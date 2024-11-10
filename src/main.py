@@ -1,5 +1,5 @@
 from flask import Flask, url_for, request, session, redirect, jsonify
-import databaseManager  # Ensure this has the necessary functions implemented
+import databaseManager
 
 app = Flask(__name__)
 

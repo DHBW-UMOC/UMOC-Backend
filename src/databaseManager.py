@@ -7,5 +7,3 @@ def InsertMessage(message, group):
 
 def getMessage(beginDate, endDate, group):
     return {}
-
-
