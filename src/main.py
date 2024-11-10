@@ -1,5 +1,5 @@
-from flask import Flask, url_for, request, session, redirect, jsonify
-import databaseManager
+from flask import Flask, request, session, redirect, jsonify, url_for
+import databaseManager  # Ensure this has the necessary functions implemented
 
 app = Flask(__name__)
 
@@ -39,7 +39,8 @@ def saveMessage():
     message_data = request.get_json()
     if message_data and 'message' in message_data:
         # Assuming databaseManager.save_message accepts a message and saves it
-        databaseManager.InsertMessage(session.get('username'), message_data['message'])
+        senderUserId = session.get('username', 'Anonymous')  # Placeholder for actual user identification
+        databaseManager.InsertMessage(senderUserId, message_data['message'])
         return jsonify({"status": "Message saved"}), 200
     else:
         return jsonify({"error": "Invalid message data"}), 400
@@ -50,7 +51,7 @@ def getMessage():
         return jsonify({"error": "Unauthorized"}), 401
     
     # Example of retrieving messages for a specific group (assuming Group1 here)
-    messages = databaseManager.getMessage("", "", "Group1")  # Modify as per databaseManager function
+    messages = databaseManager.getMessage("10.11.2024", "10.11.2024", "Group1")  # Modify as per databaseManager function
     return jsonify(messages), 200
 
 if __name__ == "__main__":
