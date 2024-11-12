@@ -2,11 +2,14 @@ import sqlite3
 from datetime import datetime
 from uuid import uuid4
 
-# Function to get a new SQLite connection for each request
-def get_connection():
-    return sqlite3.connect("test.db", check_same_thread=False)
 
-# Function to create tables if they do not already exist
+###########################
+## DATABASE MANAGER FILE
+###########################
+def get_connection():
+    return sqlite3.connect("umoc.db", check_same_thread=False)
+
+
 def create_tables():
     conn = get_connection()
     cursor = conn.cursor()
@@ -20,7 +23,7 @@ def create_tables():
         sessionId TEXT DEFAULT NULL
     )
     """)
-    
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS "Group" (
         groupId TEXT PRIMARY KEY,
@@ -29,7 +32,7 @@ def create_tables():
         createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
     )
     """)
-    
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS GroupAdmin (
         userId TEXT NOT NULL REFERENCES User(userId) ON DELETE CASCADE,
@@ -37,7 +40,7 @@ def create_tables():
         PRIMARY KEY (userId, groupId)
     )
     """)
-    
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS UserContact (
         userId TEXT NOT NULL REFERENCES User(userId) ON DELETE CASCADE,
@@ -46,7 +49,7 @@ def create_tables():
         PRIMARY KEY (userId, contactID)
     )
     """)
-    
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS GroupContact (
         userId TEXT NOT NULL REFERENCES User(userId) ON DELETE CASCADE,
@@ -54,7 +57,7 @@ def create_tables():
         PRIMARY KEY (userId, groupId)
     )
     """)
-    
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS Message (
         messageId TEXT PRIMARY KEY,
@@ -65,7 +68,7 @@ def create_tables():
         sendAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL
     )
     """)
-    
+
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS MessageStatus (
         messageId TEXT NOT NULL REFERENCES Message(messageId) ON DELETE CASCADE,
@@ -80,7 +83,10 @@ def create_tables():
     conn.commit()
     conn.close()
 
-# Function to insert a message
+
+###########################
+## SERVICE FUNCTIONS
+###########################
 def InsertMessage(senderUserId, encryptedContent, recipientUserId=None, groupId="Group1"):
     conn = get_connection()
     cursor = conn.cursor()
@@ -96,7 +102,7 @@ def InsertMessage(senderUserId, encryptedContent, recipientUserId=None, groupId=
     conn.close()
     return messageId
 
-# Function to retrieve messages
+
 def getMessage(beginDate=None, endDate=None, groupId=None):
     conn = get_connection()
     cursor = conn.cursor()
@@ -106,19 +112,20 @@ def getMessage(beginDate=None, endDate=None, groupId=None):
     if beginDate:
         query += " AND sendAt >= ?"
         params.append(beginDate)
-    
+
     if endDate:
         query += " AND sendAt <= ?"
         params.append(endDate)
-    
+
     if groupId:
         query += " AND groupId = ?"
         params.append(groupId)
-    
+
     cursor.execute(query, tuple(params))
     messages = cursor.fetchall()
     conn.close()
     return messages
+
 
 # Ensure tables are created on module load
 create_tables()
