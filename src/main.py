@@ -2,13 +2,15 @@ from flask import Flask, request, session, redirect, jsonify, url_for
 from flask_socketio import SocketIO
 
 import databaseManager
-from resource.secrets import SECRET_KEY
+from resource.config import SecretKey
+
+secKey = SecretKey()
 
 ###########################
 ## SETUP
 ###########################
 app = Flask(__name__)
-app.secret_key = SECRET_KEY
+app.secret_key = secKey.SECRET_KEY
 AUTH_TOKENS = {'user_token': 'secure_token_here'}
 
 socketio = SocketIO(app, cors_allowed_origins="*")
