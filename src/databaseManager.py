@@ -7,7 +7,7 @@ from uuid import uuid4
 ## DATABASE MANAGER FILE
 ###########################
 def get_connection():
-    return sqlite3.connect("..\data\umoc.db", check_same_thread=False)
+    return sqlite3.connect("umoc.db", check_same_thread=False)
 
 
 def create_tables():
