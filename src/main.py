@@ -32,5 +32,6 @@ if __name__ == '__main__':
     socketio.run(
         app,
         port=int(os.getenv('PORT', 5001)),
-        debug=os.getenv('DEBUG', 'True').lower() == 'true'
+        debug=os.getenv('DEBUG', 'True').lower() == 'true',
+        allow_unsafe_werkzeug=True
     )

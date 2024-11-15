@@ -1,8 +1,11 @@
-from sqlalchemy import Enum
-from .databaseManager import *
-import uuid
-from datetime import datetime
 import enum
+import uuid
+
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy import Enum
+
+db = SQLAlchemy()
+
 
 class ContactStatusEnum(enum.Enum):
     FRIEND = "friend"
@@ -92,7 +95,6 @@ class GroupMember(db.Model):
     joined_at = db.Column(db.DateTime, nullable=False)
     role = db.Column(Enum(GroupRoleEnum), nullable=False)
 
-
 class Message(db.Model):
     __tablename__ = 'message'
 
@@ -113,3 +115,10 @@ class GMessageStatus(db.Model):
 
     message_id = db.Column(db.String, db.ForeignKey('message.message_id'), primary_key=True)
     user_id = db.Column(db.String, db.ForeignKey('user.user_id'), primary_key=True)
+
+
+class _MESSAGE(db.Model):
+    __tablename__ = 'TestMessage'
+
+    message_id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    message = db.Column(db.String, nullable=False)
