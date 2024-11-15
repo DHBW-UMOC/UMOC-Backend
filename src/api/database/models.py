@@ -1,5 +1,5 @@
 from sqlalchemy import Enum
-from databaseManager import db
+from .databaseManager import *
 import uuid
 from datetime import datetime
 import enum

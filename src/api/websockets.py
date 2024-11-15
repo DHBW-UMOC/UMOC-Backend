@@ -1,5 +1,5 @@
 from flask_socketio import SocketIO, emit, join_room, leave_room
-from src.database.models import User, Message
+from .database.models import User, Message
 
 socketio = SocketIO()
 
