@@ -95,6 +95,7 @@ class GroupMember(db.Model):
     joined_at = db.Column(db.DateTime, nullable=False)
     role = db.Column(Enum(GroupRoleEnum), nullable=False)
 
+
 class Message(db.Model):
     __tablename__ = 'message'
 
@@ -116,6 +117,10 @@ class GMessageStatus(db.Model):
     message_id = db.Column(db.String, db.ForeignKey('message.message_id'), primary_key=True)
     user_id = db.Column(db.String, db.ForeignKey('user.user_id'), primary_key=True)
 
+
+##########################
+## Test-Models
+##########################
 
 class _MESSAGE(db.Model):
     __tablename__ = 'TestMessage'

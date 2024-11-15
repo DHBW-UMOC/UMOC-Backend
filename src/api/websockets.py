@@ -1,5 +1,4 @@
-from flask_socketio import SocketIO, emit, join_room, leave_room
-from .database.models import User, Message
+from flask_socketio import SocketIO
 
 socketio = SocketIO()
 
@@ -15,3 +14,6 @@ def handle_connect():
 @socketio.on('disconnect')
 def handle_disconnect():
     pass
+
+
+
