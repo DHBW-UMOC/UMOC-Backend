@@ -2,7 +2,7 @@ import uuid
 
 from flask import Blueprint, request, jsonify
 
-from src.api.database import databaseManager
+from api.database import databaseManager
 
 endpointApp = Blueprint('main', __name__)
 
@@ -22,6 +22,8 @@ def register():
 
     databaseManager.addUser(username, password, "")
 
+    return "User registered!"
+
 
 @endpointApp.route("/login", methods=['GET'])
 def login():
@@ -34,6 +36,8 @@ def login():
     sessionID = uuid.uuid4()
     databaseManager.setSessionId(username, password, sessionID)
 
+    return "User registered!"
+
 
 @endpointApp.route("/logout", methods=['POST'])
 def logout():
@@ -42,6 +46,8 @@ def logout():
     if not sessionID: return jsonify({"error": "No sessionID provided for logout"}), 400
 
     databaseManager.resetSessionId(sessionID)
+
+    return "User registered!"
 
 
 @endpointApp.route("/addContact", methods=['POST'])
@@ -53,6 +59,8 @@ def addContact():
     if not contact: return jsonify({"error": "No contact provided for addContact"}), 400
 
     databaseManager.addContact(sessionID, contact)
+
+    return "User registered!"
 
 
 @endpointApp.route("/changeContact", methods=['POST'])
@@ -66,6 +74,8 @@ def changeContact():
     if not status: return jsonify({"error": "No status provided for changeContact"}), 400
 
     databaseManager.changeContact(sessionID, contact, status)
+
+    return "User registered!"
 
 
 ##########################
@@ -88,4 +98,4 @@ def saveMessage():
 
 @endpointApp.route("/getMessages")
 def getMessage():
-    return databaseManager.getMessages()
+    return "CHANGELATER"

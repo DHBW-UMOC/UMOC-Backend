@@ -1,8 +1,9 @@
 import uuid
 
 from flask import Flask
+import datetime
 
-from src.api.database.models import db, _MESSAGE, User, UserContact, ContactStatusEnum
+from api.database.models import db, _MESSAGE, User, UserContact, ContactStatusEnum
 
 
 def init_db(app: Flask):
@@ -14,8 +15,8 @@ def init_db(app: Flask):
 ##########################
 ## DATABASE ACCESS FUNCTIONS
 ##########################
-def addUser(username: str, password: str, public_key: str):
-    _User = User(username=username, password=password, public_key=public_key)
+def addUser(username: str, password: str, public_key: str): #TODO add actual numbers
+    _User = User(username=username, password=password, public_key=public_key, salt="", created_at=datetime.date.today())
     db.session.add(_User)
     db.session.commit()
 
