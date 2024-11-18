@@ -98,4 +98,8 @@ def saveMessage():
 
 @endpointApp.route("/getMessages")
 def getMessage():
-    return "CHANGELATER"
+    return databaseManager.getMessages()
+
+@endpointApp.route("/getContacts")
+def getContacts():
+    return "Not IMPLEMENTED"
