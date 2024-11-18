@@ -23,7 +23,7 @@ def get_user_from_session(session_id):
 ###########################
 @socketio.on('connect')
 def handle_connect():
-    session_id = request.args.get('session_id')
+    session_id = request.args.get('sessionID')
     if not session_id:
         return False
 
@@ -56,7 +56,7 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
-    session_id = request.args.get('session_id')
+    session_id = request.args.get('sessionID')
     if not session_id or session_id not in active_sessions:
         return
 
@@ -81,7 +81,7 @@ def handle_disconnect():
 
 @socketio.on('send_message')
 def handle_message(data):
-    session_id = data.get('session_id')
+    session_id = data.get('sessionID')
     recipient_id = data.get('recipient_id')
     content = data.get('content')
     is_group = data.get('is_group', False)
@@ -121,7 +121,7 @@ def handle_message(data):
 
 @socketio.on('add_contact')
 def handle_add_contact(data):
-    session_id = data.get('session_id')
+    session_id = data.get('sessionID')
     contact_username = data.get('contact_username')
 
     user = get_user_from_session(session_id)

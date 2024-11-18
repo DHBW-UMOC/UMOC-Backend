@@ -119,7 +119,3 @@ def saveMessage():
 @endpointApp.route("/getMessages")
 def getMessage():
     return databaseManager.getMessages()
-
-@endpointApp.route("/getContacts")
-def getContacts():
-    return "Not IMPLEMENTED"
