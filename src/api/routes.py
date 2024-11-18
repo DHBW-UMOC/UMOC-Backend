@@ -78,6 +78,26 @@ def changeContact():
     return "User registered!"
 
 
+@endpointApp.route("/getContacts", methods=['GET'])
+def getContacts():
+    sessionID = request.form.get('sessionID')
+
+    if not sessionID: return jsonify({"error": "No sessionID provided for getContacts"}), 400
+
+    return databaseManager.getContacts(sessionID)
+
+
+@endpointApp.route("/getContactMessages", methods=['GET'])
+def getContactMessages():
+    sessionID = request.form.get('sessionID')
+    contact = request.form.get('contact')
+
+    if not sessionID: return jsonify({"error": "No sessionID provided for getContactMessages"}), 400
+    if not contact: return jsonify({"error": "No contact provided for getContactMessages"}), 400
+
+    return databaseManager.getContactMessages(sessionID, contact)
+
+
 ##########################
 ## TEST ENDPOINTS
 ##########################

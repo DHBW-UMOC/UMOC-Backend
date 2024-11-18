@@ -5,12 +5,21 @@ import datetime
 
 from api.database.models import db, _MESSAGE, User, UserContact, ContactStatusEnum
 
+from src.api.database.models import Message
+
 
 def init_db(app: Flask):
     db.init_app(app)
     with app.app_context():
         db.create_all()
 
+
+def reset_database(app):
+    with app.app_context():
+        db.session.remove()
+        db.drop_all()
+        db.create_all()
+        print("Database reset completed.")
 
 ##########################
 ## DATABASE ACCESS FUNCTIONS
@@ -59,6 +68,18 @@ def changeContact(sessionID: uuid, contact: str, status: ContactStatusEnum):
         db.session.commit()
     else:
         return False
+
+
+def getContacts(sessionID: uuid):
+    user = User.query.filter_by(session_id=sessionID).first()
+    userContacts = not UserContact.query.filter_by(user_id=user.user_id)
+    return userContacts
+
+
+def getContactMessages(sessionID: uuid, contact: str):
+    user = User.query.filter_by(session_id=sessionID).first()
+    userContact = UserContact.query.filter_by(user_id=user.user_id, contact_id=contact).first()
+    return Message.query.filter_by(sender_user_id=user.user_id, recipient_user_id=userContact.contact_id).all()
 
 
 ##########################

@@ -1,6 +1,6 @@
 from flask import Flask
 from flask_socketio import SocketIO
-from api.database.databaseManager import init_db
+from api.database.databaseManager import init_db, reset_database
 from api.websockets import socketio
 import api.routes as routes
 import os
@@ -18,7 +18,13 @@ def create_app():
     # Initialize extensions
     from api.database.databaseManager import init_db
     init_db(app)
+    reset_database(app)  # IMPORTANT
     socketio.init_app(app)
+
+    # Insert dummy data
+    with app.app_context():
+        from api.database.insertDummyData import insert_example_data
+        insert_example_data()
     
     # Register blueprints
     from api.routes import endpointApp
