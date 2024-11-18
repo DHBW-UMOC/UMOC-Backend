@@ -2,9 +2,9 @@ from flask import request
 from flask_socketio import SocketIO, emit, join_room, leave_room
 from datetime import datetime
 import uuid
-from src.api.database.models import db, User, UserContact, Message, Group, GroupMember, ContactStatusEnum, MessageTypeEnum
+from api.database.models import db, User, UserContact, Message, Group, GroupMember, ContactStatusEnum, MessageTypeEnum
 
-from src.api.database.models import User
+from api.database.models import User
 
 socketio = SocketIO()
 active_sessions = {}  # {session_id: user_id}
