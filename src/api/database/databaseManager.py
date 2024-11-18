@@ -1,6 +1,6 @@
 import uuid
 
-from flask import Flask
+from flask import Flask, jsonify
 import datetime
 
 from api.database.models import db, _MESSAGE, User, UserContact, ContactStatusEnum
