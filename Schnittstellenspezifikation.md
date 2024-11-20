@@ -35,7 +35,7 @@ Parameters:
 Response:
 ```json
 {
-    "success": "User logged in, session ID created"
+    {"sessionID": sessionID}
 }
 ```
 ```json
