@@ -11,7 +11,7 @@ pip freeze > requirements.txt
 # Installation
 ```
 git clone https://github.com/UMOC/UMOC-Backend.git
-cd messenger-backend
+cd UMOC-Backend
 pip install -r requirements.txt
 ```
 

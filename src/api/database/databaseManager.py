@@ -5,6 +5,7 @@ from api.database.models import Message
 from api.database.models import MessageTypeEnum
 from api.database.models import db, User, UserContact, ContactStatusEnum
 from flask import Flask, jsonify
+from sqlalchemy import or_
 
 
 def init_db(app: Flask):
@@ -87,7 +88,7 @@ def getContacts(sessionID: uuid):
         for contact in userContacts
     ]
 
-    return jsonify({"contacts": contact_list})
+    return jsonify(contact_list)
 
 
 def getContactMessages(sessionID: uuid, contactID: uuid):
@@ -99,11 +100,16 @@ def getContactMessages(sessionID: uuid, contactID: uuid):
 
     if not userContact:
         return jsonify({"error": "Contact not found"})
-    messages = Message.query.filter_by(sender_user_id=user.user_id, recipient_user_id=userContact.contact_id).all()
+    messages = Message.query.filter(
+        or_(
+            (Message.sender_user_id == user.user_id) & (Message.recipient_user_id == userContact.contact_id),
+            (Message.sender_user_id == userContact.contact_id) & (Message.recipient_user_id == user.user_id)
+        )
+    ).order_by(Message.send_at.desc()).all()
 
     messages_list = [{"content": message.encrypted_content, "sender_user_id": message.sender_user_id, "send_at": message.send_at} for message in messages]
 
-    return jsonify({"messages": messages_list})
+    return jsonify(messages_list)
 
 
 ##########################
