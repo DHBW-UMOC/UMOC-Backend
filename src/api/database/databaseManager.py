@@ -105,7 +105,7 @@ def getContactMessages(sessionID: uuid, contactID: uuid):
             (Message.sender_user_id == user.user_id) & (Message.recipient_user_id == userContact.contact_id),
             (Message.sender_user_id == userContact.contact_id) & (Message.recipient_user_id == user.user_id)
         )
-    ).order_by(Message.send_at.asc()).all()
+    ).order_by(Message.send_at.desc()).all()
 
     messages_list = [{"content": message.encrypted_content, "sender_user_id": message.sender_user_id, "send_at": message.send_at} for message in messages]
 
