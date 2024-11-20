@@ -18,7 +18,9 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///umoc.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-    CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
+    CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}},
+         methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+         allow_headers=["Content-Type", "Authorization"])
     
     # Initialize extensions
     from api.database.databaseManager import init_db
