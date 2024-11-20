@@ -24,7 +24,7 @@ Response:
 ## 2. Login a User
 Endpoint: ```/login```
 
-Method: ```POST```
+Method: ```GET```
 
 Parameters:
 
