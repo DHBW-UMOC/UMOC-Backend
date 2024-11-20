@@ -87,7 +87,7 @@ def getContacts(sessionID: uuid):
         for contact in userContacts
     ]
 
-    return jsonify({"contacts": contact_list})
+    return jsonify(contact_list)
 
 
 def getContactMessages(sessionID: uuid, contactID: uuid):
