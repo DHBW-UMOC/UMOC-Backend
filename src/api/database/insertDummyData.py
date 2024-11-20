@@ -42,7 +42,7 @@ def insert_example_data():
 
     user3 = User(
         user_id=USER_UUID3,
-        username="user3",
+        username="Bernd",
         password="password3",
         salt="salt3",
         created_at=datetime.now(),
@@ -54,7 +54,7 @@ def insert_example_data():
 
     user4 = User(
         user_id="00000000-0000-0000-0000-000000000004",
-        username="user4",
+        username="Günter",
         password="password4",
         salt="salt4",
         created_at=datetime.now(),
@@ -66,7 +66,7 @@ def insert_example_data():
 
     user5 = User(
         user_id="00000000-0000-0000-0000-000000000005",
-        username="user5",
+        username="Nick",
         password="password5",
         salt="salt5",
         created_at=datetime.now(),
@@ -78,7 +78,7 @@ def insert_example_data():
 
     user6 = User(
         user_id="00000000-0000-0000-0000-000000000006",
-        username="user6",
+        username="Pascal",
         password="password6",
         salt="salt6",
         created_at=datetime.now(),
