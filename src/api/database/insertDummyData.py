@@ -30,7 +30,7 @@ def insert_example_data():
 
     user2 = User(
         user_id=USER_UUID2,
-        username="user2",
+        username="Max Mustermann",
         password="password2",
         salt="salt2",
         created_at=datetime.now(),
@@ -42,7 +42,7 @@ def insert_example_data():
 
     user3 = User(
         user_id=USER_UUID3,
-        username="Bernd",
+        username="Angela Merkel",
         password="password3",
         salt="salt3",
         created_at=datetime.now(),
@@ -66,7 +66,7 @@ def insert_example_data():
 
     user5 = User(
         user_id="00000000-0000-0000-0000-000000000005",
-        username="Nick",
+        username="Trump",
         password="password5",
         salt="salt5",
         created_at=datetime.now(),
@@ -326,10 +326,110 @@ def insert_example_data():
         is_group=False
     )
 
+    message15 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user1.user_id,
+        recipient_user_id=user2.user_id,
+        encrypted_content="Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi.   ",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
 
+    message16 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user1.user_id,
+        recipient_user_id=user2.user_id,
+        encrypted_content="Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.   ",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
+
+    message17 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user1.user_id,
+        recipient_user_id=user2.user_id,
+        encrypted_content="Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui bland",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
+
+    message18 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user2.user_id,
+        recipient_user_id=user1.user_id,
+        encrypted_content="Fusce sagittis laoreet erat eget tincidunt. Nunc sed ex a sem dictum molestie. Proin convallis mi a viverra vehicula. Sed dapibus velit vitae lectus varius, sit amet rutrum sem cursus. Sed fermentum ut tellus non ullamcorper. Phasellus posuere euismod velit sed convallis. Sed at diam scelerisque, pellentesque eros quis, condimentum urna. Morbi vel velit a justo tincidunt congue quis et sem. Duis nec leo nisl. Nullam ultricies a neque vel sagittis. Pellentesque lectus est, maximus id libero mollis, porta consequat odio. Nam eget euismod dui, eget aliquet eros. Donec malesuada nibh vitae magna fermentum, ut iaculis mauris euismod. Etiam viverra, purus non vestibulum mollis, metus ex rhoncus magna, vitae scelerisque lectus metus nec magna.",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
+
+    message19 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user1.user_id,
+        recipient_user_id=user2.user_id,
+        encrypted_content="Duis sed luctus libero. Sed gravida ullamcorper suscipit. Sed a rhoncus dui. Ut tincidunt suscipit diam, at egestas sapien semper nec. Sed egestas accumsan tortor at tincidunt. Integer laoreet, ex sit amet laoreet euismod, est ex dapibus metus, fringilla ornare est mi a tellus. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Nam et auctor augue. Phasellus nisi ligula, tempor a velit ac, luctus viverra felis. Integer non dapibus purus. Suspendisse ac metus tincidunt, consequat urna eu, aliquam felis. Phasellus congue libero mi, eget varius mauris condimentum vulputate.",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
+
+    message20 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user2.user_id,
+        recipient_user_id=user1.user_id,
+        encrypted_content="Pellentesque malesuada finibus tellus vel egestas. Nunc blandit, felis tincidunt fermentum tincidunt, tellus felis luctus urna, et luctus elit enim a urna. Morbi pharetra ante dictum leo faucibus varius. Proin imperdiet leo tincidunt quam placerat sagittis. Curabitur magna elit, lobortis vel augue nec, luctus cursus dui. Suspendisse sagittis purus sit amet libero lacinia consequat. Nam iaculis massa libero, vel faucibus quam auctor venenatis. Praesent elementum lacinia felis ut porta. In porttitor fringilla nisl vehicula dapibus. Nunc bibendum lacinia orci, a pulvinar sapien tincidunt a. Morbi egestas tortor sed nisl efficitur, non condimentum libero blandit.",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
+
+    message21 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user1.user_id,
+        recipient_user_id=user2.user_id,
+        encrypted_content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed lobortis sollicitudin lacus, sit amet rutrum lacus condimentum et. Maecenas orci justo, feugiat id dignissim vitae, fermentum maximus tortor. Aliquam tempus a nulla quis gravida. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Curabitur vestibulum nibh nec erat ullamcorper tincidunt. Donec convallis nisi mattis eros fermentum laoreet. Vivamus eget ex imperdiet, eleifend lacus quis, luctus dui. Phasellus ut dolor ac sem scelerisque suscipit. Curabitur ut justo tincidunt, dictum augue sit amet, commodo ligula. Sed dolor ligula, laoreet eu metus quis, luctus tincidunt metus. Proin eget ante posuere erat aliquet laoreet.",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
+
+    message22 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user2.user_id,
+        recipient_user_id=user1.user_id,
+        encrypted_content="readonly: Allows the BLOCKTYPES array to be initialized at runtime (when the class is loaded). Once initialized, it cannot be reassigned, but the elements in the array can still be modified. const: Requires compile-time constants and is unsuitable for arrays or complex objects like BlockType.",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
+
+    message23 = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=user1.user_id,
+        recipient_user_id=user2.user_id,
+        encrypted_content="Das ist der letzte beispielText",
+        type=MessageTypeEnum.TEXT,
+        send_at=datetime.now(),
+        updated_at=datetime.now(),
+        is_group=False
+    )
 
     # Add all to the session
-    db.session.add_all([user1, user2, user3, user4, user5, user6, contact1, contact2, contact3, contact4, contact5, contact6, contact7, contact8, contact9, message1, message2, message3, message4, message5, message6, message7, message8, message9, message10, message11, message12, message13, message14])
+    db.session.add_all(
+        [user1, user2, user3, user4, user5, user6,
+        contact1, contact2, contact3, contact4, contact5, contact6, contact7, contact8, contact9,
+        message1, message2, message3, message4, message5, message6, message7, message8, message9, message10, message11, message12, message13, message14, message15, message16, message17, message18, message19, message20, message21, message22, message23])
 
     # Commit the session to save data
     db.session.commit()
