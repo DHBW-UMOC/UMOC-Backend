@@ -1,11 +1,10 @@
+import datetime
 import uuid
 
-from flask import Flask, jsonify
-import datetime
-
-from api.database.models import db, Message, User, UserContact, ContactStatusEnum
-
 from api.database.models import Message
+from api.database.models import MessageTypeEnum
+from api.database.models import db, User, UserContact, ContactStatusEnum
+from flask import Flask, jsonify
 
 
 def init_db(app: Flask):
@@ -35,6 +34,7 @@ def setSessionId(username: str, password: str, sessionID: uuid):
     if user:
         user.session_id = sessionID
         db.session.commit()
+        return True
     else:
         return False
 
@@ -44,6 +44,7 @@ def resetSessionId(sessionID: uuid):
     if user:
         user.session_id = None
         db.session.commit()
+        return True
     else:
         return False
 
@@ -55,6 +56,7 @@ def addContact(sessionID: uuid, contact: str):
         userContact = UserContact(user_id=user.user_id, contact_id=contact)
         db.session.add(userContact)
         db.session.commit()
+        return True
     else:
         return False
 
@@ -66,22 +68,37 @@ def changeContact(sessionID: uuid, contact: str, status: ContactStatusEnum):
     if user and userContact:
         userContact.status = status
         db.session.commit()
+        return True
     else:
         return False
 
 
 def getContacts(sessionID: uuid):
     user = User.query.filter_by(session_id=sessionID).first()
+    if not user:
+        return jsonify({"error": "User not found. SessionID is wrong...Probably"})
+
     userContacts = UserContact.query.filter_by(user_id=user.user_id)
 
-    contact_list = [{"contact_id": contact.contact_id, "name": "Bla", "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"} for contact in userContacts]
+    contact_list = [
+        {"contact_id": contact.contact_id,
+         "name": User.query.filter_by(user_id=contact.contact_id).first().username,
+         "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"}
+        for contact in userContacts
+    ]
 
     return jsonify({"contacts": contact_list})
 
 
-def getContactMessages(sessionID: uuid, contact: str):
+def getContactMessages(sessionID: uuid, contactID: uuid):
     user = User.query.filter_by(session_id=sessionID).first()
-    userContact = UserContact.query.filter_by(user_id=user.user_id, contact_id=contact).first()
+
+    if not user:
+        return jsonify({"error": "User not found. SessionID is wrong"})
+    userContact = UserContact.query.filter_by(user_id=user.user_id, contact_id=contactID).first()
+
+    if not userContact:
+        return jsonify({"error": "Contact not found"})
     messages = Message.query.filter_by(sender_user_id=user.user_id, recipient_user_id=userContact.contact_id).all()
 
     messages_list = [{"content": message.encrypted_content, "sender_user_id": message.sender_user_id, "send_at": message.send_at} for message in messages]
@@ -92,11 +109,22 @@ def getContactMessages(sessionID: uuid, contact: str):
 ##########################
 ## TEST DATABASE FUNCTIONS
 ##########################
-def saveMessage(message: str, sender_id, content, timestamp, group, recipient_id, message_type):
-    _Message = Message(message, message_id=uuid.uuid4, sender_user_id=sender_id, recipient_user_id=recipient_id, encrypted_content=content, type=message_type, send_at=timestamp, is_group=group)
-    db.session.add(_Message)
+def saveMessage(sessionID: uuid, recipientID: uuid, content: str, isGroup: bool=False, messageType: MessageTypeEnum=MessageTypeEnum.TEXT):
+    userID = User.query.filter_by(session_id=sessionID).first().user_id
+
+    if not userID:
+        return jsonify({"error": "User not found. SessionID is wrong."})
+
+    message = Message(
+        sender_user_id=userID,
+        recipient_user_id=recipientID,
+        encrypted_content=content,
+        type=messageType,
+        send_at=datetime.datetime.now(),
+        is_group=isGroup
+    )
+    db.session.add(message)
     db.session.commit()
 
+    return jsonify({"message": "Message saved successfully"}), 200
 
-def getMessages():
-    return _MESSAGE.query.all()

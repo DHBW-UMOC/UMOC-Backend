@@ -6,38 +6,47 @@ from api.database.models import db
 
 
 def insert_example_data():
+    USER_UUID1 = "00000000-0000-0000-0000-000000000001"
+    USER_UUID2 = "00000000-0000-0000-0000-000000000002"
+    USER_UUID3 = "00000000-0000-0000-0000-000000000003"
+
+    SESSION_UUID1 = "00000000-0000-0000-1111-000000000001"
+    SESSION_UUID2 = "00000000-0000-0000-1111-000000000002"
+    SESSION_UUID3 = "00000000-0000-0000-1111-000000000003"
+
+
     # Creating three users
     user1 = User(
-        user_id=str(uuid.uuid4()),
+        user_id=USER_UUID1,
         username="user1",
         password="password1",
         salt="salt1",
         created_at=datetime.now(),
-        session_id=str(uuid.uuid4()),
+        session_id=SESSION_UUID1,
         public_key="public_key_user1",
         encrypted_private_key="encrypted_private_key_user1",
         is_online=True
     )
 
     user2 = User(
-        user_id=str(uuid.uuid4()),
+        user_id=USER_UUID2,
         username="user2",
         password="password2",
         salt="salt2",
         created_at=datetime.now(),
-        session_id=str(uuid.uuid4()),
+        session_id=SESSION_UUID2,
         public_key="public_key_user2",
         encrypted_private_key="encrypted_private_key_user2",
         is_online=False
     )
 
     user3 = User(
-        user_id=str(uuid.uuid4()),
+        user_id=USER_UUID3,
         username="user3",
         password="password3",
         salt="salt3",
         created_at=datetime.now(),
-        session_id=str(uuid.uuid4()),
+        session_id=SESSION_UUID3,
         public_key="public_key_user3",
         encrypted_private_key="encrypted_private_key_user3",
         is_online=True

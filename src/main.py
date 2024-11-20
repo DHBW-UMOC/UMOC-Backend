@@ -1,9 +1,11 @@
-from flask import Flask
-from flask_socketio import SocketIO
-from api.database.databaseManager import init_db, reset_database
-from api.websockets import socketio
-import api.routes as routes
 import os
+
+from flask import Flask
+
+from api.database.databaseManager import reset_database
+from api.websockets import socketio
+
+
 # from dotenv import load_dotenv
 
 
@@ -37,7 +39,7 @@ if __name__ == '__main__':
     app = create_app()
     socketio.run(
         app,
-        port=int(os.getenv('PORT', 5001)),
+        port=int(os.getenv('PORT', 5000)),
         debug=os.getenv('DEBUG', 'True').lower() == 'true',
         allow_unsafe_werkzeug=True
     )

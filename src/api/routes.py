@@ -1,9 +1,7 @@
 import uuid
-import datetime
-
-from flask import Blueprint, request, jsonify
 
 from api.database import databaseManager
+from flask import Blueprint, request, jsonify
 
 endpointApp = Blueprint('main', __name__)
 
@@ -13,8 +11,8 @@ endpointApp = Blueprint('main', __name__)
 ##########################
 @endpointApp.route("/register", methods=['POST'])
 def register():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    username = request.args.get('username')
+    password = request.args.get('password')
     # public_key = request.form.get('public_key')
 
     if not username: return jsonify({"error": "No username provided for register"}), 400
@@ -23,58 +21,61 @@ def register():
 
     databaseManager.addUser(username, password, "")
 
-    return "User registered!"
+    return jsonify({"success": "No username provided for register"})
 
 
 @endpointApp.route("/login", methods=['GET'])
 def login():
-    username = request.form.get('username')
-    password = request.form.get('password')
+    username = request.args.get('username')
+    password = request.args.get('password')
 
-    if not username: return jsonify({"error": "No username provided for register"}), 400
-    if not password: return jsonify({"error": "No password provided for register"}), 400
+    if not username: return jsonify({"error": "No username provided for login"}), 400
+    if not password: return jsonify({"error": "No password provided for login"}), 400
 
-    sessionID = uuid.uuid4()
-    databaseManager.setSessionId(username, password, sessionID)
+    sessionID = str(uuid.uuid4())
+    if not databaseManager.setSessionId(username, password, sessionID):
+        return jsonify({"error": "User not found. Username or password is wrong...Probably"}), 400
 
-    return "User registered!"
+    return jsonify({"sessionID": str(sessionID)})
 
 
 @endpointApp.route("/logout", methods=['POST'])
 def logout():
-    sessionID = request.form.get('sessionID')
+    sessionID = request.args.get('sessionID')
 
     if not sessionID: return jsonify({"error": "No sessionID provided for logout"}), 400
 
     databaseManager.resetSessionId(sessionID)
 
-    return "User registered!"
+    return jsonify({"success": "User logged out successfully"})
 
 
 @endpointApp.route("/addContact", methods=['POST'])
 def addContact():
-    sessionID = request.form.get('sessionID')
-    contact = request.form.get('contact')
+    sessionID = request.args.get('sessionID')
+    contact = request.args.get('contactID')
 
     if not sessionID: return jsonify({"error": "No sessionID provided for addContact"}), 400
     if not contact: return jsonify({"error": "No contact provided for addContact"}), 400
 
-    databaseManager.addContact(sessionID, contact)
+    if not databaseManager.addContact(sessionID, contact):
+        return jsonify({"error": "User not found. SessionID is wrong...Probably"}), 400
 
-    return "User registered!"
+    return jsonify({"success": "Contact was added successfully"})
 
 
 @endpointApp.route("/changeContact", methods=['POST'])
 def changeContact():
-    sessionID = request.form.get('sessionID')
-    contact = request.form.get('contact')
-    status = request.form.get('status')
+    sessionID = request.args.get('sessionID')
+    contact = request.args.get('contactID')
+    status = request.args.get('status')
 
     if not sessionID: return jsonify({"error": "No sessionID provided for changeContact"}), 400
     if not contact: return jsonify({"error": "No contact provided for changeContact"}), 400
     if not status: return jsonify({"error": "No status provided for changeContact"}), 400
 
-    databaseManager.changeContact(sessionID, contact, status)
+    if not databaseManager.changeContact(sessionID, contact, status):
+        return jsonify({"error": "User not found. SessionID is wrong...Probably"}), 400
 
     return "User registered!"
 
@@ -91,12 +92,12 @@ def getContacts():
 @endpointApp.route("/getContactMessages", methods=['GET'])
 def getContactMessages():
     sessionID = request.args.get('sessionID')
-    contact = request.args.get('contact')
+    contactID = request.args.get('contactID')
 
     if not sessionID: return jsonify({"error": "No sessionID provided for getContactMessages"}), 400
-    if not contact: return jsonify({"error": "No contact provided for getContactMessages"}), 400
+    if not contactID: return jsonify({"error": "No contact provided for getContactMessages"}), 400
 
-    return databaseManager.getContactMessages(sessionID, contact)
+    return databaseManager.getContactMessages(sessionID, contactID)
 
 
 ##########################
@@ -112,20 +113,16 @@ def saveMessage():
 
     data = request.json
 
-    message = data["message"]
-    sender_id = data["sender_id"]
-    recipient_user_id = data["recipient_user_id"]
+    sessionID = data["sessionID"]
+    recipientID = data["recipientID"]
     content = data["content"]
-    message_type = data["type"]
-    timestamp = datetime.datetime.now()
-    is_group = False
 
-    if not message:
+    if not sessionID:
         return jsonify({"error": "No message provided"}), 400
-    databaseManager.saveMessage(message, sender_id, content, timestamp, is_group, recipient_user_id, message_type)
-    return jsonify({"message": "Message saved successfully"}), 200
+
+    return databaseManager.saveMessage(sessionID, recipientID, content)
 
 
-@endpointApp.route("/getMessages")
-def getMessage():
-    return databaseManager.getMessages()
+# @endpointApp.route("/getMessages")
+# def getMessage():
+#     return databaseManager.getMessages()
