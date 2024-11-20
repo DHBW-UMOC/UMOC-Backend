@@ -1,6 +1,7 @@
 import os
 
 from flask import Flask
+from flask_cors import CORS
 
 from api.database.databaseManager import reset_database
 from api.websockets import socketio
@@ -16,11 +17,13 @@ def create_app():
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///umoc.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+    CORS(app, resources={r"/*": {"origins": "http://localhost:4200"}})
     
     # Initialize extensions
     from api.database.databaseManager import init_db
     init_db(app)
-    reset_database(app)  # IMPORTANT
+    reset_database(app)  # IMPORTANT!!!
     socketio.init_app(app)
 
     # Insert dummy data
