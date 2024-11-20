@@ -103,7 +103,7 @@ def getContactMessages(sessionID: uuid, contactID: uuid):
 
     messages_list = [{"content": message.encrypted_content, "sender_user_id": message.sender_user_id, "send_at": message.send_at} for message in messages]
 
-    return jsonify({"messages": messages_list})
+    return jsonify(messages_list)
 
 
 ##########################
