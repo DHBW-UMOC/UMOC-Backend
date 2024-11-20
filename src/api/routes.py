@@ -1,4 +1,5 @@
 import uuid
+import datetime
 
 from flask import Blueprint, request, jsonify
 
@@ -80,7 +81,7 @@ def changeContact():
 
 @endpointApp.route("/getContacts", methods=['GET'])
 def getContacts():
-    sessionID = request.form.get('sessionID')
+    sessionID = request.args.get('sessionID')
 
     if not sessionID: return jsonify({"error": "No sessionID provided for getContacts"}), 400
 
@@ -89,8 +90,8 @@ def getContacts():
 
 @endpointApp.route("/getContactMessages", methods=['GET'])
 def getContactMessages():
-    sessionID = request.form.get('sessionID')
-    contact = request.form.get('contact')
+    sessionID = request.args.get('sessionID')
+    contact = request.args.get('contact')
 
     if not sessionID: return jsonify({"error": "No sessionID provided for getContactMessages"}), 400
     if not contact: return jsonify({"error": "No contact provided for getContactMessages"}), 400
@@ -106,13 +107,22 @@ def default():
     return "Hello World"
 
 
-@endpointApp.route("/saveMessage/", methods=["POST"])
+@endpointApp.route("/saveMessage", methods=["POST"])
 def saveMessage():
-    message = request.form.get('message')
+
+    data = request.json
+
+    message = data["message"]
+    sender_id = data["sender_id"]
+    recipient_user_id = data["recipient_user_id"]
+    content = data["content"]
+    message_type = data["type"]
+    timestamp = datetime.datetime.now()
+    is_group = False
 
     if not message:
         return jsonify({"error": "No message provided"}), 400
-    databaseManager.saveMessage(message)
+    databaseManager.saveMessage(message, sender_id, content, timestamp, is_group, recipient_user_id, message_type)
     return jsonify({"message": "Message saved successfully"}), 200
 
 

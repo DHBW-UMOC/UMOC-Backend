@@ -3,9 +3,9 @@ import uuid
 from flask import Flask, jsonify
 import datetime
 
-from api.database.models import db, _MESSAGE, User, UserContact, ContactStatusEnum
+from api.database.models import db, Message, User, UserContact, ContactStatusEnum
 
-from src.api.database.models import Message
+from api.database.models import Message
 
 
 def init_db(app: Flask):
@@ -72,21 +72,28 @@ def changeContact(sessionID: uuid, contact: str, status: ContactStatusEnum):
 
 def getContacts(sessionID: uuid):
     user = User.query.filter_by(session_id=sessionID).first()
-    userContacts = not UserContact.query.filter_by(user_id=user.user_id)
-    return userContacts
+    userContacts = UserContact.query.filter_by(user_id=user.user_id)
+
+    contact_list = [{"contact_id": contact.contact_id, "name": "Bla", "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"} for contact in userContacts]
+
+    return jsonify({"contacts": contact_list})
 
 
 def getContactMessages(sessionID: uuid, contact: str):
     user = User.query.filter_by(session_id=sessionID).first()
     userContact = UserContact.query.filter_by(user_id=user.user_id, contact_id=contact).first()
-    return Message.query.filter_by(sender_user_id=user.user_id, recipient_user_id=userContact.contact_id).all()
+    messages = Message.query.filter_by(sender_user_id=user.user_id, recipient_user_id=userContact.contact_id).all()
+
+    messages_list = [{"content": message.encrypted_content, "sender_user_id": message.sender_user_id, "send_at": message.send_at} for message in messages]
+
+    return jsonify({"messages": messages_list})
 
 
 ##########################
 ## TEST DATABASE FUNCTIONS
 ##########################
-def saveMessage(message: str):
-    _Message = _MESSAGE(message=message)
+def saveMessage(message: str, sender_id, content, timestamp, group, recipient_id, message_type):
+    _Message = Message(message, message_id=uuid.uuid4, sender_user_id=sender_id, recipient_user_id=recipient_id, encrypted_content=content, type=message_type, send_at=timestamp, is_group=group)
     db.session.add(_Message)
     db.session.commit()
 
