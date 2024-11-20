@@ -1,7 +1,7 @@
 import unittest
 import requests
 
-BASE_URL = "http://127.0.0.1:5001"  # Lokale URL der Flask-App
+BASE_URL = "http://127.0.0.1:5000"  # Lokale URL der Flask-App
 
 
 class TestEndpointsOnline(unittest.TestCase):
