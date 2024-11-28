@@ -21,7 +21,7 @@ def get_user_from_session(session_id):
 ###########################
 ## WEBSOCKET ENDPOINTS
 ###########################
-@socketio.on('connect')
+@socketio.on('connect', namespace='/')
 def handle_connect():
     session_id = request.args.get('sessionID')
     if not session_id:
@@ -54,7 +54,7 @@ def handle_connect():
             }, room=user_sids[contact.contact_id])
 
 
-@socketio.on('disconnect')
+@socketio.on('disconnect', namespace='/')
 def handle_disconnect():
     session_id = request.args.get('sessionID')
     if not session_id or session_id not in active_sessions:
