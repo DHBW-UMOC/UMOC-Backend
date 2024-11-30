@@ -1,53 +1,53 @@
+import unittest
+from unittest.mock import patch
 import requests
 
-# Base URL for your Flask API
-BASE_URL = "http://localhost:5000"
+BASE_URL = "http://127.0.0.1:5000"
 
-# Authorization token (replace 'secure_token_here' with your actual token)
-AUTH_TOKEN = "secure_token_here"
 
-# Headers for authorization
-HEADERS = {
-    "Authorization": AUTH_TOKEN,
-    "Content-Type": "application/json"
-}
+class TestEndpoints(unittest.TestCase):
 
-def login(username):
-    """Simulates logging in by sending a username to the /login endpoint."""
-    response = requests.post(f"{BASE_URL}/login", data={"username": username})
-    if response.status_code == 200:
-        print("Logged in successfully.")
-    else:
-        print("Login failed:", response.text)
+    @patch("requests.post")
+    def test_register_success(self, mock_post):
+        """Tests the /register endpoint with valid data."""
+        mock_post.return_value.status_code = 200
+        response = requests.post(f"{BASE_URL}/register", data={
+            'username': 'testuser',
+            'password': 'testpassword'
+        })
+        self.assertEqual(response.status_code, 200)
 
-def save_message(message):
-    """Sends a message to the /saveMessage endpoint."""
-    payload = {"message": message}
-    response = requests.post(f"{BASE_URL}/saveMessage", json=payload, headers=HEADERS)
-    if response.status_code == 200:
-        print("Message saved successfully:", response.json())
-    else:
-        print("Failed to save message:", response.text)
+    @patch("requests.post")
+    def test_register_missing_username(self, mock_post):
+        """Tests the /register endpoint without a username."""
+        mock_post.return_value.status_code = 400
+        mock_post.return_value.text = "No username provided for register"
+        response = requests.post(f"{BASE_URL}/register", data={
+            'password': 'testpassword'
+        })
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("No username provided for register", response.text)
 
-def get_messages():
-    """Retrieves messages from the /getMessages endpoint."""
-    response = requests.get(f"{BASE_URL}/getMessages", headers=HEADERS)
-    if response.status_code == 200:
-        messages = response.json()
-        print("Retrieved messages:", messages)
-    else:
-        print("Failed to retrieve messages:", response.text)
+    @patch("requests.post")
+    def test_save_message_success(self, mock_post):
+        """Tests the /saveMessage endpoint with a valid message."""
+        mock_post.return_value.status_code = 200
+        mock_post.return_value.text = "Message saved successfully"
+        response = requests.post(f"{BASE_URL}/saveMessage", data={
+            'message': 'Hello World'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("Message saved successfully", response.text)
 
-# Test the API functions
+    @patch("requests.get")
+    def test_get_messages(self, mock_get):
+        """Tests the /getMessages endpoint."""
+        mock_get.return_value.status_code = 200
+        mock_get.return_value.json.return_value = [{"message": "Hello World"}]
+        response = requests.get(f"{BASE_URL}/getMessages")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json(), [{"message": "Hello World"}])
+
+
 if __name__ == "__main__":
-    username = "test_user"  # Replace with your test username
-    message = "Hello from the test script!"  # Replace with your test message
-
-    print("Testing login...")
-    login(username)
-
-    print("\nTesting saveMessage...")
-    save_message(message)
-
-    print("\nTesting getMessages...")
-    get_messages()
+    unittest.main()
