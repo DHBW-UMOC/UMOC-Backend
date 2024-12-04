@@ -195,4 +195,96 @@ Response:
     "error": "No sessionID provided for saveMessage"
 }
 ```
+---
 
+# WebSocket Interface Specification
+
+Base URL: `http://localhost:5000`
+
+## General Notes
+- **Protocol**: WebSocket using Socket.IO
+- **Connection Query Parameter**: `sessionID` (required for authentication)
+- **Prototype**: `test/testWebSockets.html`
+
+---
+
+## 1. Connect
+**Description**: Establish a connection to the WebSocket server.
+**Endpoint**: `connect`  
+**Query Parameters**:
+- `sessionID` (string, required): A valid session ID for the user.  
+  Example: `"00000000-0000-0000-1111-000000000001"`
+
+**Client Example**:
+```javascript
+const socket = io('http://localhost:5000', {
+    query: { sessionID: '00000000-0000-0000-1111-000000000001' }
+});
+```
+
+## 2. Disconnect
+**Event name:** `disconnect`
+**Description**: Just Disconnects the user from the WebSocket server.
+Parameters:
+- ```sessionID``` (string) ```"00000000-0000-0000-1111-000000000001"```: The session ID of the user.
+
+## 3. Send Message
+**Event name:** ```send_message```
+**Description:** Send a new message.
+Parameters: 
+- ```sessionID``` (string) ```"00000000-0000-0000-1111-000000000001"```: The session ID of the user.
+- ```recipientID``` (string) ```"00000000-0000-0000-0000-000000000002"```: The recipient's username.
+- ```content``` (string) ```"Hello, this is a test message."```: The content of the message.
+- ```type``` (string) ```"text"```: The type of the message.
+- ```is_group``` (boolean) ```false```: The message is a group message.
+
+Example:
+```js
+socket.emit('send_message', {
+    sessionID: '00000000-0000-0000-1111-000000000001',
+    recipient_id: '00000000-0000-0000-0000-000000000002',
+    content: 'Hello, this is a test message.',
+    type: 'text',
+    is_group: false
+});
+```
+
+4. Receive Message
+**Description:** Receive a new message.
+**Event name:** `new_message`
+**Data:**
+```json
+{
+    "message_id": "00000000-0000-0000-0000-000000000003",
+    "sender_id": "00000000-0000-0000-1111-000000000001",
+    "sender_username": "Alice",
+    "content": "Hello!",
+    "type": "text",
+    "timestamp": "2024-12-04T10:00:00.000Z",
+    "is_group": false
+}
+```
+Client Example:
+```js
+socket.on('new_message', (data) => {
+    console.log('New message received:', data);
+});
+```
+
+## 5. addContact
+**Event name:** ```add_contact```
+Parameters:
+- ```sessionID``` (string) ```"00000000-0000-0000-1111-000000000001"```: The session ID of the user.
+- ```contact_username``` (string) ```"Trump"```: The contact's username.
+
+Example:
+```js
+socket.emit('add_contact', {
+    sessionID: '00000000-0000-0000-1111-000000000001',
+    contact_username: 'Trump'
+});
+
+socket.on('contact_added', (data) => {
+    console.log('Contact added:', data);
+});
+```

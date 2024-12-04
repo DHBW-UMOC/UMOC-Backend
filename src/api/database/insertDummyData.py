@@ -135,14 +135,14 @@ def insert_example_data():
         continue_streak=True
     )
 
-    contact6 = UserContact(
-        user_id=user1.user_id,
-        contact_id=user5.user_id,
-        status=ContactStatusEnum.NEW,
-        time_out=None,
-        streak=0,
-        continue_streak=True
-    )
+    # contact6 = UserContact(
+    #     user_id=user1.user_id,
+    #     contact_id=user5.user_id,
+    #     status=ContactStatusEnum.NEW,
+    #     time_out=None,
+    #     streak=0,
+    #     continue_streak=True
+    # )
 
     contact7 = UserContact(
         user_id=user1.user_id,
@@ -428,7 +428,7 @@ def insert_example_data():
     # Add all to the session
     db.session.add_all(
         [user1, user2, user3, user4, user5, user6,
-        contact1, contact2, contact3, contact4, contact5, contact6, contact7, contact8, contact9,
+        contact1, contact2, contact3, contact4, contact5, contact7, contact8, contact9,
         message1, message2, message3, message4, message5, message6, message7, message8, message9, message10, message11, message12, message13, message14, message15, message16, message17, message18, message19, message20, message21, message22, message23])
 
     # Commit the session to save data
