@@ -12,20 +12,23 @@ from api.websockets import socketio
 
 def create_app():
     app = Flask(__name__)
-    
+
     # Load config
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
     app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///umoc.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     CORS(app, resources={r"/*": {"origins": "*"}},
+         supports_credentials=True,
          allow_headers=["Content-Type", "Authorization"])
     
     # Initialize extensions
     from api.database.databaseManager import init_db
     init_db(app)
     reset_database(app)  # IMPORTANT!!!
-    socketio.init_app(app)
+    socketio.init_app(app, cors_allowed_origins="*")
+
+
 
     # Insert dummy data
     with app.app_context():
@@ -43,7 +46,9 @@ if __name__ == '__main__':
     app = create_app()
     socketio.run(
         app,
+        host='0.0.0.0',
         port=int(os.getenv('PORT', 5000)),
         debug=os.getenv('DEBUG', 'True').lower() == 'true',
-        allow_unsafe_werkzeug=True
+        allow_unsafe_werkzeug=True,
+        # async_mode='gevent'
     )

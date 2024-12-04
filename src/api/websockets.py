@@ -7,30 +7,38 @@ from api.database.models import db, User, UserContact, Message, Group, GroupMemb
 from api.database.models import User
 
 socketio = SocketIO()
-active_sessions = {}  # {session_id: user_id}
 user_sids = {}  # {user_id: socket_id}
 
 
 def get_user_from_session(session_id):
     """Helper to get user from session ID"""
-    if session_id not in active_sessions:
-        return None
-    return User.query.filter_by(user_id=active_sessions[session_id]).first()
+    # if session_id not in active_sessions:
+    #     return None
+    return User.query.filter_by(session_id=session_id).first()
 
 
 ###########################
 ## WEBSOCKET ENDPOINTS
 ###########################
-@socketio.on('connect', namespace='/')
+@socketio.on('connect')
 def handle_connect():
     session_id = request.args.get('sessionID')
+    print(f"Connection attempt with session ID: {session_id}")  # Debug log
+
     if not session_id:
-        return False
+        print("Rejecting: Missing session ID")  # Debug log
+        return False  # Reject connection
+
+    # if session_id not in active_sessions:
+    #     print(f"Rejecting: Invalid session ID: {session_id}")  # Debug log
+    #     return False  # Reject connection
 
     user = get_user_from_session(session_id)
     if not user:
-        return False
+        print(f"Rejecting: No user found for session ID: {session_id}")  # Debug log
+        return False  # Reject connection
 
+    print(f"Accepting connection for user: {user.username}")  # Debug log
     user_sids[user.user_id] = request.sid
 
     user.is_online = True
@@ -53,11 +61,13 @@ def handle_connect():
                 'status': 'online'
             }, room=user_sids[contact.contact_id])
 
+    return True
+
 
 @socketio.on('disconnect', namespace='/')
 def handle_disconnect():
     session_id = request.args.get('sessionID')
-    if not session_id or session_id not in active_sessions:
+    if not session_id:
         return
 
     user = get_user_from_session(session_id)
