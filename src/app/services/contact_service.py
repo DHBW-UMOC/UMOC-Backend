@@ -86,4 +86,5 @@ class ContactService:
                     "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
                 })
         
+        # Return as a simple list - no need to wrap it here as the route will do that
         return contact_list

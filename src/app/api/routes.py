@@ -1,4 +1,6 @@
 from flask import Blueprint, request, jsonify
+from app.extensions import db
+from app.models.user import User, UserContact, ContactStatusEnum
 from app.services.user_service import UserService
 from app.services.message_service import MessageService
 from app.services.contact_service import ContactService
@@ -101,6 +103,9 @@ def get_contacts():
     if "error" in result:
         return jsonify(result), 400
     
+    # Add debug print
+    print(f"Returning contacts for session {session_id}: {result}")
+    
     return jsonify({"contacts": result})
 
 # Message routes
@@ -148,3 +153,32 @@ def save_message():
 @api_bp.route("/")
 def default():
     return "UMOC Backend API"
+
+# Debug endpoint
+@api_bp.route("/debugContacts", methods=['GET'])
+def debug_contacts():
+    session_id = request.args.get('sessionID')
+    
+    if not session_id:
+        return jsonify({"error": "No sessionID provided"}), 400
+    
+    user = User.query.filter_by(session_id=session_id).first()
+    if not user:
+        return jsonify({"error": "User not found", "session_id": session_id}), 400
+    
+    contacts = UserContact.query.filter_by(user_id=user.user_id).all()
+    
+    debug_info = {
+        "user_id": user.user_id,
+        "username": user.username,
+        "contact_count": len(contacts),
+        "contacts": [
+            {
+                "contact_id": c.contact_id,
+                "status": c.status.value,
+                "streak": c.streak
+            } for c in contacts
+        ]
+    }
+    
+    return jsonify(debug_info)

@@ -1,9 +1,8 @@
 {
     "python.testing.pytestArgs": [
-        "-v",
-        "--no-cov",
-        "--rootdir=${workspaceFolder}",
-        "test"
+        "test",
+        "-p",
+        "no:flask"
     ],
     "python.testing.unittestEnabled": false,
     "python.testing.pytestEnabled": true,
@@ -29,7 +28,6 @@
         "PYTHONPATH": "${workspaceFolder};${workspaceFolder}/src",
         "PYTHONSTARTUP": "${workspaceFolder}/vscode_pytest_bootstrap.py"
     },
-    "python.testing.pytestArgs": [
-        "--import-mode=importlib"
-    ]
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "autopep8"
 }
