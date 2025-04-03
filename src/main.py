@@ -1,54 +1,22 @@
 import os
+import sys
 
-from flask import Flask
-from flask_cors import CORS
+# Add src directory to path
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from api.database.databaseManager import reset_database
-from api.websockets import socketio
-
-
-# from dotenv import load_dotenv
-
-
-def create_app():
-    app = Flask(__name__)
-
-    # Load config
-    app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'your-secret-key')
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///umoc.db')
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-    CORS(app, resources={r"/*": {"origins": "*"}},
-         supports_credentials=True,
-         allow_headers=["Content-Type", "Authorization"])
-    
-    # Initialize extensions
-    from api.database.databaseManager import init_db
-    init_db(app)
-    reset_database(app)  # IMPORTANT!!!
-    socketio.init_app(app, cors_allowed_origins="*")
-
-
-
-    # Insert dummy data
-    with app.app_context():
-        from api.database.insertDummyData import insert_example_data
-        insert_example_data()
-    
-    # Register blueprints
-    from api.routes import endpointApp
-    app.register_blueprint(endpointApp)
-    
-    return app
-
+from app import create_app, reset_database
+from app.extensions import socketio
 
 if __name__ == '__main__':
     app = create_app()
+    
+    # Reset database for development (comment out for production)
+    reset_database(app)
+    
     socketio.run(
         app,
         host='0.0.0.0',
         port=int(os.getenv('PORT', 5000)),
         debug=os.getenv('DEBUG', 'True').lower() == 'true',
-        allow_unsafe_werkzeug=True,
-        # async_mode='gevent'
+        allow_unsafe_werkzeug=True
     )
