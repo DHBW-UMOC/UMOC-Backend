@@ -1,6 +1,6 @@
 # UMOC API Documentation
 
-Base URL: `http://localhost:5000`
+**Base URL**: `http://localhost:5000`
 
 ## Table of Contents
 - [Authentication Flow](#authentication-flow)
@@ -8,6 +8,7 @@ Base URL: `http://localhost:5000`
 - [WebSocket Interface](#websocket-interface-specification)
 - [Data Models](#data-models)
 - [Error Handling](#error-handling)
+- [Testing](#testing)
 
 ## Authentication Flow
 
@@ -16,7 +17,7 @@ Base URL: `http://localhost:5000`
 3. Include this `sessionID` in all subsequent API calls and WebSocket connections
 4. Use `/logout` to terminate a session
 
-**Session ID Format**: UUIDv4 string (e.g., `"{session_id}"`)
+**Session ID Format**: UUIDv4 string (e.g., `"550e8400-e29b-41d4-a716-446655440000"`)
 
 ## API Endpoints
 
@@ -28,8 +29,8 @@ Base URL: `http://localhost:5000`
 **Request Body**:
 ```json
 {
-    "username": "{username}",
-    "password": "{password}"
+    "username": "string",
+    "password": "string"
 }
 ```
 
@@ -37,7 +38,7 @@ Base URL: `http://localhost:5000`
 ```json
 {
     "success": "User registered successfully",
-    "user_id": "{user_id}"
+    "user_id": "string"
 }
 ```
 
@@ -69,18 +70,17 @@ Base URL: `http://localhost:5000`
 **Request Body**:
 ```json
 {
-    "username": "{username}",
-    "password": "{password}",
-    "public_key": "{public_key}"  // Optional
+    "username": "string",
+    "password": "string"
 }
 ```
 
 **Successful Response** (200 OK):
 ```json
 {
-    "success": "User logged in, session ID created",
-    "sessionID": "{session_id}",
-    "user_id": "{user_id}"
+    "success": "Login successful",
+    "sessionID": "string",
+    "user_id": "string"
 }
 ```
 
@@ -100,7 +100,7 @@ Base URL: `http://localhost:5000`
 - Invalid credentials (401 Unauthorized):
   ```json
   {
-      "error": "Invalid username or password"
+      "error": "Invalid credentials"
   }
   ```
 
@@ -112,14 +112,14 @@ Base URL: `http://localhost:5000`
 **Request Body**:
 ```json
 {
-    "sessionID": "{session_id}"
+    "sessionID": "string"
 }
 ```
 
 **Successful Response** (200 OK):
 ```json
 {
-    "success": "User logged out successfully"
+    "success": "Logout successful"
 }
 ```
 
@@ -145,8 +145,8 @@ Base URL: `http://localhost:5000`
 **Request Body**:
 ```json
 {
-    "sessionID": "{session_id}",
-    "contactID": "{contact_id}"
+    "sessionID": "string",
+    "contactID": "string"
 }
 ```
 
@@ -155,10 +155,12 @@ Base URL: `http://localhost:5000`
 {
     "success": "Contact added successfully",
     "contact": {
-        "contact_id": "{contact_id}",
-        "name": "{contact_username}",
+        "contact_id": "string",
+        "name": "string",
         "status": "new",
-        "url": "{profile_image_url}"
+        "streak": 0,
+        "url": "string",
+        "is_online": false
     }
 }
 ```
@@ -168,12 +170,6 @@ Base URL: `http://localhost:5000`
   ```json
   {
       "error": "No sessionID provided for addContact"
-  }
-  ```
-- Invalid sessionID (401 Unauthorized):
-  ```json
-  {
-      "error": "Invalid session ID"
   }
   ```
 - Missing contactID (400 Bad Request):
@@ -196,16 +192,16 @@ Base URL: `http://localhost:5000`
   ```
 
 ### 5. Change Contact Status
-**Endpoint**: `/changeContact`  
+**Endpoint**: `/changeContactStatus`  
 **Method**: `POST`  
 **Content-Type**: `application/json`
 
 **Request Body**:
 ```json
 {
-    "sessionID": "{session_id}",
-    "contact": "{contact_id}",
-    "status": "{status}"  // Possible values: "friend", "blocked", "new", "timeout", "last_words"
+    "sessionID": "string",
+    "contactID": "string",
+    "status": "friend|last_words|blocked|new|timeout"
 }
 ```
 
@@ -213,11 +209,7 @@ Base URL: `http://localhost:5000`
 ```json
 {
     "success": "Contact status changed successfully",
-    "contact": {
-        "contact_id": "{contact_id}",
-        "name": "{contact_username}",
-        "status": "{status}"
-    }
+    "newStatus": "string"
 }
 ```
 
@@ -225,13 +217,19 @@ Base URL: `http://localhost:5000`
 - Missing sessionID (400 Bad Request):
   ```json
   {
-      "error": "No sessionID provided for changeContact"
+      "error": "No sessionID provided for changeContactStatus"
   }
   ```
-- Missing contact (400 Bad Request):
+- Missing contactID (400 Bad Request):
   ```json
   {
-      "error": "No contact provided for changeContact"
+      "error": "No contactID provided for changeContactStatus"
+  }
+  ```
+- Missing status (400 Bad Request):
+  ```json
+  {
+      "error": "No status provided for changeContactStatus"
   }
   ```
 - Invalid status (400 Bad Request):
@@ -255,7 +253,7 @@ Base URL: `http://localhost:5000`
 
 **Example Request**:
 ```
-GET /getContacts?sessionID={session_id}
+GET /getContacts?sessionID=string
 ```
 
 **Successful Response** (200 OK):
@@ -263,19 +261,19 @@ GET /getContacts?sessionID={session_id}
 {
     "contacts": [
         {
-            "contact_id": "{contact_id_1}",
-            "name": "{contact_username_1}",
+            "contact_id": "string",
+            "name": "string",
             "status": "friend",
             "streak": 1,
-            "url": "{profile_image_url_1}",
+            "url": "string",
             "is_online": true
         },
         {
-            "contact_id": "{contact_id_2}",
-            "name": "{contact_username_2}",
+            "contact_id": "string",
+            "name": "string",
             "status": "new",
             "streak": 0,
-            "url": "{profile_image_url_2}",
+            "url": "string",
             "is_online": false
         }
     ]
@@ -301,11 +299,11 @@ GET /getContacts?sessionID={session_id}
 **Method**: `GET`  
 **Query Parameters**:
 - `sessionID` (string, required): The session ID of the user
-- `contactID` (string, required): The contact's user ID
+- `contactID` (string, required): The ID of the contact to retrieve messages from
 
 **Example Request**:
 ```
-GET /getContactMessages?sessionID={session_id}&contactID={contact_id}
+GET /getContactMessages?sessionID=string&contactID=string
 ```
 
 **Successful Response** (200 OK):
@@ -313,19 +311,13 @@ GET /getContactMessages?sessionID={session_id}&contactID={contact_id}
 {
     "messages": [
         {
-            "message_id": "{message_id_1}",
-            "content": "{message_content_1}",
+            "message_id": "string",
+            "sender_user_id": "string",
+            "recipient_user_id": "string",
+            "content": "string",
             "type": "text",
-            "send_at": "{timestamp_1}",
-            "sender_user_id": "{sender_id_1}",
-            "is_group": false
-        },
-        {
-            "message_id": "{message_id_2}",
-            "content": "{message_content_2}",
-            "type": "text",
-            "send_at": "{timestamp_2}",
-            "sender_user_id": "{sender_id_2}",
+            "send_at": "ISO datetime",
+            "updated_at": "ISO datetime",
             "is_group": false
         }
     ]
@@ -366,10 +358,10 @@ GET /getContactMessages?sessionID={session_id}&contactID={contact_id}
 **Request Body**:
 ```json
 {
-    "sessionID": "{session_id}",
-    "recipientID": "{recipient_id}",
-    "content": "{message_content}",
-    "type": "{message_type}",
+    "sessionID": "string",
+    "recipientID": "string",
+    "content": "string",
+    "type": "text|image|item",
     "is_group": false
 }
 ```
@@ -378,8 +370,7 @@ GET /getContactMessages?sessionID={session_id}&contactID={contact_id}
 ```json
 {
     "success": "Message saved successfully",
-    "message_id": "{message_id}",
-    "timestamp": "{timestamp}"
+    "message_id": "string"
 }
 ```
 
@@ -417,7 +408,7 @@ GET /getContactMessages?sessionID={session_id}&contactID={contact_id}
 
 ## WebSocket Interface Specification
 
-Base URL: `http://localhost:5000`
+**Base URL**: `http://localhost:5000`
 
 ### General Notes
 - **Protocol**: WebSocket using Socket.IO
@@ -434,12 +425,12 @@ Base URL: `http://localhost:5000`
 **Description**: Establish a connection to the WebSocket server.  
 **Query Parameters**:
 - `sessionID` (string, required): A valid session ID for the user.  
-  Example: `"{session_id}"`
+  Example: `"550e8400-e29b-41d4-a716-446655440000"`
 
 **Client Example**:
 ```javascript
 const socket = io('http://localhost:5000', {
-    query: { sessionID: '{session_id}' },
+    query: { sessionID: 'valid-session-id' },
     transports: ['websocket', 'polling']
 });
 
@@ -473,10 +464,10 @@ socket.on('disconnect', (reason) => {
 **Parameters**:
 ```javascript
 {
-    sessionID: "{session_id}",  // The session ID of the sender
-    recipient_id: "{recipient_id}",  // The recipient's user ID
-    content: "{message_content}",  // The content of the message
-    type: "{message_type}",  // Message type: "text", "image", or "item"
+    sessionID: "string",  // The session ID of the sender
+    recipient_id: "string",  // The recipient's user ID
+    content: "string",  // The content of the message
+    type: "text|image|item",  // Message type
     is_group: false  // Whether this is a group message
 }
 ```
@@ -484,36 +475,36 @@ socket.on('disconnect', (reason) => {
 **Client Example**:
 ```javascript
 socket.emit('send_message', {
-    sessionID: '{session_id}',
-    recipient_id: '{recipient_id}',
-    content: '{message_content}',
-    type: '{message_type}',
+    sessionID: 'valid-session-id',
+    recipient_id: 'recipient-user-id',
+    content: 'Hello, how are you?',
+    type: 'text',
     is_group: false
 });
 ```
 
 ### 4. Receive Message
 **Event name**: `new_message`  
-**Description**: Event fired when receiving a new message.
+**Description**: Event fired when a new message is received.
 
 **Data Structure**:
 ```javascript
 {
-    message_id: "{message_id}",  // Unique message ID
-    sender_id: "{sender_id}",  // Sender's user ID
-    sender_username: "{sender_username}",  // Sender's username
-    content: "{message_content}",  // Message content
-    type: "{message_type}",  // Message type: "text", "image", or "item"
-    timestamp: "{timestamp}",  // When the message was sent
-    is_group: false  // Whether this is a group message
+    message_id: "string",
+    sender_user_id: "string",
+    sender_username: "string",
+    content: "string",
+    type: "text|image|item",
+    timestamp: "ISO datetime",
+    is_group: false
 }
 ```
 
 **Client Example**:
 ```javascript
-socket.on('new_message', (data) => {
-    console.log('New message received:', data);
-    // Handle the new message (e.g., display it in the UI)
+socket.on('new_message', (message) => {
+    console.log('New message received:', message);
+    // Update UI with the new message
 });
 ```
 
@@ -524,16 +515,16 @@ socket.on('new_message', (data) => {
 **Parameters**:
 ```javascript
 {
-    sessionID: "{session_id}",  // The session ID of the user
-    contact_username: "{contact_username}"  // The username of the contact to add
+    sessionID: "string",  // The session ID of the user
+    contact_username: "string"  // The username of the contact to add
 }
 ```
 
 **Client Example**:
 ```javascript
 socket.emit('add_contact', {
-    sessionID: '{session_id}',
-    contact_username: '{contact_username}'
+    sessionID: 'valid-session-id',
+    contact_username: 'friend_username'
 });
 ```
 
@@ -546,10 +537,10 @@ socket.emit('add_contact', {
 {
     success: true,
     contact: {
-        contact_id: "{contact_id}",
-        name: "{contact_username}",
+        contact_id: "string",
+        name: "string",
         status: "new",
-        url: "{profile_image_url}",
+        url: "string",
         is_online: false
     }
 }
@@ -570,9 +561,9 @@ socket.on('contact_added', (data) => {
 **Data Structure**:
 ```javascript
 {
-    from_user_id: "{user_id}",
-    from_username: "{username}",
-    timestamp: "{timestamp}"
+    from_user_id: "string",
+    from_username: "string",
+    timestamp: "ISO datetime"
 }
 ```
 
@@ -591,10 +582,10 @@ socket.on('contact_request', (data) => {
 **Data Structure**:
 ```javascript
 {
-    user_id: "{user_id}",
-    username: "{username}",
+    user_id: "string",
+    username: "string",
     is_online: true,
-    last_seen: "{timestamp}"  // Only included when is_online is false
+    last_seen: "ISO datetime"  // Only included when is_online is false
 }
 ```
 
