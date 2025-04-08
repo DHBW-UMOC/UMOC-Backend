@@ -21,8 +21,8 @@ def create_app(config_class=Config):
     app.register_blueprint(api_bp)
     
     # Initialize WebSocket handlers
-    with app.app_context():
-        from app.websocket import socket_handlers
+    # with app.app_context():
+    #     from app.websocket import socket_handlers
     
     return app
 

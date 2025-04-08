@@ -119,11 +119,8 @@ def get_contact_messages():
     if not contact_id:
         return jsonify({"error": "No contact provided for getContactMessages"}), 400
     
-    result = message_service.get_messages_with_contact(session_id, contact_id)
-    if "error" in result:
-        return jsonify(result), 400
-    
-    return jsonify({"messages": result})
+    result, status_code = message_service.get_messages_with_contact(session_id, contact_id)
+    return jsonify(result), status_code
 
 @api_bp.route("/saveMessage", methods=["POST"])
 def save_message():

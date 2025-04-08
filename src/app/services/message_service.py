@@ -49,6 +49,60 @@ class MessageService:
         
         return {"message_id": message.message_id}
 
+    def get_messages_with_contact(self, session_id, contact_id):
+        """
+        Get messages between a user and their contact.
+        
+        Args:
+            session_id: The session ID of the user
+            contact_id: The ID of the contact
+            
+        Returns:
+            tuple: JSON response and status code
+        """
+        try:
+            # First, get the user from the session ID
+            user = User.query.filter_by(session_id=session_id).first()
+            if not user:
+                return {"error": "Invalid session ID"}, 400
+            
+            # Check if the contact exists
+            contact = User.query.get(contact_id)
+            if not contact:
+                return {"error": "Contact not found"}, 400
+            
+            # Query messages between the user and the contact (in both directions)
+            messages = Message.query.filter(
+                or_(
+                    and_(Message.sender_user_id == user.user_id, Message.recipient_user_id == contact_id),
+                    and_(Message.sender_user_id == contact_id, Message.recipient_user_id == user.user_id)
+                )
+            ).order_by(Message.send_at).all()
+            
+            # Format the messages for response
+            formatted_messages = []
+            for msg in messages:
+                # Get sender info
+                sender = User.query.get(msg.sender_user_id)
+                sender_username = sender.username if sender else "Unknown User"
+                
+                message_data = {
+                    'message_id': msg.message_id,
+                    'sender_user_id': msg.sender_user_id,  # Changed from 'sender_id' to 'sender_user_id'
+                    'sender_username': sender_username,
+                    'recipient_id': msg.recipient_user_id,
+                    'content': msg.encrypted_content,
+                    'type': msg.type.value if hasattr(msg.type, 'value') else 'text',
+                    'timestamp': msg.send_at.isoformat() if msg.send_at else None,
+                }
+                formatted_messages.append(message_data)
+            
+            return {"messages": formatted_messages}, 200
+            
+        except Exception as e:
+            db.session.rollback()
+            return {"error": str(e)}, 500
+
     def get_chat_messages(self, user_id, chat_id, is_group=False, page=1, page_size=20):
         """Get paginated messages for a chat."""
         try:
