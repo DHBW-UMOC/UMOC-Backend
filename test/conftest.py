@@ -1,7 +1,15 @@
+"""
+Master configuration file for tests - consolidates all fixtures and test configuration
+"""
 import os
 import sys
+import importlib
 import importlib.util
-import pytest  # Add this import!
+import pytest
+
+# ----------------------------------------------------------------------
+# Path and environment setup
+# ----------------------------------------------------------------------
 
 # Get the absolute paths
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
@@ -9,23 +17,54 @@ src_path = os.path.join(project_root, 'src')
 
 # Force-add paths at the beginning of sys.path
 if src_path in sys.path:
-    sys.path.remove(src_path)  # Remove if exists
-sys.path.insert(0, src_path)  # Add at the beginning
+    sys.path.remove(src_path)
+sys.path.insert(0, src_path)
 
 if project_root in sys.path:
-    sys.path.remove(project_root)  # Remove if exists
-sys.path.insert(0, project_root)  # Add at the beginning
+    sys.path.remove(project_root)
+sys.path.insert(0, project_root)
+
+# Set PYTHONPATH environment variable
+os.environ['PYTHONPATH'] = os.pathsep.join([project_root, src_path])
 
 print(f"Project root path: {project_root}")
 print(f"Source path: {src_path}")
-print(f"Current sys.path: {sys.path}")
+print(f"sys.path: {sys.path}")
 
-# Import test configuration - this should be available regardless of import path success
-from test.test_config import TEST_USERS
+# ----------------------------------------------------------------------
+# Test configuration constants
+# ----------------------------------------------------------------------
 
-# Manually create a module spec and import modules from absolute paths
-# This is a more reliable way to import modules when paths are problematic
+# Test database URI - use in-memory SQLite for tests
+TEST_DATABASE_URI = 'sqlite:///:memory:'
+
+# Test users
+TEST_USERS = {
+    'user1': {
+        'user_id': 'test-user-id-1',
+        'username': 'testuser1',
+        'password': 'password1',
+        'salt': 'test-salt',
+        'public_key': 'test-public-key'
+    },
+    'user2': {
+        'user_id': 'test-user-id-2',
+        'username': 'testuser2',
+        'password': 'password2',
+        'salt': 'test-salt',
+        'public_key': 'test-public-key'
+    }
+}
+
+# Test API endpoint base URL
+API_BASE_URL = 'http://127.0.0.1:5000'
+
+# ----------------------------------------------------------------------
+# Module imports
+# ----------------------------------------------------------------------
+
 def import_module_from_path(module_name, module_path):
+    """Helper function to import modules from absolute paths"""
     spec = importlib.util.spec_from_file_location(module_name, module_path)
     if spec is None:
         print(f"Could not find module {module_name} at {module_path}")
@@ -81,7 +120,10 @@ except ImportError as e:
         print(f"Manual import failed: {e}")
         raise
 
-# VS Code PyTest integration helper
+# ----------------------------------------------------------------------
+# Pytest configuration and fixtures
+# ----------------------------------------------------------------------
+
 def pytest_configure(config):
     """Register custom markers to avoid warnings in VS Code."""
     config.addinivalue_line("markers", "unit: mark a test as a unit test")
@@ -156,3 +198,69 @@ def db_session(app):
 def test_user_ids():
     """Return test user IDs from config for convenient access."""
     return {name: data['user_id'] for name, data in TEST_USERS.items()}
+
+# ----------------------------------------------------------------------
+# Contact fixtures
+# ----------------------------------------------------------------------
+
+@pytest.fixture
+def setup_contact(auth_client, app, test_user_ids):
+    """Set up a contact relationship between test users."""
+    client, session_id = auth_client
+    
+    # Add user2 as a contact for user1
+    client.post('/addContact', query_string={
+        'sessionID': session_id,
+        'contactID': test_user_ids['user2']
+    })
+    
+    # Return the client, session ID, and user IDs for convenience
+    return {
+        'client': client,
+        'session_id': session_id,
+        'user1_id': test_user_ids['user1'],
+        'user2_id': test_user_ids['user2']
+    }
+
+@pytest.fixture
+def setup_friend_contact(setup_contact, app):
+    """Set up a contact relationship with FRIEND status."""
+    client = setup_contact['client']
+    session_id = setup_contact['session_id']
+    user2_id = setup_contact['user2_id']
+    
+    # Change contact status to FRIEND
+    client.post('/changeContact', query_string={
+        'sessionID': session_id,
+        'contactID': user2_id,
+        'status': 'friend'
+    })
+    
+    return setup_contact
+
+# ----------------------------------------------------------------------
+# Message fixtures
+# ----------------------------------------------------------------------
+
+@pytest.fixture
+def send_test_message(setup_contact, app):
+    """Send a test message from user1 to user2."""
+    client = setup_contact['client']
+    session_id = setup_contact['session_id']
+    user2_id = setup_contact['user2_id']
+    
+    message_content = 'Hello, this is a test message'
+    
+    # Send a message
+    message_data = {
+        'sessionID': session_id,
+        'recipientID': user2_id,
+        'content': message_content
+    }
+    
+    response = client.post('/saveMessage', 
+                         json=message_data,
+                         content_type='application/json')
+    
+    setup_contact['message_content'] = message_content
+    return setup_contact
