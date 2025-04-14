@@ -62,5 +62,5 @@ jobs:
 
         - name: Build and Push Docker image
           run: |
-            docker build -t ghcr.io/DHBW-UMOC/UMOC-Backend:latest .  # Docker Image bauen
-            docker push ghcr.io/DHBW-UMOC/UMOC-Backend:latest  # Docker Image auf Registry pushen
+            docker build -t ghcr.io/max-rohrhirsch/umoc-backend:latest .  # Docker Image bauen
+            docker push ghcr.io/max-rohrhirsch/umoc-backend:latest  # Docker Image auf Registry pushen
