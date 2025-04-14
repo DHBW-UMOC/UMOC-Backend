@@ -62,5 +62,6 @@ jobs:
 
         - name: Build and Push Docker image
           run: |
+            echo "${{ secrets.DOCKER_PAD }}" | docker login ghcr.io -u max-rohrhirsch --password-stdin
             docker build -t ghcr.io/max-rohrhirsch/umoc-backend:latest .  # Docker Image bauen
             docker push ghcr.io/max-rohrhirsch/umoc-backend:latest  # Docker Image auf Registry pushen
