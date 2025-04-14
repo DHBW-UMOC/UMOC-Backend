@@ -8,6 +8,7 @@ from app.config import Config
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.config["JWT_SECRET_KEY"] = "INSANE TECHNICAL DEBT"
     
     # Initialize extensions
     db.init_app(app)

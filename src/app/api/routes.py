@@ -5,6 +5,11 @@ from app.services.user_service import UserService
 from app.services.message_service import MessageService
 from app.services.contact_service import ContactService
 
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
+
 api_bp = Blueprint('api', __name__)
 user_service = UserService()
 message_service = MessageService()
