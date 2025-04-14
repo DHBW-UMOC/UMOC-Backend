@@ -59,7 +59,7 @@ def insert_example_data():
                  password="password5", salt="salt5", created_at=datetime.now(),
                  session_id="00000000-0000-0000-1111-000000000005")
     
-    user6 = User(user_id="00000000-0000-0000-0000-000000000006", username="Pascal", 
+    user6 = User(user_id="00000000-0000-0000-0000-000000000006", username="Lucas", 
                  password="password6", salt="salt6", created_at=datetime.now(),
                  session_id="00000000-0000-0000-1111-000000000006")
 
