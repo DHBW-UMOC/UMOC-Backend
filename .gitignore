@@ -240,3 +240,5 @@ generated/
 *.prof
 *.lprof
 profile_results/
+
+.vscode
