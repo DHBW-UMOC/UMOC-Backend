@@ -45,8 +45,9 @@ jobs:
         export PYTHONPATH=${PYTHONPATH}:./src
         python -m pytest test/ --maxfail=5 --disable-warnings --cov=src
 
-  build:
+  publish:
     if: github.ref == 'refs/heads/main'
+    needs: build-and-test
     runs-on: ubuntu-latest
 
     steps:
