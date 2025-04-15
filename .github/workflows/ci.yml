@@ -55,7 +55,7 @@ jobs:
         fi
 
   build-and-test:
-    needs: lint
+    needs: check-code-quality
     runs-on: ubuntu-latest
 
     steps:
