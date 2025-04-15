@@ -23,15 +23,15 @@ def register():
     password = request.args.get('password')
     
     if not username:
-        return jsonify({"error": "No username provided for register"}), 400
+        return jsonify({"error": "Username is required"}), 400
     if not password:
-        return jsonify({"error": "No password provided for register"}), 400
+        return jsonify({"error": "Password is required"}), 400
     
     result = user_service.register_user(username, password)
     if "error" in result:
-        return jsonify(result), 400
+        return jsonify({"error": "Registration failed"}), 409  # Conflict for duplicate username
     
-    return jsonify({"success": "User registered successfully"})
+    return jsonify({"success": "User registered successfully"}), 201  # Created
 
 @api_bp.route("/login", methods=['GET'])
 def login():
@@ -39,18 +39,18 @@ def login():
     password = request.args.get('password')
     
     if not username:
-        return jsonify({"error": "No username provided for login"}), 400
+        return jsonify({"error": "Username is required"}), 400
     if not password:
-        return jsonify({"error": "No password provided for login"}), 400
+        return jsonify({"error": "Password is required"}), 400
     
     result = user_service.login_user(username, password)
     if "error" in result:
-        return jsonify(result), 400
+        return jsonify({"error": "Invalid credentials"}), 401  # Unauthorized
     
     access_token = create_access_token(identity=result["user_id"])
     expires_in = current_app.config["JWT_ACCESS_TOKEN_EXPIRES"].total_seconds()
 
-    return jsonify(access_token=access_token, expires_in=expires_in)
+    return jsonify(access_token=access_token, expires_in=expires_in), 200
 
 @api_bp.route("/logout", methods=['POST'])
 @jwt_required()
@@ -58,8 +58,8 @@ def logout():
     user_id = get_jwt_identity()
     result = user_service.logout_user_by_user_id(user_id)
     if "error" in result:
-        return jsonify(result), 400
-    return jsonify({"success": "User logged out successfully"})
+        return jsonify({"error": "Logout failed"}), 500  # Internal Server Error
+    return jsonify({"success": "User logged out successfully"}), 200
 
 # Contact management routes
 @api_bp.route("/addContact", methods=['POST'])
@@ -69,13 +69,13 @@ def add_contact():
     contact_id = request.args.get('contactID')
     
     if not contact_id:
-        return jsonify({"error": "No contact provided for addContact"}), 400
+        return jsonify({"error": "Contact ID is required"}), 400
     
     result = contact_service.add_contact_by_user_id(user_id, contact_id)
     if "error" in result:
-        return jsonify(result), 400
+        return jsonify({"error": "Failed to add contact"}), 500
     
-    return jsonify({"success": "Contact was added successfully"})
+    return jsonify({"success": "Contact was added successfully"}), 201
 
 @api_bp.route("/changeContact", methods=['POST'])
 @jwt_required()
@@ -85,15 +85,15 @@ def change_contact():
     status = request.args.get('status')
     
     if not contact_id:
-        return jsonify({"error": "No contact provided for changeContact"}), 400
+        return jsonify({"error": "Contact ID is required"}), 400
     if not status:
-        return jsonify({"error": "No status provided for changeContact"}), 400
+        return jsonify({"error": "Status is required"}), 400
     
     result = contact_service.change_contact_status_by_user_id(user_id, contact_id, status)
     if "error" in result:
-        return jsonify(result), 400
+        return jsonify({"error": "Failed to change contact status"}), 500
     
-    return jsonify({"success": "Contact status changed successfully"})
+    return jsonify({"success": "Contact status changed successfully"}), 200
 
 @api_bp.route("/getContacts", methods=['GET'])
 @jwt_required()
@@ -101,7 +101,7 @@ def get_contacts():
     user_id = get_jwt_identity()
     result = contact_service.get_user_contacts_by_user_id(user_id)
     if "error" in result:
-        return jsonify(result), 400
+        return jsonify(result), 500
     return jsonify({"contacts": result})
 
 # Message routes
