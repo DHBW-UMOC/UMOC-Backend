@@ -2,6 +2,7 @@ from datetime import datetime
 from sqlalchemy import or_, and_, func
 import uuid
 
+from src.app.extensions import db
 from src.app.models.message import Message, MessageRead, MessageTypeEnum
 from src.app.models.user import User
 from src.app.models.group import Group, GroupMember

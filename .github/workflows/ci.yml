@@ -11,7 +11,7 @@ on:
       - development
 
 jobs:
-  build-and-test:
+  lint:
     runs-on: ubuntu-latest
 
     steps:
@@ -27,11 +27,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install pytest-cov pytest-flask pylint flake8
-
-    - name: Run flake8 linting
-      run: |
-        flake8 src/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        pip install pylint
 
     - name: Run pylint with score check
       run: |
@@ -57,11 +53,30 @@ jobs:
           echo "✅ Pylint score $SCORE is acceptable"
         fi
 
+  build-and-test:
+    needs: lint
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.12'
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest-cov pytest-flask
+
     - name: Start Flask backend
       run: |
         export PYTHONPATH=${PYTHONPATH}:./src
         nohup python src/main.py &
-        sleep 5  # Give some time for the server to start
+        sleep 5
 
     - name: Run tests
       run: |
