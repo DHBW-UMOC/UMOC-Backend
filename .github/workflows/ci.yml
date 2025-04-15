@@ -44,24 +44,26 @@ jobs:
       run: |
         export PYTHONPATH=${PYTHONPATH}:./src
         python -m pytest test/ --maxfail=5 --disable-warnings --cov=src
+
   build:
-      runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
 
-      steps:
-        - name: Checkout code
-          uses: actions/checkout@v2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
 
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-        - name: Log in to Docker Hub (oder GitHub Container Registry)
-          uses: docker/login-action@v2
-          with:
-            username: ${{ secrets.DOCKER_USERNAME }}  # Docker Username (in den Secrets hinterlegt)
-            password: ${{ secrets.DOCKER_PASSWORD }}  # Docker Passwort (in den Secrets hinterlegt)
+      - name: Log in to Docker Hub (oder GitHub Container Registry)
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
 
-        - name: Build and Push Docker image
-          run: |
-            echo "${{ secrets.DOCKER_PAD }}" | docker login ghcr.io -u max-rohrhirsch --password-stdin
-            docker build -t ghcr.io/max-rohrhirsch/umoc-backend:latest .  # Docker Image bauen
-            docker push ghcr.io/max-rohrhirsch/umoc-backend:latest  # Docker Image auf Registry pushen
+      - name: Build and Push Docker image
+        run: |
+          echo "${{ secrets.DOCKER_PAD }}" | docker login ghcr.io -u max-rohrhirsch --password-stdin
+          docker build -t ghcr.io/max-rohrhirsch/umoc-backend:latest .
+          docker push ghcr.io/max-rohrhirsch/umoc-backend:latest
