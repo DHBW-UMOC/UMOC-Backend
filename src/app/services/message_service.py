@@ -11,12 +11,12 @@ from app.models.group import Group, GroupMember
 class MessageService:
     """Service to handle message-related operations."""
     
-    def save_message(self, session_id, recipient_id, content, is_group=False, message_type=MessageTypeEnum.TEXT):
+    def save_message(self, user_id, recipient_id, content, is_group=False, message_type=MessageTypeEnum.TEXT):
         """Save a new message to the database."""
         # First, get the sender user
-        user = User.query.filter_by(session_id=session_id).first()
+        user = User.query.filter_by(user_id=user_id).first()
         if not user:
-            return {"error": "Invalid session ID"}
+            return {"error": "Invalid user ID"}
         
         # Check if recipient exists
         if is_group:
@@ -45,26 +45,29 @@ class MessageService:
         )
         
         db.session.add(message)
-        db.session.commit()
-        
-        return {"message_id": message.message_id}
+        try:
+            db.session.commit()
+            return {"message_id": message.message_id}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"Database error: {str(e)}"}
 
-    def get_messages_with_contact(self, session_id, contact_id):
+    def get_messages_with_contact(self, user_id, contact_id):
         """
         Get messages between a user and their contact.
         
         Args:
-            session_id: The session ID of the user
+            user_id: The ID of the user
             contact_id: The ID of the contact
             
         Returns:
             tuple: JSON response and status code
         """
         try:
-            # First, get the user from the session ID
-            user = User.query.filter_by(session_id=session_id).first()
-            if not user:
-                return {"error": "Invalid session ID"}, 400
+            # First, get the user by user_id
+            spec_user = User.query.filter_by(user_id=user_id).first()  # Fixed query
+            if not spec_user:
+                return {"error": "Invalid user ID"}, 400
             
             # Check if the contact exists
             contact = User.query.get(contact_id)
@@ -74,8 +77,8 @@ class MessageService:
             # Query messages between the user and the contact (in both directions)
             messages = Message.query.filter(
                 or_(
-                    and_(Message.sender_user_id == user.user_id, Message.recipient_user_id == contact_id),
-                    and_(Message.sender_user_id == contact_id, Message.recipient_user_id == user.user_id)
+                    and_(Message.sender_user_id == spec_user.user_id, Message.recipient_user_id == contact_id),
+                    and_(Message.sender_user_id == contact_id, Message.recipient_user_id == spec_user.user_id)
                 )
             ).order_by(Message.send_at).all()
             
@@ -88,7 +91,7 @@ class MessageService:
                 
                 message_data = {
                     'message_id': msg.message_id,
-                    'sender_user_id': msg.sender_user_id,  # Changed from 'sender_id' to 'sender_user_id'
+                    'sender_user_id': msg.sender_user_id,
                     'sender_username': sender_username,
                     'recipient_id': msg.recipient_user_id,
                     'content': msg.encrypted_content,

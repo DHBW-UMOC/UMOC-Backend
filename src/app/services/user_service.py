@@ -59,6 +59,21 @@ class UserService:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
     
+    def logout_user_by_user_id(self, user_id):
+        user = User.query.filter_by(user_id=user_id).first()
+        if not user:
+            return {"error": "User not found"}
+        
+        user.session_id = None
+        user.is_online = False
+        
+        try:
+            db.session.commit()
+            return {"success": True}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"Database error: {str(e)}"}
+    
     def get_user_by_session(self, session_id):
         return User.query.filter_by(session_id=session_id).first()
     

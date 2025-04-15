@@ -5,9 +5,19 @@ from flask_cors import CORS
 from app.extensions import db, socketio
 from app.config import Config
 
+from flask_jwt_extended import JWTManager
+
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+
 def create_app(config_class=Config):
     app = Flask(__name__)
     app.config.from_object(config_class)
+    app.config["JWT_SECRET_KEY"] = "INSANE TECHNICAL DEBT"
+    app.config["JWT_ACCESS_TOKEN_EXPIRES"] = timedelta(days=1)
+
+    jwt = JWTManager(app)
     
     # Initialize extensions
     db.init_app(app)
