@@ -1,6 +1,6 @@
-from app.extensions import db
-from app.models.user import User, UserContact, ContactStatusEnum
-from app.services.user_service import UserService
+from src.app.extensions import db
+from src.app.models.user import User, UserContact, ContactStatusEnum
+from src.app.services.user_service import UserService
 
 class ContactService:
     def __init__(self):

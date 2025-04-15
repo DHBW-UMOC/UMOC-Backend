@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
-from app.extensions import db
-from app.models.user import User
+from src.app.extensions import db
+from src.app.models.user import User
 
 class UserService:
     def register_user(self, username, password, public_key=""):

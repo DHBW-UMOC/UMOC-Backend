@@ -1,6 +1,6 @@
 import enum
 from sqlalchemy import Enum
-from app.extensions import db
+from src.app.extensions import db
 
 class ItemTypeEnum(enum.Enum):
     MUTE = "mute"
