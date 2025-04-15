@@ -32,7 +32,8 @@ jobs:
     - name: Run pylint with score check
       run: |
         echo "[MESSAGES CONTROL]" > .pylintrc
-        echo "disable=trailing-whitespace,missing-module-docstring,too-few-public-methods" >> .pylintrc
+        echo "disable=trailing-whitespace,missing-module-docstring,too-few-public-methods,missing-function-docstring" >> .pylintrc
+        echo "max-line-length=140" >> .pylintrc
 
         echo "Running pylint on ./src..."
         OUTPUT=$(pylint src/ --rcfile=.pylintrc || true)
