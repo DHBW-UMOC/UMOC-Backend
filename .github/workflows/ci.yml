@@ -1,5 +1,15 @@
 name: CI Pipeline
 
+on:
+  push:
+    branches:
+      - main
+      - development
+  pull_request:
+    branches:
+      - main
+      - development
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
