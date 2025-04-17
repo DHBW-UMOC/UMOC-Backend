@@ -50,7 +50,7 @@ def login():
     access_token = create_access_token(identity=result["user_id"])
     expires_in = current_app.config["JWT_ACCESS_TOKEN_EXPIRES"].total_seconds()
 
-    return jsonify(access_token=access_token, expires_in=expires_in)
+    return jsonify(access_token=access_token, expires_in=expires_in, user_id=result["user_id"])
 
 @api_bp.route("/logout", methods=['POST'])
 @jwt_required()
