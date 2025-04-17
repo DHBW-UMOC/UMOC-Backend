@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import Enum, Column, String, ForeignKey, DateTime, Boolean
 from sqlalchemy.orm import relationship
-from app.extensions import db
+from src.app.extensions import db
 
 class MessageTypeEnum(enum.Enum):
     TEXT = "text"

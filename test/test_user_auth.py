@@ -1,107 +1,80 @@
-import json
 import pytest
-import sys
-import os
+from flask import Blueprint
 
-# Import from test's __init__ will set up the paths
-from test import setup_path
+from src.app.extensions import db
+from src.app.models.user import User
+from datetime import datetime
 
-from app.models.user import User
+from src.app.services.contact_service import ContactService
+from src.app.services.message_service import MessageService
+from src.app.services.user_service import UserService
 
-def test_register_user(client):
-    """Test user registration."""
-    # Test successful registration
-    response = client.post('/register', query_string={
-        'username': 'newuser',
-        'password': 'newpassword'
-    })
-    assert response.status_code == 200
-    assert b"User registered successfully" in response.data
-    
-    # Test registration with an existing username
-    response = client.post('/register', query_string={
-        'username': 'testuser1',  # This username already exists
-        'password': 'password'
-    })
-    assert response.status_code == 400
-    assert b"Username already exists" in response.data
-    
-    # Test registration with missing username
-    response = client.post('/register', query_string={
-        'password': 'password'
-    })
-    assert response.status_code == 400
-    assert b"No username provided for register" in response.data
-    
-    # Test registration with missing password
-    response = client.post('/register', query_string={
-        'username': 'user123'
-    })
-    assert response.status_code == 400
-    assert b"No password provided for register" in response.data
+###############################
+### SETUP INTEGRATION TESTS
+###############################
+app = Blueprint('api', __name__)
+user_service = UserService()
+message_service = MessageService()
+contact_service = ContactService()
 
-def test_login_user(client, app):
-    """Test user login."""
-    # Test successful login
-    response = client.get('/login', query_string={
-        'username': 'testuser1',
-        'password': 'password1'
-    })
-    assert response.status_code == 200
-    assert 'sessionID' in response.json
-    
-    # Test login with invalid credentials
-    response = client.get('/login', query_string={
-        'username': 'testuser1',
-        'password': 'wrongpassword'
-    })
-    assert response.status_code == 400
-    assert b"Invalid username or password" in response.data
-    
-    # Test login with missing username
-    response = client.get('/login', query_string={
-        'password': 'password1'
-    })
-    assert response.status_code == 400
-    assert b"No username provided for login" in response.data
-    
-    # Test login with missing password
-    response = client.get('/login', query_string={
-        'username': 'testuser1'
-    })
-    assert response.status_code == 400
-    assert b"No password provided for login" in response.data
-    
-    # Verify that the user is marked as online after login
-    with app.app_context():
-        user = User.query.filter_by(username='testuser1').first()
-        assert user.is_online is True
+# Testdaten
+USERNAME = "testuser"
+PASSWORD = "secure123"
+USER_ID = "user-id-123"
 
-def test_logout_user(auth_client, app):
-    """Test user logout."""
-    client, session_id = auth_client
-    
-    # Test successful logout
-    response = client.post('/logout', query_string={
-        'sessionID': session_id
-    })
-    assert response.status_code == 200
-    assert b"User logged out successfully" in response.data
-    
-    # Verify that the user is marked as offline after logout
-    with app.app_context():
-        user = User.query.filter_by(username='testuser1').first()
-        assert user.session_id is None
-        assert user.is_online is False
-    
-    # Test logout with invalid session ID
-    response = client.post('/logout', query_string={
-        'sessionID': 'invalid-session-id'
-    })
-    assert response.status_code == 400
-    assert b"Invalid session ID" in response.data
-    
-    # Test logout with missing session ID
-    response = client.post('/logout')
-    assert response.status_code == 400
-    assert b"No sessionID provided for logout" in response.data
+USERNAME2 = "testuser2"
+PASSWORD2 = "secure1234"
+USER_ID2 = "user-id-456"
+
+
+@pytest.fixture
+def client(app):
+    with app.test_client() as client:
+        # Beispiel-Daten
+        user = User(user_id=USER_ID, username=USERNAME, password=PASSWORD, salt="s", created_at=datetime.now())
+        db.session.add(user)
+        db.session.commit()
+        yield client
+        db.drop_all()
+
+
+###############################
+### SETUP INTEGRATION TESTS
+###############################
+
+# REGISTER
+def test_register_success(client):
+    res = client.post(f"/api/register?username={USERNAME2}&password={PASSWORD2}")
+    print(res)
+    assert res.status_code == 201
+
+
+def test_register_duplicate(client):
+    res = client.post(f"/api/register?username={USERNAME}&password={PASSWORD}")
+    assert res.status_code == 409
+
+
+# LOGIN
+def test_login_success(client):
+    res = client.get(f"/api/login?username={USERNAME}&password={PASSWORD}")
+    assert res.status_code == 200
+
+
+def test_login_invalid(client):
+    res = client.get(f"/api/login?username=wrong&password=wrong")
+    assert res.status_code == 401
+
+
+# LOGOUT
+def test_logout_success(mock_identity, mock_logout, client):
+    mock_identity.return_value = USER_ID
+    mock_logout.return_value = {}
+    res = client.post("/api/logout")
+    assert res.status_code == 200
+
+
+def test_logout_fail(mock_identity, mock_logout, client):
+    mock_identity.return_value = USER_ID
+    mock_logout.return_value = {"error": "fail"}
+    res = client.post("/api/logout")
+    assert res.status_code == 500

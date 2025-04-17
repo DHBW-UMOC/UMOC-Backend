@@ -1,6 +1,8 @@
-from app.extensions import db
-from app.models.user import User, UserContact, ContactStatusEnum
-from app.services.user_service import UserService
+from src.app.extensions import db
+from src.app.models.user import User, UserContact, ContactStatusEnum
+from src.app.services.user_service import UserService
+from src.app.utils.utils import commit_session
+
 
 class ContactService:
     def __init__(self):
@@ -33,12 +35,7 @@ class ContactService:
         )
         
         db.session.add(new_contact)
-        try:
-            db.session.commit()
-            return {"success": True}
-        except Exception as e:
-            db.session.rollback()
-            return {"error": f"Database error: {str(e)}"}
+        commit_session(db)
     
     def change_contact_status(self, session_id, contact_id, status_str):
         user = self.user_service.get_user_by_session(session_id)

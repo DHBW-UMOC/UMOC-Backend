@@ -2,10 +2,10 @@ from datetime import datetime
 from sqlalchemy import or_, and_, func
 import uuid
 
-from app.extensions import db
-from app.models.message import Message, MessageRead, MessageTypeEnum
-from app.models.user import User
-from app.models.group import Group, GroupMember
+from src.app.extensions import db
+from src.app.models.message import Message, MessageRead, MessageTypeEnum
+from src.app.models.user import User
+from src.app.models.group import Group, GroupMember
 
 
 class MessageService:

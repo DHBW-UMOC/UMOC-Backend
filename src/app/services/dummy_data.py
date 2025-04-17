@@ -1,8 +1,8 @@
 import uuid
 from datetime import datetime
-from app.extensions import db
-from app.models.user import User, UserContact, ContactStatusEnum
-from app.models.message import Message, MessageTypeEnum
+from src.app.extensions import db
+from src.app.models.user import User, UserContact, ContactStatusEnum
+from src.app.models.message import Message, MessageTypeEnum
 
 def insert_example_data():
     USER_UUID1 = "00000000-0000-0000-0000-000000000001"

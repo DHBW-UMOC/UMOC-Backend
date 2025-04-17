@@ -12,8 +12,8 @@ import os
 # Import from test's __init__ will set up the paths
 from test import setup_path
 
-from app.models.message import Message
-from app.extensions import db  # Import db directly
+from src.app.models.message import Message
+from src.app.extensions import db  # Import db directly
 
 def test_save_message(auth_client, app):
     """
