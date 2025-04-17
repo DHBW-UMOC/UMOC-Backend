@@ -8,7 +8,7 @@ class UserService:
         # Check if user already exists
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:
-            return {"error": "Username already exists"}
+            return {"error": "Username already exists"}  # Conflict
         
         # In a real application, password would be hashed with salt
         new_user = User(
@@ -25,12 +25,12 @@ class UserService:
             return {"success": True, "user_id": new_user.user_id}
         except Exception as e:
             db.session.rollback()
-            return {"error": f"Database error: {str(e)}"}
+            return {"error": "An unexpected error occurred during registration"}  # Internal error
     
     def login_user(self, username, password):
         user = User.query.filter_by(username=username, password=password).first()
         if not user:
-            return {"error": "Invalid username or password"}
+            return {"error": "Invalid username or password"}  # Unauthorized
         
         # Generate a new session ID
         session_id = str(uuid.uuid4())
@@ -42,12 +42,12 @@ class UserService:
             return {"success": True, "session_id": session_id, "user_id": user.user_id}
         except Exception as e:
             db.session.rollback()
-            return {"error": f"Database error: {str(e)}"}
+            return {"error": "An unexpected error occurred during login"}  # Internal error
     
     def logout_user(self, session_id):
         user = User.query.filter_by(session_id=session_id).first()
         if not user:
-            return {"error": "Invalid session ID"}
+            return {"error": "Session not found"}  # Not Found
         
         user.session_id = None
         user.is_online = False
@@ -57,12 +57,12 @@ class UserService:
             return {"success": True}
         except Exception as e:
             db.session.rollback()
-            return {"error": f"Database error: {str(e)}"}
+            return {"error": "An unexpected error occurred during logout"}  # Internal error
     
     def logout_user_by_user_id(self, user_id):
         user = User.query.filter_by(user_id=user_id).first()
         if not user:
-            return {"error": "User not found"}
+            return {"error": "User not found"}  # Not Found
         
         user.session_id = None
         user.is_online = False
@@ -72,7 +72,7 @@ class UserService:
             return {"success": True}
         except Exception as e:
             db.session.rollback()
-            return {"error": f"Database error: {str(e)}"}
+            return {"error": "An unexpected error occurred during logout"}  # Internal error
     
     def get_user_by_session(self, session_id):
         return User.query.filter_by(session_id=session_id).first()
