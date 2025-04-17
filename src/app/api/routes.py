@@ -127,7 +127,13 @@ def save_message():
 
     recipient_id = data.get("recipientID")
     content = data.get("content")
-    is_group = data.get("isGroup", "false").lower() == "true"  # Default to False if not provided
+    
+    # Handle isGroup that could be either a boolean or a string
+    is_group_value = data.get("isGroup", False)
+    if isinstance(is_group_value, bool):
+        is_group = is_group_value
+    else:
+        is_group = str(is_group_value).lower() == "true"
 
     if not recipient_id:
         return jsonify({"error": "No recipientID provided for saveMessage"}), 400
