@@ -9,6 +9,7 @@ from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
 from flask_jwt_extended import JWTManager
+import re
 
 api_bp = Blueprint('api', __name__)
 user_service = UserService()
@@ -26,10 +27,18 @@ def register():
         return jsonify({"error": "Username is required"}), 400
     if not password:
         return jsonify({"error": "Password is required"}), 400
+
+    if not re.match(r'^[a-zA-Z0-9._]+$', username):
+        return jsonify({"error": "Username can only contain letters, numbers, dots (.) and underscores (_)"}), 400
+    if len(username) < 3 or len(username) > 25:
+        return jsonify({"error": "Username must be between 3 and 20 characters long"}), 400
+
+    if len(password) < 4 or len(password) > 100:
+        return jsonify({"error": "Password must be between 4 and 100 characters long"}), 400
     
     result = user_service.register_user(username, password)
     if "error" in result:
-        return jsonify({"error": "Registration failed"}), 409  # Conflict for duplicate username
+        return jsonify({"error": "Username already exists."}), 409  # Conflict for duplicate username
     
     return jsonify({"success": "User registered successfully"}), 201  # Created
 

@@ -24,6 +24,9 @@ Register a new user account.
   - **Code**: 400
     - **Content**: `{"error": "Username is required"}`
     - **Content**: `{"error": "Password is required"}`
+    - **Content**: `{"error": "Username can only contain letters, numbers, dots (.) and underscores (_)"}`
+    - **Content**: `{"error": "Password must be between 4 and 100 characters long"}`
+    - **Content**: `{"error": "Username must be between 3 and 25 characters long"}`
   - **Code**: 409
     - **Content**: `{"error": "Username already exists"}`
   - **Code**: 500
