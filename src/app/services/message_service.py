@@ -1,6 +1,6 @@
 from datetime import datetime
-from sqlalchemy import or_, and_, func
 import uuid
+from sqlalchemy import or_, and_, func
 
 from app.extensions import db
 from app.models.message import Message, MessageRead, MessageTypeEnum

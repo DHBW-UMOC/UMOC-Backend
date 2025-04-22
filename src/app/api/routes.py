@@ -1,15 +1,12 @@
+import re
 from flask import Blueprint, current_app, request, jsonify
-from app.extensions import db
-from app.models.user import User, UserContact, ContactStatusEnum
-from app.services.user_service import UserService
-from app.services.message_service import MessageService
-from app.services.contact_service import ContactService
-
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
-import re
+from app.models.user import User, UserContact
+from app.services.user_service import UserService
+from app.services.message_service import MessageService
+from app.services.contact_service import ContactService
 
 api_bp = Blueprint('api', __name__)
 user_service = UserService()

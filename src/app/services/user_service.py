@@ -25,7 +25,7 @@ class UserService:
             return {"success": True, "user_id": new_user.user_id}
         except Exception as e:
             db.session.rollback()
-            return {"error": "An unexpected error occurred during registration"}  # Internal error
+            return {"error": f"An unexpected error occurred during registration: {e}"}  # Internal error
     
     def login_user(self, username, password):
         user = User.query.filter_by(username=username, password=password).first()
@@ -42,7 +42,7 @@ class UserService:
             return {"success": True, "session_id": session_id, "user_id": user.user_id}
         except Exception as e:
             db.session.rollback()
-            return {"error": "An unexpected error occurred during login"}  # Internal error
+            return {"error": f"An unexpected error occurred during login: {e}"}  # Internal error
     
     def logout_user(self, session_id):
         user = User.query.filter_by(session_id=session_id).first()
@@ -57,7 +57,7 @@ class UserService:
             return {"success": True}
         except Exception as e:
             db.session.rollback()
-            return {"error": "An unexpected error occurred during logout"}  # Internal error
+            return {"error": f"An unexpected error occurred during logout: {e}"}  # Internal error
     
     def logout_user_by_user_id(self, user_id):
         user = User.query.filter_by(user_id=user_id).first()
@@ -72,7 +72,7 @@ class UserService:
             return {"success": True}
         except Exception as e:
             db.session.rollback()
-            return {"error": "An unexpected error occurred during logout"}  # Internal error
+            return {"error": f"An unexpected error occurred during logout: {e}"}  # Internal error
     
     def get_user_by_session(self, session_id):
         return User.query.filter_by(session_id=session_id).first()
