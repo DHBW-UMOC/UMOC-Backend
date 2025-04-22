@@ -86,9 +86,9 @@ jobs:
 
   publish:
     if: github.ref == 'refs/heads/main'
-    # needs:
-      # - build-and-test
-      # - check-code-quality
+    needs:
+       - build-and-test
+       - check-code-quality
     runs-on: ubuntu-latest
 
     steps:
