@@ -66,7 +66,7 @@ def logout():
 @jwt_required()
 def add_contact():
     user_id = get_jwt_identity()
-    contact_id = request.args.get('contactID')
+    contact_id = request.args.get('contact_id')
     
     if not contact_id:
         return jsonify({"error": "Contact ID is required"}), 400
@@ -81,7 +81,7 @@ def add_contact():
 @jwt_required()
 def change_contact():
     user_id = get_jwt_identity()
-    contact_id = request.args.get('contactID')
+    contact_id = request.args.get('contact_id')
     status = request.args.get('status')
     
     if not contact_id:
@@ -108,7 +108,7 @@ def get_contacts():
 @api_bp.route("/getContactMessages", methods=['GET'])
 @jwt_required()
 def get_contact_messages():
-    contact_id = request.args.get('contactID')
+    contact_id = request.args.get('contact_id')
     user_id = get_jwt_identity()
 
     if not contact_id:
@@ -125,11 +125,11 @@ def save_message():
     # Support both JSON body and query parameters
     data = request.json if request.is_json else request.args
 
-    recipient_id = data.get("recipientID")
+    recipient_id = data.get("recipient_id")
     content = data.get("content")
     
     # Handle isGroup that could be either a boolean or a string
-    is_group_value = data.get("isGroup", False)
+    is_group_value = data.get("is_group", False)
     if isinstance(is_group_value, bool):
         is_group = is_group_value
     else:

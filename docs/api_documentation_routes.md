@@ -84,7 +84,7 @@ Add a new contact to a user's contact list.
 - **Request Body**:
   ```json
   {
-    "contactID": "contact_user_id"
+    "contact_id": "contact_user_id"
   }
   ```
 - **Success Response**:
@@ -107,7 +107,7 @@ Change the status of a contact.
 - **Request Body**:
   ```json
   {
-    "contactID": "contact_user_id",
+    "contact_id": "contact_user_id",
     "status": "new_status"
   }
   ```
@@ -167,7 +167,7 @@ Retrieve all messages between the authenticated user and a specific contact.
 - **Headers**:
   - `Authorization`: Bearer `<JWT access token>`
 - **Query Parameters**:
-  - `contactID`: ID of the contact
+  - `contact_id`: ID of the contact
 - **Success Response**:
   - **Code**: 200
   - **Content**: 
@@ -209,9 +209,9 @@ Save a new message.
 - **Request Body**:
   ```json
   {
-    "recipientID": "recipient_user_id",
+    "recipient_id": "recipient_user_id",
     "content": "message_content",
-    "isGroup": false
+    "is_group": false
   }
   ```
 - **Success Response**:
