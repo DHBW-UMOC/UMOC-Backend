@@ -131,12 +131,27 @@ Retrieve all contacts for the authenticated user.
   - `Authorization`: Bearer `<JWT access token>`
 - **Success Response**:
   - **Code**: 200
-  - **Content**:
-    ```json
-    {
-      "contacts": [contact_objects]
-    }
-    ```
+    - **Content**:
+        ```json
+        {
+          "contacts": [
+            {
+              "contact_id": "00000000-0000-0000-0000-000000000002",
+              "name": "Max Mustermann",
+              "status": "FRIEND",
+              "streak": null,
+              "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+            },
+            {
+              "contact_id": "00000000-0000-0000-0000-000000000003",
+              "name": "Angela Merkel",
+              "status": "NEW",
+              "streak": null,
+              "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+            }
+          ]
+      }
+      ```
 - **Error Response**:
   - **Code**: 500
     - **Content**: `{"error": "Failed to retrieve contacts"}`
@@ -155,7 +170,28 @@ Retrieve all messages between the authenticated user and a specific contact.
   - `contactID`: ID of the contact
 - **Success Response**:
   - **Code**: 200
-  - **Content**: Message objects
+  - **Content**: 
+    ```json
+    {
+      "contacts": [
+        {
+          "contact_id": "00000000-0000-0000-0000-000000000002",
+          "name": "Max Mustermann",
+          "status": "FRIEND",
+          "streak": null,
+          "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+        },
+        {
+          "contact_id": "00000000-0000-0000-0000-000000000003",
+          "name": "Angela Merkel",
+          "status": "NEW",
+          "streak": null,
+          "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+        }
+      ]
+    }
+    ```
+
 - **Error Response**:
   - **Code**: 400
     - **Content**: `{"error": "Contact ID is required"}`
