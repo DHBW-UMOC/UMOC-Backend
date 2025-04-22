@@ -24,6 +24,9 @@ Register a new user account.
   - **Code**: 400
     - **Content**: `{"error": "Username is required"}`
     - **Content**: `{"error": "Password is required"}`
+    - **Content**: `{"error": "Username can only contain letters, numbers, dots (.) and underscores (_)"}`
+    - **Content**: `{"error": "Password must be between 4 and 100 characters long"}`
+    - **Content**: `{"error": "Username must be between 3 and 25 characters long"}`
   - **Code**: 409
     - **Content**: `{"error": "Username already exists"}`
   - **Code**: 500
@@ -84,7 +87,7 @@ Add a new contact to a user's contact list.
 - **Request Body**:
   ```json
   {
-    "contactID": "contact_user_id"
+    "contact_name": "contact_name"
   }
   ```
 - **Success Response**:
@@ -92,9 +95,10 @@ Add a new contact to a user's contact list.
   - **Content**: `{"success": "Contact was added successfully"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Contact ID is required"}`
-  - **Code**: 500
-    - **Content**: `{"error": "Failed to add contact"}`
+    - **Content**: `{"error": "Contact name is required"}`
+    - **Content**: `{"error": "Contact already exists"}`
+    - **Content**: `{"error": "Contact not found.", "suggestions": ["contact_name", "contact_name2"]}`
+    - **Content**: `{"error": "Contact not found."}`
 
 ### Change Contact Status
 
@@ -107,7 +111,7 @@ Change the status of a contact.
 - **Request Body**:
   ```json
   {
-    "contactID": "contact_user_id",
+    "contact_id": "contact_user_id",
     "status": "new_status"
   }
   ```
@@ -131,12 +135,27 @@ Retrieve all contacts for the authenticated user.
   - `Authorization`: Bearer `<JWT access token>`
 - **Success Response**:
   - **Code**: 200
-  - **Content**:
-    ```json
-    {
-      "contacts": [contact_objects]
-    }
-    ```
+    - **Content**:
+        ```json
+        {
+          "contacts": [
+            {
+              "contact_id": "00000000-0000-0000-0000-000000000002",
+              "name": "Max Mustermann",
+              "status": "FRIEND",
+              "streak": null,
+              "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+            },
+            {
+              "contact_id": "00000000-0000-0000-0000-000000000003",
+              "name": "Angela Merkel",
+              "status": "NEW",
+              "streak": null,
+              "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+            }
+          ]
+      }
+      ```
 - **Error Response**:
   - **Code**: 500
     - **Content**: `{"error": "Failed to retrieve contacts"}`
@@ -152,10 +171,31 @@ Retrieve all messages between the authenticated user and a specific contact.
 - **Headers**:
   - `Authorization`: Bearer `<JWT access token>`
 - **Query Parameters**:
-  - `contactID`: ID of the contact
+  - `contact_id`: ID of the contact
 - **Success Response**:
   - **Code**: 200
-  - **Content**: Message objects
+  - **Content**: 
+    ```json
+    {
+      "contacts": [
+        {
+          "contact_id": "00000000-0000-0000-0000-000000000002",
+          "name": "Max Mustermann",
+          "status": "FRIEND",
+          "streak": null,
+          "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+        },
+        {
+          "contact_id": "00000000-0000-0000-0000-000000000003",
+          "name": "Angela Merkel",
+          "status": "NEW",
+          "streak": null,
+          "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+        }
+      ]
+    }
+    ```
+
 - **Error Response**:
   - **Code**: 400
     - **Content**: `{"error": "Contact ID is required"}`
@@ -173,9 +213,9 @@ Save a new message.
 - **Request Body**:
   ```json
   {
-    "recipientID": "recipient_user_id",
+    "recipient_id": "recipient_user_id",
     "content": "message_content",
-    "isGroup": false
+    "is_group": false
   }
   ```
 - **Success Response**:

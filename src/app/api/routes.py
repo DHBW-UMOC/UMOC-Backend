@@ -1,14 +1,12 @@
+import re
 from flask import Blueprint, current_app, request, jsonify
-from app.extensions import db
-from app.models.user import User, UserContact, ContactStatusEnum
-from app.services.user_service import UserService
-from app.services.message_service import MessageService
-from app.services.contact_service import ContactService
-
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from flask_jwt_extended import JWTManager
+from app.models.user import User, UserContact
+from app.services.user_service import UserService
+from app.services.message_service import MessageService
+from app.services.contact_service import ContactService
 
 api_bp = Blueprint('api', __name__)
 user_service = UserService()
@@ -26,10 +24,18 @@ def register():
         return jsonify({"error": "Username is required"}), 400
     if not password:
         return jsonify({"error": "Password is required"}), 400
+
+    if not re.match(r'^[a-zA-Z0-9._]+$', username):
+        return jsonify({"error": "Username can only contain letters, numbers, dots (.) and underscores (_)"}), 400
+    if len(username) < 3 or len(username) > 25:
+        return jsonify({"error": "Username must be between 3 and 20 characters long"}), 400
+
+    if len(password) < 4 or len(password) > 100:
+        return jsonify({"error": "Password must be between 4 and 100 characters long"}), 400
     
     result = user_service.register_user(username, password)
     if "error" in result:
-        return jsonify({"error": "Registration failed"}), 409  # Conflict for duplicate username
+        return jsonify({"error": "Username already exists."}), 409  # Conflict for duplicate username
     
     return jsonify({"success": "User registered successfully"}), 201  # Created
 
@@ -66,14 +72,14 @@ def logout():
 @jwt_required()
 def add_contact():
     user_id = get_jwt_identity()
-    contact_id = request.args.get('contactID')
+    contact_name = request.args.get('contact_name')
     
-    if not contact_id:
-        return jsonify({"error": "Contact ID is required"}), 400
+    if not contact_name:
+        return jsonify({"error": "Contact name is required"}), 400
     
-    result = contact_service.add_contact_by_user_id(user_id, contact_id)
+    result = contact_service.add_contact_by_name(user_id, contact_name)
     if "error" in result:
-        return jsonify({"error": "Failed to add contact"}), 500
+        return jsonify(result), 400
     
     return jsonify({"success": "Contact was added successfully"}), 201
 
@@ -81,7 +87,7 @@ def add_contact():
 @jwt_required()
 def change_contact():
     user_id = get_jwt_identity()
-    contact_id = request.args.get('contactID')
+    contact_id = request.args.get('contact_id')
     status = request.args.get('status')
     
     if not contact_id:
@@ -108,7 +114,7 @@ def get_contacts():
 @api_bp.route("/getContactMessages", methods=['GET'])
 @jwt_required()
 def get_contact_messages():
-    contact_id = request.args.get('contactID')
+    contact_id = request.args.get('contact_id')
     user_id = get_jwt_identity()
 
     if not contact_id:
@@ -125,11 +131,11 @@ def save_message():
     # Support both JSON body and query parameters
     data = request.json if request.is_json else request.args
 
-    recipient_id = data.get("recipientID")
+    recipient_id = data.get("recipient_id")
     content = data.get("content")
     
     # Handle isGroup that could be either a boolean or a string
-    is_group_value = data.get("isGroup", False)
+    is_group_value = data.get("is_group", False)
     if isinstance(is_group_value, bool):
         is_group = is_group_value
     else:

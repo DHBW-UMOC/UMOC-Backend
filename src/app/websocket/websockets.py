@@ -1,8 +1,8 @@
-from flask import request
-from flask_socketio import SocketIO, emit, join_room, leave_room
 from datetime import datetime
 import uuid
-from app.models import db, User, UserContact, Message, Group, GroupMember, ContactStatusEnum, MessageTypeEnum
+from flask import request
+from flask_socketio import SocketIO, emit, join_room
+from app.models import db, User, UserContact, Message, ContactStatusEnum, MessageTypeEnum
 
 socketio = SocketIO()
 user_sids = {}  # {user_id: socket_id}
