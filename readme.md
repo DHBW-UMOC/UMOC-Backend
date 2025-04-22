@@ -9,7 +9,7 @@ pip freeze > requirements.txt
 - Other dependencies (listed in requirements.txt)
 
 # Installation
-```
+```bash
 git clone https://github.com/UMOC/UMOC-Backend.git
 cd UMOC-Backend
 pip install -r requirements.txt
@@ -18,8 +18,13 @@ pip install -r requirements.txt
 # Usage
 
 Run the main.py file. Maybe sync the packages first.
-```py
-python main.py
+```bash
+python src/main.py
+```
+or
+```bash
+docker build -t umoc-backend .
+docker run -d -p 5000:5000 umoc-backend
 ```
 The server will be running on http://127.0.0.1:5000
 

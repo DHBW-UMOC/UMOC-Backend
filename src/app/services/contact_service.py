@@ -1,6 +1,7 @@
 from app.extensions import db
 from app.models.user import User, UserContact, ContactStatusEnum
 from app.services.user_service import UserService
+from sqlalchemy import func
 
 class ContactService:
     def __init__(self):
@@ -88,24 +89,33 @@ class ContactService:
         
         return contact_list
 
-    def add_contact_by_user_id(self, user_id, contact_id):
+    def add_contact_by_name(self, user_id, contact_name):
         user = self.user_service.get_user_by_id(user_id)
         if not user:
             return {"error": "User not found"}
-        
-        contact = self.user_service.get_user_by_id(contact_id)
+
+        contact = self.user_service.get_user_by_username(contact_name)
         if not contact:
-            return {"error": "Contact not found"}
-        
+            # Using Levenshtein distance (if your DB supports it)
+            similar_users = User.query.order_by(
+                func.levenshtein(User.username, contact_name)
+            ).limit(5).all()
+
+            suggestions = [u.username for u in similar_users
+                           if u.user_id != user.user_id and func.levenshtein(u.username, contact_name) <= 3]
+            if suggestions:
+                return {"error": "Contact not found.", "suggestions": suggestions}
+            return {"error": "Contact not found."}
+
         # Check if contact already exists
         existing_contact = UserContact.query.filter_by(
-            user_id=user.user_id, 
+            user_id=user.user_id,
             contact_id=contact.user_id
         ).first()
-        
+
         if existing_contact:
             return {"error": "Contact already exists"}
-        
+
         new_contact = UserContact(
             user_id=user.user_id,
             contact_id=contact.user_id,
@@ -113,7 +123,7 @@ class ContactService:
             streak=0,
             continue_streak=True
         )
-        
+
         db.session.add(new_contact)
         try:
             db.session.commit()

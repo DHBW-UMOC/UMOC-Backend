@@ -75,14 +75,14 @@ def logout():
 @jwt_required()
 def add_contact():
     user_id = get_jwt_identity()
-    contact_id = request.args.get('contact_id')
+    contact_name = request.args.get('contact_name')
     
-    if not contact_id:
-        return jsonify({"error": "Contact ID is required"}), 400
+    if not contact_name:
+        return jsonify({"error": "Contact name is required"}), 400
     
-    result = contact_service.add_contact_by_user_id(user_id, contact_id)
+    result = contact_service.add_contact_by_name(user_id, contact_name)
     if "error" in result:
-        return jsonify({"error": "Failed to add contact"}), 500
+        return jsonify(result), 400
     
     return jsonify({"success": "Contact was added successfully"}), 201
 

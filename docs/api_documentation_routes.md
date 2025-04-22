@@ -87,7 +87,7 @@ Add a new contact to a user's contact list.
 - **Request Body**:
   ```json
   {
-    "contact_id": "contact_user_id"
+    "contact_name": "contact_name"
   }
   ```
 - **Success Response**:
@@ -95,9 +95,10 @@ Add a new contact to a user's contact list.
   - **Content**: `{"success": "Contact was added successfully"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Contact ID is required"}`
-  - **Code**: 500
-    - **Content**: `{"error": "Failed to add contact"}`
+    - **Content**: `{"error": "Contact name is required"}`
+    - **Content**: `{"error": "Contact already exists"}`
+    - **Content**: `{"error": "Contact not found.", "suggestions": ["contact_name", "contact_name2"]}`
+    - **Content**: `{"error": "Contact not found."}`
 
 ### Change Contact Status
 
