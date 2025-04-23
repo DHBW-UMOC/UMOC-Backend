@@ -140,18 +140,18 @@ Retrieve all contacts for the authenticated user.
         {
           "contacts": [
             {
-              "contact_id": "00000000-0000-0000-0000-000000000002",
-              "name": "Max Mustermann",
-              "status": "FRIEND",
-              "streak": null,
-              "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+              "contact_id": "00000000-0000-0000-0000-000000000000",
+              "name": "String",
+              "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS",
+              "streak": "int | null",
+              "url": "Link to JPG"
             },
             {
-              "contact_id": "00000000-0000-0000-0000-000000000003",
-              "name": "Angela Merkel",
-              "status": "NEW",
-              "streak": null,
-              "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+              "contact_id": "00000000-0000-0000-0000-000000000000",
+              "name": "String",
+              "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS",
+              "streak": "int | null",
+              "url": "Link to JPG"
             }
           ]
       }
@@ -177,21 +177,25 @@ Retrieve all messages between the authenticated user and a specific contact.
   - **Content**: 
     ```json
     {
-      "contacts": [
-        {
-          "contact_id": "00000000-0000-0000-0000-000000000002",
-          "name": "Max Mustermann",
-          "status": "FRIEND",
-          "streak": null,
-          "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
-        },
-        {
-          "contact_id": "00000000-0000-0000-0000-000000000003",
-          "name": "Angela Merkel",
-          "status": "NEW",
-          "streak": null,
-          "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
-        }
+      "messages":[
+          {
+            "content":"String",
+            "message_id":"00000000-0000-0000-0000-000000000000",
+            "recipient_id":"00000000-0000-0000-0000-000000000000",
+            "sender_user_id":"00000000-0000-0000-0000-000000000000",
+            "sender_username":"String",
+            "timestamp":"0000-00-00T00:00:00.000000",
+            "type":"TEXT | IMAGE | ITEM | LOCATION | AUDIO | VIDEO"
+          },
+          {
+            "content":"String",
+            "message_id":"00000000-0000-0000-0000-000000000000",
+            "recipient_id":"00000000-0000-0000-0000-000000000000",
+            "sender_user_id":"00000000-0000-0000-0000-000000000000",
+            "sender_username":"String",
+            "timestamp":"0000-00-00T00:00:00.000000",
+            "type":"TEXT | IMAGE | ITEM | LOCATION | AUDIO | VIDEO"
+          }
       ]
     }
     ```
