@@ -116,12 +116,13 @@ def get_contacts():
 @jwt_required()
 def get_contact_messages():
     contact_id = request.args.get('contact_id')
+    page = request.args.get('page', type=int)
     user_id = get_jwt_identity()
 
     if not contact_id:
         return jsonify({"error": "No contactID provided for getContactMessages"}), 400
     
-    result, status_code = message_service.get_messages_with_contact(user_id, contact_id)
+    result, status_code = message_service.get_messages_with_contact(user_id, contact_id, page)
     return jsonify(result), status_code
 
 @api_bp.route("/saveMessage", methods=["POST"])
