@@ -52,43 +52,52 @@ class MessageService:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
 
-    def get_messages_with_contact(self, user_id, contact_id):
+    def get_messages_with_contact(self, user_id, contact_id, page=None):
         """
         Get messages between a user and their contact.
-        
+
         Args:
             user_id: The ID of the user
             contact_id: The ID of the contact
-            
+            page: Optional. Page number for pagination (default: None, returns all messages)
+
         Returns:
             tuple: JSON response and status code
         """
         try:
             # First, get the user by user_id
-            spec_user = User.query.filter_by(user_id=user_id).first()  # Fixed query
+            spec_user = User.query.filter_by(user_id=user_id).first()
             if not spec_user:
                 return {"error": "Invalid user ID"}, 400
-            
+
             # Check if the contact exists
             contact = User.query.get(contact_id)
             if not contact:
                 return {"error": "Contact not found"}, 400
-            
+
             # Query messages between the user and the contact (in both directions)
-            messages = Message.query.filter(
+            base_query = Message.query.filter(
                 or_(
                     and_(Message.sender_user_id == spec_user.user_id, Message.recipient_user_id == contact_id),
                     and_(Message.sender_user_id == contact_id, Message.recipient_user_id == spec_user.user_id)
                 )
-            ).order_by(Message.send_at).all()
-            
+            ).order_by(Message.send_at)
+
+            # Pagination logic
+            if page is not None:
+                page = int(page)
+                per_page = 20
+                messages = base_query.limit(per_page).offset((page - 1) * per_page).all()
+            else:
+                messages = base_query.all()
+
             # Format the messages for response
             formatted_messages = []
             for msg in messages:
                 # Get sender info
                 sender = User.query.get(msg.sender_user_id)
                 sender_username = sender.username if sender else "Unknown User"
-                
+
                 message_data = {
                     'message_id': msg.message_id,
                     'sender_user_id': msg.sender_user_id,
@@ -99,9 +108,9 @@ class MessageService:
                     'timestamp': msg.send_at.isoformat() if msg.send_at else None,
                 }
                 formatted_messages.append(message_data)
-            
+
             return {"messages": formatted_messages}, 200
-            
+
         except Exception as e:
             db.session.rollback()
             return {"error": str(e)}, 500
