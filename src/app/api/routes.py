@@ -19,6 +19,7 @@ contact_service = ContactService()
 def register():
     username = request.args.get('username')
     password = request.args.get('password')
+    profile_pic = request.args.get('profile_pic')
     
     if not username:
         return jsonify({"error": "Username is required"}), 400
@@ -33,7 +34,7 @@ def register():
     if len(password) < 4 or len(password) > 100:
         return jsonify({"error": "Password must be between 4 and 100 characters long"}), 400
     
-    result = user_service.register_user(username, password)
+    result = user_service.register_user(username, password, profile_pic)
     if "error" in result:
         return jsonify({"error": "Username already exists."}), 409  # Conflict for duplicate username
     

@@ -17,6 +17,7 @@ class User(db.Model):
     user_id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     username = db.Column(db.String, nullable=False, unique=True)
     password = db.Column(db.String, nullable=False)
+    profile_picture = db.Column(db.String, default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
     salt = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     session_id = db.Column(db.String)
@@ -28,6 +29,7 @@ class User(db.Model):
         return {
             'user_id': self.user_id,
             'username': self.username,
+            'profile_picture': self.profile_picture,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'is_online': self.is_online
         }
@@ -51,5 +53,5 @@ class UserContact(db.Model):
             'name': self.contact.username if self.contact else None,
             'status': self.status.value,
             'streak': self.streak,
-            'url': "https://static.spektrum.de/fm/912/f2000/205090.jpg"  # Default avatar URL
+            'profile_picture': self.user.profile_picture
         }

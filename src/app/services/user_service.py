@@ -4,7 +4,7 @@ from app.extensions import db
 from app.models.user import User
 
 class UserService:
-    def register_user(self, username, password, public_key=""):
+    def register_user(self, username, password, profile_pic, public_key=""):
         # Check if user already exists
         existing_user = User.query.filter_by(username=username).first()
         if existing_user:

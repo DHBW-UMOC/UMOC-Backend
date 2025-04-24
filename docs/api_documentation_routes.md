@@ -17,6 +17,7 @@ Register a new user account.
 - **URL Parameters**:
   - `username`: User's desired username
   - `password`: User's password
+  - `profile_picture`: URL to the user's profile picture (optional)
 - **Success Response**:
   - **Code**: 201
   - **Content**: `{"success": "User registered successfully"}`
