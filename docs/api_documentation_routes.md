@@ -17,6 +17,7 @@ Register a new user account.
 - **URL Parameters**:
   - `username`: User's desired username
   - `password`: User's password
+  - `profile_picture`: URL to the user's profile picture (optional)
 - **Success Response**:
   - **Code**: 201
   - **Content**: `{"success": "User registered successfully"}`
@@ -172,6 +173,7 @@ Retrieve all messages between the authenticated user and a specific contact.
   - `Authorization`: Bearer `<JWT access token>`
 - **Query Parameters**:
   - `contact_id`: ID of the contact
+  - `page`: Page number for pagination (optional; Page=20 messages); Bei None bekommt man alle Messages.
 - **Success Response**:
   - **Code**: 200
   - **Content**: 

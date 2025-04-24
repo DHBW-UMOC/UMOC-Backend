@@ -3,10 +3,11 @@ from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from app.models.user import User, UserContact
+from app.models.user import User, UserContact, ContactStatusEnum
 from app.services.user_service import UserService
 from app.services.message_service import MessageService
 from app.services.contact_service import ContactService
+from app.extensions import db
 
 api_bp = Blueprint('api', __name__)
 user_service = UserService()
@@ -19,6 +20,7 @@ contact_service = ContactService()
 def register():
     username = request.args.get('username')
     password = request.args.get('password')
+    profile_pic = request.args.get('profile_pic')
     
     if not username:
         return jsonify({"error": "Username is required"}), 400
@@ -33,7 +35,7 @@ def register():
     if len(password) < 4 or len(password) > 100:
         return jsonify({"error": "Password must be between 4 and 100 characters long"}), 400
     
-    result = user_service.register_user(username, password)
+    result = user_service.register_user(username, password, profile_pic)
     if "error" in result:
         return jsonify({"error": "Username already exists."}), 409  # Conflict for duplicate username
     
@@ -115,12 +117,13 @@ def get_contacts():
 @jwt_required()
 def get_contact_messages():
     contact_id = request.args.get('contact_id')
+    page = request.args.get('page', type=int)
     user_id = get_jwt_identity()
 
     if not contact_id:
         return jsonify({"error": "No contactID provided for getContactMessages"}), 400
     
-    result, status_code = message_service.get_messages_with_contact(user_id, contact_id)
+    result, status_code = message_service.get_messages_with_contact(user_id, contact_id, page)
     return jsonify(result), status_code
 
 @api_bp.route("/saveMessage", methods=["POST"])
@@ -149,6 +152,23 @@ def save_message():
     result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
     if "error" in result:
         return jsonify(result), 400
+
+    # Kontakte automatisch hinzufügen (beidseitig)
+    for uid, cid in [(user_id, recipient_id), (recipient_id, user_id)]:
+        exists = UserContact.query.filter_by(user_id=uid, contact_id=cid).first()
+        if not exists:
+            db.session.add(UserContact(
+                user_id=uid,
+                contact_id=cid,
+                status=ContactStatusEnum.NEW,
+                streak=0,
+                continue_streak=True
+            ))
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Contact add failed: {str(e)}"}), 500
 
     return jsonify({"success": "Message saved successfully", "message_id": result["message_id"]})
 
