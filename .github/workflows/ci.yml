@@ -73,16 +73,19 @@ jobs:
         pip install -r requirements.txt
         pip install pytest-cov pytest-flask
 
-    - name: Start Flask backend
+    - name: Setup Python path
       run: |
-        export PYTHONPATH=${PYTHONPATH}:./src
-        nohup python src/main.py &
-        sleep 5
+        echo "PYTHONPATH=${PYTHONPATH}:$(pwd):$(pwd)/src" >> $GITHUB_ENV
 
-    - name: Run tests
+    - name: Verify compatibility patch 
       run: |
-        export PYTHONPATH=${PYTHONPATH}:./src
-        python -m pytest test/ --maxfail=5 --disable-warnings --cov=src
+        python -c "import sys; print(f'Python version: {sys.version}')"
+        python -c "import test.compatibility_patch; print('Compatibility patch loaded successfully')"
+
+    - name: Run tests using pytest.ini configuration
+      run: |
+        # Using the options from pytest.ini
+        python -m pytest test/ --cov=src --import-mode=importlib --disable-warnings
 
   publish:
     if: github.ref == 'refs/heads/main'

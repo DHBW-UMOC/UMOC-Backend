@@ -9,3 +9,5 @@ if sys.version_info >= (3, 10) and not hasattr(collections, 'MutableMapping'):
     collections.Iterable = collections.abc.Iterable
     collections.Iterator = collections.abc.Iterator
     collections.Sequence = collections.abc.Sequence
+
+    print(f"Applied compatibility patch for Python {sys.version}")
