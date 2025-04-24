@@ -3,10 +3,11 @@ from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
-from app.models.user import User, UserContact
+from app.models.user import User, UserContact, ContactStatusEnum
 from app.services.user_service import UserService
 from app.services.message_service import MessageService
 from app.services.contact_service import ContactService
+from app.extensions import db
 
 api_bp = Blueprint('api', __name__)
 user_service = UserService()
@@ -151,6 +152,23 @@ def save_message():
     result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
     if "error" in result:
         return jsonify(result), 400
+
+    # Kontakte automatisch hinzufügen (beidseitig)
+    for uid, cid in [(user_id, recipient_id), (recipient_id, user_id)]:
+        exists = UserContact.query.filter_by(user_id=uid, contact_id=cid).first()
+        if not exists:
+            db.session.add(UserContact(
+                user_id=uid,
+                contact_id=cid,
+                status=ContactStatusEnum.NEW,
+                streak=0,
+                continue_streak=True
+            ))
+    try:
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": f"Contact add failed: {str(e)}"}), 500
 
     return jsonify({"success": "Message saved successfully", "message_id": result["message_id"]})
 
