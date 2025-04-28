@@ -130,14 +130,14 @@ class MessageService:
                 
                 # Get group messages
                 query = Message.query.filter(
-                    Message.is_group == True,
+                    Message.is_group is True,
                     Message.recipient_user_id == chat_id
                 ).order_by(Message.send_at.desc())
                 
             else:
                 # For direct messages
                 query = Message.query.filter(
-                    Message.is_group == False,
+                    Message.is_group is False,
                     or_(
                         and_(Message.sender_user_id == user_id, Message.recipient_user_id == chat_id),
                         and_(Message.sender_user_id == chat_id, Message.recipient_user_id == user_id)
@@ -252,7 +252,7 @@ class MessageService:
             if is_group:
                 # Get unread messages for group
                 query = db.session.query(func.count(Message.message_id)).filter(
-                    Message.is_group == True,
+                    Message.is_group is True,
                     Message.recipient_user_id == chat_id,
                     Message.sender_user_id != user_id,
                     ~Message.message_id.in_(
@@ -264,7 +264,7 @@ class MessageService:
             else:
                 # Get unread messages for direct chat
                 query = db.session.query(func.count(Message.message_id)).filter(
-                    Message.is_group == False,
+                    Message.is_group is False,
                     Message.recipient_user_id == user_id,
                     Message.sender_user_id == chat_id,
                     ~Message.message_id.in_(
@@ -276,5 +276,5 @@ class MessageService:
             
             return query.scalar() or 0
             
-        except Exception as e:
+        except Exception as _:
             return 0

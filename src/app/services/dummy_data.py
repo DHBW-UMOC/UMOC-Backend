@@ -44,7 +44,8 @@ def insert_example_data():
         user_id=USER_UUID3,
         username="Angela Merkel",
         password="password3",
-        profile_picture="https://www.abgeordnetenwatch.de/sites/default/files/styles/opengraph_image/public/politicians-profile-pictures/merkel_angela_chaperon_ci_110195_0.png",
+        profile_picture="https://www.abgeordnetenwatch.de/sites/default/files/styles/opengraph_image/public/"
+                        "politicians-profile-pictures/merkel_angela_chaperon_ci_110195_0.png",
         salt="salt3",
         created_at=datetime.now(),
         session_id=SESSION_UUID3,
