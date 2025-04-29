@@ -1,13 +1,10 @@
 import uuid
 from datetime import datetime
-from src.app.extensions import db
-from src.app.models.group import Group, GroupMember
-
-from src.app.models.user import User
-from src.app.models.group import Group, GroupMember, GroupRoleEnum
+from app.extensions import db
+from app.models.group import Group, GroupMember, GroupRoleEnum
 
 
-class UserService:
+class GroupService:
     def create_group(self, user_id, group_name, group_pic, group_members):
         # Check if group name already exists
         existing_group = Group.query.filter_by(name=group_name).first()
@@ -17,6 +14,7 @@ class UserService:
         new_group = Group(
             group_id=str(uuid.uuid4()),
             name=group_name,
+            admin_user_id=user_id,
             picture=group_pic,
             created_at=datetime.utcnow()
         )
@@ -40,7 +38,7 @@ class UserService:
     def delete_group(self, user_id, group_id):
         group = Group.query.filter_by(group_id=group_id).first()
 
-        if not self.isUserAdmin(user_id, group_id): return {"error": "User is not admin of the group"}
+        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
         if not group: return {"error": "Group not found"}
 
         GroupMember.query.filter_by(group_id=group_id).delete()
@@ -55,7 +53,7 @@ class UserService:
 
     def add_member(self, user_id, group_id, new_member_id):
         if not self.does_group_exist(group_id): return {"error": "Group not found"}
-        if not self.isUserAdmin(user_id, group_id): return {"error": "User is not admin of the group"}
+        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         new_member = GroupMember(
             group_id=group_id,
@@ -72,7 +70,7 @@ class UserService:
 
     def remove_member(self, user_id, group_id, member_id):
         if not self.does_group_exist(group_id): return {"error": "Group not found"}
-        if not self.isUserAdmin(user_id, group_id): return {"error": "User is not admin of the group"}
+        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         member = GroupMember.query.filter_by(group_id=group_id, user_id=member_id).first()
         if not member: return {"error": "Member not found"}
@@ -85,28 +83,9 @@ class UserService:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
 
-    def get_group_members(self, user_id, group_id):
-        if not self.does_group_exist(group_id): return {"error": "Group not found"}
-        if not self.isUserAdmin(user_id, group_id): return {"error": "User is not admin of the group"}
-
-        members = GroupMember.query.filter_by(group_id=group_id).all()
-        return [member.to_dict() for member in members]
-
-    def get_group_by_id(self, group_id):
-        group = Group.query.filter_by(group_id=group_id).first()
-        if not group: return {"error": "Group not found"}
-
-        return group.to_dict()
-
-    def get_groups_by_user_id(self, user_id):
-        groups = Group.query.filter_by(user_id=user_id).all()
-        if not groups: return {"error": "No groups found for this user"}
-
-        return [group.to_dict() for group in groups]
-
     def change_group_name(self, user_id, group_id, new_name):
         if not self.does_group_exist(group_id): return {"error": "Group not found"}
-        if not self.isUserAdmin(user_id, group_id): return {"error": "User is not admin of the group"}
+        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         group = Group.query.filter_by(group_id=group_id).first()
         if not group: return {"error": "Group not found"}
@@ -121,7 +100,7 @@ class UserService:
 
     def change_group_picture(self, user_id, group_id, new_picture):
         if not self.does_group_exist(group_id): return {"error": "Group not found"}
-        if not self.isUserAdmin(user_id, group_id): return {"error": "User is not admin of the group"}
+        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         group = Group.query.filter_by(group_id=group_id).first()
         if not group: return {"error": "Group not found"}
@@ -136,7 +115,7 @@ class UserService:
 
     def change_group_admin(self, user_id, group_id, new_admin_id):
         if not self.does_group_exist(group_id): return {"error": "Group not found"}
-        if not self.isUserAdmin(user_id, group_id): return {"error": "User is not admin of the group"}
+        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         group = Group.query.filter_by(group_id=group_id).first()
         if not group: return {"error": "Group not found"}
@@ -156,12 +135,37 @@ class UserService:
     ## HELPER FUNCTIONS
     ##############################
 
-    def isUserAdmin(self, user_id, group_id):
+    def is_user_admin(self, user_id, group_id):
         group_member = GroupMember.query.filter_by(user_id=user_id, group_id=group_id).first()
         if group_member and group_member.is_admin:
+            return True
+        return False
+
+    def is_user_member(self, user_id, group_id):
+        group_member = GroupMember.query.filter_by(user_id=user_id, group_id=group_id).first()
+        if group_member:
             return True
         return False
 
     def does_group_exist(self, group_id):
         group = Group.query.filter_by(group_id=group_id).first()
         return group is not None
+
+    def get_group_members(self, user_id, group_id):
+        if not self.does_group_exist(group_id): return {"error": "Group not found"}
+        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
+
+        members = GroupMember.query.filter_by(group_id=group_id).all()
+        return [member.to_dict() for member in members]
+
+    def get_group_by_id(self, group_id):
+        group = Group.query.filter_by(group_id=group_id).first()
+        if not group: return {"error": "Group not found"}
+
+        return group.to_dict()
+
+    def get_groups_by_user_id(self, user_id):
+        groups = Group.query.filter_by(user_id=user_id).all()
+        if not groups: return {"error": "No groups found for this user"}
+
+        return [group.to_dict() for group in groups]

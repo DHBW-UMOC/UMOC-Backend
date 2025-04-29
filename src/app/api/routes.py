@@ -231,6 +231,7 @@ def create_group():
     group_members = data.get('group_members', [])
 
     if not user: return jsonify({"error": "User not found"}), 400
+    if len(group_name) < 3 or len(group_name) > 25: return jsonify({"error": "Group name must be between 3 and 50 characters long"}), 400
     if not group_name: return jsonify({"error": "Group name is required"}), 400
     if not group_members: return jsonify({"error": "Group members are required"}), 400
     if not isinstance(group_members, list): return jsonify({"error": "Group members must be a list"}), 400
@@ -257,27 +258,47 @@ def delete_group():
 
     if not group_id:
         return jsonify({"error": "Group ID is required"}), 400
-    if not UserService.does_user_exist(user_id):
+    if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
-    if not GroupService.does_group_exist(group_id):
+    if not group_service.does_group_exist(group_id):
         return jsonify({"error": "Group not found"}), 404
 
-    result = GroupService.delete_group(user_id, group_id)
+    result = group_service.delete_group(user_id, group_id)
 
     if "error" in result:
         return jsonify(result), 400
     return jsonify({"success": "Group deleted successfully"}), 200
 
 
-
 @api_bp.route("/changeGroup", methods=['POST'])
 @jwt_required()
 def change_group():
     user_id = get_jwt_identity()
-    user = User.query.filter_by(user_id=user_id).first()
-    if not user:
-        return jsonify({"error": "User not found"}), 400
     data = request.json if request.is_json else request.args
+    action = data.get("action")
+    group_id = data.get("group_id")
+    new_value = data.get("new_data")
+
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    if not group_service.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 404
+    if not group_service.is_user_admin(user_id, group_id):
+        return jsonify({"error": "User is not admin of the group"}), 403
+    if not action:
+        return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
+    if not new_value:
+        return jsonify({"error": "New value is required"}), 400
+
+    if action == "name":
+        group_service.change_group_name(user_id, group_id, new_value)
+    elif action == "picture":
+        group_service.change_group_picture(user_id, group_id, new_value)
+    elif action == "admin":
+        group_service.change_group_admin(user_id, group_id, new_value)
+    else:
+        return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
+    return jsonify({"success": "Group updated successfully"}), 200
 
 
 @api_bp.route("/addMember", methods=['POST'])
@@ -292,18 +313,18 @@ def add_member():
         return jsonify({"error": "Group ID is required"}), 400
     if not new_member_id:
         return jsonify({"error": "New member ID is required"}), 400
-    if not UserService.does_user_exist(user_id):
+    if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
-    if not UserService.does_user_exist(new_member_id):
+    if not user_service.does_user_exist(new_member_id):
         return jsonify({"error": "New member not found"}), 400
-    if not GroupService.does_group_exist(group_id):
-        return jsonify({"error": "Group not found"}), 404
-    if not GroupService.is_user_admin(user_id, group_id):
+    if not group_service.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 400
+    if not group_service.is_user_admin(user_id, group_id):
         return jsonify({"error": "User is not admin of the group"}), 403
-    if GroupService.is_user_member(new_member_id, group_id):
+    if group_service.is_user_member(new_member_id, group_id):
         return jsonify({"error": "New member is already in the group"}), 409
 
-    result = GroupService.add_member(user_id, group_id, new_member_id)
+    result = group_service.add_member(user_id, group_id, new_member_id)
     if "error" in result:
         return jsonify(result), 400
     return jsonify({"success": "Member added successfully"}), 200
@@ -320,18 +341,38 @@ def remove_member():
         return jsonify({"error": "Group ID is required"}), 400
     if not member_id:
         return jsonify({"error": "Member ID is required"}), 400
-    if not UserService.does_user_exist(user_id):
+    if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
-    if not UserService.does_user_exist(member_id):
+    if not user_service.does_user_exist(member_id):
         return jsonify({"error": "Member not found"}), 400
-    if not GroupService.does_group_exist(group_id):
-        return jsonify({"error": "Group not found"}), 404
-    if not GroupService.is_user_admin(user_id, group_id):
+    if not group_service.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 400
+    if not group_service.is_user_admin(user_id, group_id):
         return jsonify({"error": "User is not admin of the group"}), 403
-    if not GroupService.is_user_member(member_id, group_id):
+    if not group_service.is_user_member(member_id, group_id):
         return jsonify({"error": "Member is not in the group"}), 409
 
-    result = GroupService.remove_member(user_id, group_id, member_id)
+    result = group_service.remove_member(user_id, group_id, member_id)
     if "error" in result:
         return jsonify(result), 400
     return jsonify({"success": "Member removed successfully"}), 200
+
+@api_bp.route("/getGroupMembers", methods=['GET'])
+@jwt_required()
+def get_group_members():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    group_id = data.get('group_id')
+
+    if not group_id:
+        return jsonify({"error": "Group ID is required"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    if not group_service.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 404
+
+    result = group_service.get_group_members(user_id, group_id)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"members": result}), 200
+
