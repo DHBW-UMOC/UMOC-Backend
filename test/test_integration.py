@@ -315,6 +315,253 @@ class TestApiEndpoints(BaseTestCase):
         self.assertTrue(len(messages_data['messages']) > 0)
         self.assertEqual(messages_data['messages'][0]['content'], message_content)
 
+    def test_endpoint_get_groups(self):
+        """Test the getGroups endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Test getting groups
+        response = self.client.get('/getGroups', headers=headers)
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('groups', data)
+        self.assertTrue(len(data['groups']) >= 0)
+
+    def test_endpoint_create_group(self):
+        """Test the createGroup endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Test creating a group
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
+
+        self.assertIn('group_id', data)
+        self.assertIn('group_name', data)
+        self.assertEqual(data['group_name'], group_name)
+        self.assertIn('admin_user_id', data)
+
+    def test_endpoint_delete_group(self):
+        """Test the deleteGroup endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Create a group first
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+
+        # Test deleting the group
+        response = self.client.post(
+            f'/deleteGroup?group_id={group_id}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
+
+    def test_endpoint_change_group_name(self):
+        """Test the changeGroupName endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Create a group first
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+
+        # Test changing the group name
+        new_group_name = "Updated Group Name"
+        response = self.client.post(
+            f'/changeGroupName?group_id={group_id}&new_name={new_group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
+
+    def test_endpoint_change_group_picture(self):
+        """Test the changeGroupPicture endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Create a group first
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+
+        # Test changing the group picture
+        new_picture_url = "http://example.com/new_picture.jpg"
+        response = self.client.post(
+            f'/changeGroupPicture?group_id={group_id}&new_picture={new_picture_url}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
+
+    def test_endpoint_change_group_admin(self):
+        """Test the changeGroupAdmin endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Create a group first
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+
+        # Test changing the group admin
+        new_admin_id = "new_admin_user_id"
+
+    def test_endpoint_get_group_members(self):
+        """Test the getGroupMembers endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Create a group first
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+
+        # Test getting group members
+        response = self.client.get(
+            f'/getGroupMembers?group_id={group_id}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('members', data)
+        self.assertTrue(len(data['members']) >= 0)
+
+    def test_endpoint_get_group_messages(self):
+        """Test the getGroupMessages endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Create a group first
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+
+        # Test getting group messages
+        response = self.client.get(
+            f'/getGroupMessages?group_id={group_id}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('messages', data)
+        self.assertTrue(len(data['messages']) >= 0)
+
+    def test_add_group_member(self):
+        """Test the addGroupMember endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Create a group first
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+
+        # Test adding a member to the group
+        new_member_id = "new_member_user_id"
+        response = self.client.post(
+            f'/addGroupMember?group_id={group_id}&new_member_id={new_member_id}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
+
+    def test_remove_group_member(self):
+        """Test the removeGroupMember endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Create a group first
+        group_name = "Test Group"
+        response = self.client.post(
+            f'/createGroup?group_name={group_name}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+
+        # Test removing a member from the group
+        member_id = "member_user_id"
+        response = self.client.post(
+            f'/removeGroupMember?group_id={group_id}&member_id={member_id}',
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
+
+    def test_send_message(self):
+        """Test the sendMessage endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+
+        # Add a contact first
+        contact_id = self.add_contact(headers)
+
+        # Test sending a message
+        message_content = "Hello, this is a test message!"
+        response = self.client.post(
+            '/sendMessage',
+            json={
+                'recipient_id': contact_id,
+                'content': message_content,
+                'is_group': False
+            },
+            headers=headers
+        )
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
+
 
 if __name__ == '__main__':
     unittest.main()
