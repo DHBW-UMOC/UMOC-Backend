@@ -1,4 +1,4 @@
-## Changelog – v1.2.0
+## Changelog – Max - 29.04.2025
 
 ### Neue Endpunkte
 - **POST `/createGroup`** – Erstellt neue Gruppen.
