@@ -200,7 +200,7 @@ class TestApiEndpoints(BaseTestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertIn('success', data)
     
-    def test_endpoint_get_contacts(self):
+    def test_endpoint_get_chats(self):
         """Test the getContacts endpoint"""
         # Set up users, login, and add contact
         headers, _ = self.setup_users_and_login()
@@ -210,11 +210,11 @@ class TestApiEndpoints(BaseTestCase):
         )
         
         # Test getting contacts
-        response = self.client.get('/getContacts', headers=headers)
+        response = self.client.get('/getChats', headers=headers)
         self.assertEqual(response.status_code, 200)
         data = json.loads(response.data.decode('utf-8'))
-        self.assertIn('contacts', data)
-        self.assertTrue(len(data['contacts']) > 0)
+        self.assertIn('chats', data)
+        self.assertTrue(len(data['chats']) > 0)
     
     def test_endpoint_change_contact(self):
         """Test the changeContact endpoint"""

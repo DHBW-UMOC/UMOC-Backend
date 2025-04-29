@@ -16,7 +16,7 @@ class Group(db.Model):
     group_name = db.Column(db.String, nullable=False)
     admin_user_id = db.Column(db.String, db.ForeignKey('user.user_id'))
     group_picture = db.Column(db.String)
-    create_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     admin = db.relationship('User', backref='administered_groups')
     

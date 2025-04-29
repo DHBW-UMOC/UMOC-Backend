@@ -7,27 +7,34 @@ from app.models.group import Group, GroupMember, GroupRoleEnum
 class GroupService:
     def create_group(self, user_id, group_name, group_pic, group_members):
         # Check if group name already exists
-        existing_group = Group.query.filter_by(name=group_name).first()
+        existing_group = Group.query.filter_by(group_name=group_name).first()
         if existing_group:
             return {"error": "Group name already exists"}
         # Create new group
         new_group = Group(
             group_id=str(uuid.uuid4()),
-            name=group_name,
+            group_name=group_name,
             admin_user_id=user_id,
-            picture=group_pic,
+            group_picture=group_pic,
             created_at=datetime.utcnow()
         )
+        db.session.add(new_group)
 
         # Add group members
         for member_id in group_members:
             new_member = GroupMember(
                 group_id=new_group.group_id,
                 user_id=member_id,
-                is_admin=False
+                role=GroupRoleEnum.MEMBER,
             )
             db.session.add(new_member)
-        db.session.add(new_group)
+
+        new_member = GroupMember(
+            group_id=new_group.group_id,
+            user_id=user_id,
+            role=GroupRoleEnum.ADMIN,
+        )
+        db.session.add(new_member)
         try:
             db.session.commit()
             return {"success": True, "group_id": new_group.group_id}
@@ -58,7 +65,7 @@ class GroupService:
         new_member = GroupMember(
             group_id=group_id,
             user_id=new_member_id,
-            is_admin=False
+            role=GroupRoleEnum.MEMBER,
         )
         db.session.add(new_member)
         try:
@@ -137,7 +144,7 @@ class GroupService:
 
     def is_user_admin(self, user_id, group_id):
         group_member = GroupMember.query.filter_by(user_id=user_id, group_id=group_id).first()
-        if group_member and group_member.is_admin:
+        if group_member and group_member.role == GroupRoleEnum.ADMIN:
             return True
         return False
 
@@ -165,7 +172,11 @@ class GroupService:
         return group.to_dict()
 
     def get_groups_by_user_id(self, user_id):
-        groups = Group.query.filter_by(user_id=user_id).all()
+        group_ids = GroupMember.query.filter_by(user_id=user_id).all()
+        if not group_ids: return {"error": "No groups found for this user"}
+        group_ids = [group.group_id for group in group_ids]
+        groups = Group.query.filter(Group.group_id.in_(group_ids)).all()
+
         if not groups: return {"error": "No groups found for this user"}
 
         return [group.to_dict() for group in groups]

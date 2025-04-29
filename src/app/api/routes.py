@@ -3,6 +3,7 @@ from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
+import json
 from app.models.user import User, UserContact, ContactStatusEnum
 from app.services.user_service import UserService
 from app.services.message_service import MessageService
@@ -20,9 +21,10 @@ group_service = GroupService()
 # User authentication routes
 @api_bp.route("/register", methods=['POST'])
 def register():
-    username = request.args.get('username')
-    password = request.args.get('password')
-    profile_pic = request.args.get('profile_pic')
+    data = request.json if request.is_json else request.args
+    username = data.get('username')
+    password = data.get('password')
+    profile_pic = data.get('profile_pic')
 
     if not username:
         return jsonify({"error": "Username is required"}), 400
@@ -46,8 +48,9 @@ def register():
 
 @api_bp.route("/login", methods=['GET'])
 def login():
-    username = request.args.get('username')
-    password = request.args.get('password')
+    data = request.json if request.is_json else request.args
+    username = data.get('username')
+    password = data.get('password')
 
     if not username:
         return jsonify({"error": "Username is required"}), 400
@@ -79,7 +82,8 @@ def logout():
 @jwt_required()
 def add_contact():
     user_id = get_jwt_identity()
-    contact_name = request.args.get('contact_name')
+    data = request.json if request.is_json else request.args
+    contact_name = data.get('contact_name')
 
     if not contact_name:
         return jsonify({"error": "Contact name is required"}), 400
@@ -95,8 +99,9 @@ def add_contact():
 @jwt_required()
 def change_contact():
     user_id = get_jwt_identity()
-    contact_id = request.args.get('contact_id')
-    status = request.args.get('status')
+    data = request.json if request.is_json else request.args
+    contact_id = data.get('contact_id')
+    status = data.get('status')
 
     if not contact_id:
         return jsonify({"error": "Contact ID is required"}), 400
@@ -134,10 +139,11 @@ def get_chats():
 @api_bp.route("/getChatMessages", methods=['GET'])
 @jwt_required()
 def get_chat_messages():
-    chat_id = request.args.get('chat_id')
-    page = request.args.get('page', type=int)
-    is_group = request.args.get('is_group', type=bool, default=False)
     user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    chat_id = data.get('chat_id')
+    page = data.get('page', type=int)
+    is_group = data.get('is_group', type=bool, default=False)
 
     if not chat_id:
         return jsonify({"error": "No chatID provided for getContactMessages"}), 400
@@ -164,8 +170,6 @@ def get_chat_messages():
 @jwt_required()
 def save_message():
     user_id = get_jwt_identity()
-
-    # Support both JSON body and query parameters
     data = request.json if request.is_json else request.args
 
     recipient_id = data.get("recipient_id")
@@ -253,13 +257,17 @@ def create_group():
     data = request.json if request.is_json else request.args
     group_name = data.get('group_name')
     group_pic = data.get('group_pic')
-    group_members = data.get('group_members', [])
+    try:
+        group_members = json.loads(data.get('group_members', []))
+    except json.JSONDecodeError:
+        return jsonify({"error": "Invalid group members format"}), 400
 
     if not user: return jsonify({"error": "User not found"}), 400
     if len(group_name) < 3 or len(group_name) > 25: return jsonify({"error": "Group name must be between 3 and 50 characters long"}), 400
     if not group_name: return jsonify({"error": "Group name is required"}), 400
     if not group_members: return jsonify({"error": "Group members are required"}), 400
-    if not isinstance(group_members, list): return jsonify({"error": "Group members must be a list"}), 400
+    print(group_members)
+    print(type(group_members))
     if len(group_members) < 2: return jsonify({"error": "Group must have at least 2 members"}), 400
     if len(group_members) > 50: return jsonify({"error": "Group can have at most 50 members"}), 400
 
@@ -300,9 +308,10 @@ def delete_group():
 def change_group():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
-    action = data.get("action")
+    print(data)
+    action = data.get("action").lower()
     group_id = data.get("group_id")
-    new_value = data.get("new_data")
+    new_value = data.get("new_value")
 
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
@@ -313,6 +322,7 @@ def change_group():
     if not action:
         return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
     if not new_value:
+        print("New value is required")
         return jsonify({"error": "New value is required"}), 400
 
     if action == "name":
@@ -320,6 +330,8 @@ def change_group():
     elif action == "picture":
         group_service.change_group_picture(user_id, group_id, new_value)
     elif action == "admin":
+        if not group_service.does_user_exist(new_value):
+            return jsonify({"error": ""}), 400
         group_service.change_group_admin(user_id, group_id, new_value)
     else:
         return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
@@ -363,9 +375,9 @@ def remove_member():
     group_id = data.get('group_id')
     member_id = data.get('member_id')
     if not group_id:
-        return jsonify({"error": "Group ID is required"}), 400
+        return jsonify({"error": "'group_id' is required"}), 400
     if not member_id:
-        return jsonify({"error": "Member ID is required"}), 400
+        return jsonify({"error": "'member_id' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
     if not user_service.does_user_exist(member_id):

@@ -3,6 +3,8 @@ from datetime import datetime
 from app.extensions import db
 from app.models.user import User, UserContact, ContactStatusEnum
 from app.models.message import Message, MessageTypeEnum
+from app.models.group import Group, GroupMember
+from app.models.group import GroupRoleEnum
 
 
 def insert_example_data():
@@ -117,40 +119,39 @@ def insert_example_data():
         )
     ]
 
-    group1 = {
-        "group_id": GROUP_UUID1,
-        "group_name": GROUP_NAME1,
-        "admin_user_id": user1.user_id,
-        "create_at": datetime.now()
-    }
-
-    group2 = {
-        "group_id": GROUP_UUID2,
-        "group_name": GROUP_NAME2,
-        "admin_user_id": user2.user_id,
-        "create_at": datetime.now()
-    }
+    group1 = Group(
+        group_id=GROUP_UUID1,
+        group_name=GROUP_NAME1,
+        admin_user_id=user1.user_id,
+        created_at=datetime.now()
+    )
+    group2 = Group(
+        group_id=GROUP_UUID2,
+        group_name=GROUP_NAME2,
+        admin_user_id=user2.user_id,
+        created_at=datetime.now()
+    )
 
     # Create GroupMember instances for the groups
     group_members = [
-        {
-            "group_id": group1["group_id"],
-            "user_id": user1.user_id,
-            "role": "admin",
-            "joined_at": datetime.now()
-        },
-        {
-            "group_id": group1["group_id"],
-            "user_id": user2.user_id,
-            "role": "member",
-            "joined_at": datetime.now()
-        },
-        {
-            "group_id": group2["group_id"],
-            "user_id": user3.user_id,
-            "role": "member",
-            "joined_at": datetime.now()
-        }
+        GroupMember(
+            group_id=GROUP_UUID1,
+            user_id=user1.user_id,
+            role=GroupRoleEnum.ADMIN,
+            joined_at=datetime.now()
+        ),
+        GroupMember(
+            group_id=GROUP_UUID1,
+            user_id=user2.user_id,
+            role=GroupRoleEnum.MEMBER,
+            joined_at=datetime.now()
+        ),
+        GroupMember(
+            group_id=GROUP_UUID1,
+            user_id=user3.user_id,
+            role=GroupRoleEnum.MEMBER,
+            joined_at=datetime.now()
+        )
     ]
 
     # Create Group instances
@@ -158,7 +159,7 @@ def insert_example_data():
         Message(
             message_id=str(uuid.uuid4()),
             sender_user_id=user1.user_id,
-            recipient_user_id=group1["group_id"],
+            recipient_user_id=GROUP_UUID1,
             encrypted_content="Hello Group 1!",
             type=MessageTypeEnum.TEXT,
             send_at=datetime.now(),
@@ -166,8 +167,8 @@ def insert_example_data():
         ),
         Message(
             message_id=str(uuid.uuid4()),
-            sender_user_id=user2.user_id,
-            recipient_user_id=group2["group_id"],
+            sender_user_id=GROUP_UUID2,
+            recipient_user_id=GROUP_UUID2,
             encrypted_content="Hello Group 2!",
             type=MessageTypeEnum.TEXT,
             send_at=datetime.now(),
@@ -176,7 +177,7 @@ def insert_example_data():
         Message(
             message_id=str(uuid.uuid4()),
             sender_user_id=user3.user_id,
-            recipient_user_id=group1["group_id"],
+            recipient_user_id=GROUP_UUID1,
             encrypted_content="Hello Group 1 from Angela!",
             type=MessageTypeEnum.TEXT,
             send_at=datetime.now(),
