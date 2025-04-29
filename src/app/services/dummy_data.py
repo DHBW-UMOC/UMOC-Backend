@@ -4,6 +4,7 @@ from app.extensions import db
 from app.models.user import User, UserContact, ContactStatusEnum
 from app.models.message import Message, MessageTypeEnum
 
+
 def insert_example_data():
     USER_UUID1 = "00000000-0000-0000-0000-000000000001"
     USER_UUID2 = "00000000-0000-0000-0000-000000000002"
@@ -12,6 +13,12 @@ def insert_example_data():
     SESSION_UUID1 = "00000000-0000-0000-1111-000000000001"
     SESSION_UUID2 = "00000000-0000-0000-1111-000000000002"
     SESSION_UUID3 = "00000000-0000-0000-1111-000000000003"
+
+    GROUP_NAME1 = "Group 1"
+    GROUP_NAME2 = "Group 2"
+
+    GROUP_UUID1 = "00000000-2222-0000-1111-000000000001"
+    GROUP_UUID2 = "00000000-2222-0000-1111-000000000002"
 
     # Creating three users
     user1 = User(
@@ -110,10 +117,80 @@ def insert_example_data():
         )
     ]
 
+    group1 = {
+        "group_id": GROUP_UUID1,
+        "group_name": GROUP_NAME1,
+        "admin_user_id": user1.user_id,
+        "create_at": datetime.now()
+    }
+
+    group2 = {
+        "group_id": GROUP_UUID2,
+        "group_name": GROUP_NAME2,
+        "admin_user_id": user2.user_id,
+        "create_at": datetime.now()
+    }
+
+    # Create GroupMember instances for the groups
+    group_members = [
+        {
+            "group_id": group1["group_id"],
+            "user_id": user1.user_id,
+            "role": "admin",
+            "joined_at": datetime.now()
+        },
+        {
+            "group_id": group1["group_id"],
+            "user_id": user2.user_id,
+            "role": "member",
+            "joined_at": datetime.now()
+        },
+        {
+            "group_id": group2["group_id"],
+            "user_id": user3.user_id,
+            "role": "member",
+            "joined_at": datetime.now()
+        }
+    ]
+
+    # Create Group instances
+    group_messages = [
+        Message(
+            message_id=str(uuid.uuid4()),
+            sender_user_id=user1.user_id,
+            recipient_user_id=group1["group_id"],
+            encrypted_content="Hello Group 1!",
+            type=MessageTypeEnum.TEXT,
+            send_at=datetime.now(),
+            is_group=True
+        ),
+        Message(
+            message_id=str(uuid.uuid4()),
+            sender_user_id=user2.user_id,
+            recipient_user_id=group2["group_id"],
+            encrypted_content="Hello Group 2!",
+            type=MessageTypeEnum.TEXT,
+            send_at=datetime.now(),
+            is_group=True
+        ),
+        Message(
+            message_id=str(uuid.uuid4()),
+            sender_user_id=user3.user_id,
+            recipient_user_id=group1["group_id"],
+            encrypted_content="Hello Group 1 from Angela!",
+            type=MessageTypeEnum.TEXT,
+            send_at=datetime.now(),
+            is_group=True
+        ),
+    ]
+
     # Add all to the session
     db.session.add_all([user1, user2, user3, user4, user5, user6])
     db.session.add_all(contacts)
     db.session.add_all(messages)
+    db.session.add_all([group1, group2])
+    db.session.add_all(group_members)
+    db.session.add_all(group_messages)
 
     # Commit the session to save data
     db.session.commit()
