@@ -257,10 +257,12 @@ def create_group():
     data = request.json if request.is_json else request.args
     group_name = data.get('group_name')
     group_pic = data.get('group_pic')
-    try:
-        group_members = json.loads(data.get('group_members', []))
-    except json.JSONDecodeError:
-        return jsonify({"error": "Invalid group members format"}), 400
+    group_members = data.get('group_members')
+    if isinstance(group_members, str):
+        try:
+            group_members = json.loads(group_members)
+        except json.JSONDecodeError:
+            return jsonify({"error": "Invalid group_members format"}), 400
 
     if not user: return jsonify({"error": "User not found"}), 400
     if len(group_name) < 3 or len(group_name) > 25: return jsonify({"error": "Group name must be between 3 and 50 characters long"}), 400
