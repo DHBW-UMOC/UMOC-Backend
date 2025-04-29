@@ -110,28 +110,53 @@ def change_contact():
     return jsonify({"success": "Contact status changed successfully"}), 200
 
 
-@api_bp.route("/getContacts", methods=['GET'])
+@api_bp.route("/getChats", methods=['GET'])
 @jwt_required()
-def get_contacts():
+def get_chats():
     user_id = get_jwt_identity()
-    result = contact_service.get_user_contacts_by_user_id(user_id)
-    if "error" in result:
-        return jsonify(result), 500
-    return jsonify({"contacts": result})
+
+    contacts = contact_service.get_user_contacts_by_user_id(user_id)
+    if "error" in contacts:
+        return jsonify(contacts), 500
+    for c in contacts:
+        c["is_group"] = False
+
+    groups = group_service.get_groups_by_user_id(user_id)
+    if "error" in groups:
+        return jsonify(groups), 500
+    for g in groups:
+        g["is_group"] = True
+
+    return jsonify({"chats": contacts + groups})
 
 
 # Message routes
-@api_bp.route("/getContactMessages", methods=['GET'])
+@api_bp.route("/getChatMessages", methods=['GET'])
 @jwt_required()
-def get_contact_messages():
-    contact_id = request.args.get('contact_id')
+def get_chat_messages():
+    chat_id = request.args.get('chat_id')
     page = request.args.get('page', type=int)
+    is_group = request.args.get('is_group', type=bool, default=False)
     user_id = get_jwt_identity()
 
-    if not contact_id:
-        return jsonify({"error": "No contactID provided for getContactMessages"}), 400
+    if not chat_id:
+        return jsonify({"error": "No chatID provided for getContactMessages"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
 
-    result, status_code = message_service.get_messages_with_contact(user_id, contact_id, page)
+    if is_group or group_service.is_id_group(chat_id):
+        if not group_service.does_group_exist(chat_id):
+            return jsonify({"error": "Group not found"}), 404
+        if not group_service.is_user_member(user_id, chat_id):
+            return jsonify({"error": "User is not a member of the group"}), 403
+        result, status_code = message_service.get_messages_with_groups(user_id, chat_id, page)
+    else:
+        if not user_service.does_user_exist(chat_id):
+            return jsonify({"error": "Contact not found"}), 404
+        if not contact_service.is_contact(user_id, chat_id):
+            return jsonify({"error": "User is not a contact"}), 403
+        result, status_code = message_service.get_messages_with_contact(user_id, chat_id, page)
+
     return jsonify(result), status_code
 
 

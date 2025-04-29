@@ -130,7 +130,7 @@ Change the status of a contact.
 
 Retrieve all contacts for the authenticated user.
 
-- **URL**: `/getContacts`
+- **URL**: `/getChats`
 - **Method**: `GET`
 - **Headers**:
   - `Authorization`: Bearer `<JWT access token>`
@@ -139,20 +139,30 @@ Retrieve all contacts for the authenticated user.
     - **Content**:
         ```json
         {
-          "contacts": [
+          "chats": [
             {
+              "is_group": false,
               "contact_id": "00000000-0000-0000-0000-000000000000",
               "name": "String",
               "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS",
               "streak": "int | null",
-              "url": "Link to JPG"
+              "picture_url": "Link to JPG"
             },
             {
+              "is_group": false,
               "contact_id": "00000000-0000-0000-0000-000000000000",
               "name": "String",
               "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS",
               "streak": "int | null",
-              "url": "Link to JPG"
+              "picture_url": "Link to JPG"
+            },
+            {
+              "is_group": true,
+              "group_id": "00000000-0000-0000-0000-000000000000",
+              "name": "String",
+              "picture_url": "Link to JPG",
+              "admin_user_id": "00000000-0000-0000-0000-000000000000",
+              "create_at": "Link to JPG"
             }
           ]
       }
@@ -167,12 +177,12 @@ Retrieve all contacts for the authenticated user.
 
 Retrieve all messages between the authenticated user and a specific contact.
 
-- **URL**: `/getContactMessages`
+- **URL**: `/getChatMessages`
 - **Method**: `GET`
 - **Headers**:
   - `Authorization`: Bearer `<JWT access token>`
 - **Query Parameters**:
-  - `contact_id`: ID of the contact
+  - `chat_id`: ID of the contact
   - `page`: Page number for pagination (optional; Page=20 messages); Bei None bekommt man alle Messages.
 - **Success Response**:
   - **Code**: 200

@@ -15,7 +15,7 @@ class Group(db.Model):
     group_id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     group_name = db.Column(db.String, nullable=False)
     admin_user_id = db.Column(db.String, db.ForeignKey('user.user_id'))
-    public_key = db.Column(db.String)
+    group_picture = db.Column(db.String)
     create_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     admin = db.relationship('User', backref='administered_groups')
@@ -24,6 +24,7 @@ class Group(db.Model):
         return {
             'group_id': self.group_id,
             'group_name': self.group_name,
+            'group_picture': self.group_picture,
             'admin_user_id': self.admin_user_id,
             'create_at': self.create_at.isoformat() if self.create_at else None
         }

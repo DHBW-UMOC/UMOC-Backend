@@ -169,3 +169,9 @@ class GroupService:
         if not groups: return {"error": "No groups found for this user"}
 
         return [group.to_dict() for group in groups]
+
+    def is_id_group(self, group_id):
+        group = Group.query.filter_by(group_id=group_id).first()
+        if not group: return {"error": "Group not found"}
+
+        return True
