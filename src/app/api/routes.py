@@ -7,12 +7,14 @@ from app.models.user import User, UserContact, ContactStatusEnum
 from app.services.user_service import UserService
 from app.services.message_service import MessageService
 from app.services.contact_service import ContactService
+from app.services.group_service import GroupService
 from app.extensions import db
 
 api_bp = Blueprint('api', __name__)
 user_service = UserService()
 message_service = MessageService()
 contact_service = ContactService()
+group_service = GroupService()
 
 
 # User authentication routes
@@ -21,7 +23,7 @@ def register():
     username = request.args.get('username')
     password = request.args.get('password')
     profile_pic = request.args.get('profile_pic')
-    
+
     if not username:
         return jsonify({"error": "Username is required"}), 400
     if not password:
@@ -34,31 +36,33 @@ def register():
 
     if len(password) < 4 or len(password) > 100:
         return jsonify({"error": "Password must be between 4 and 100 characters long"}), 400
-    
+
     result = user_service.register_user(username, password, profile_pic)
     if "error" in result:
         return jsonify({"error": "Username already exists."}), 409  # Conflict for duplicate username
-    
+
     return jsonify({"success": "User registered successfully"}), 201  # Created
+
 
 @api_bp.route("/login", methods=['GET'])
 def login():
     username = request.args.get('username')
     password = request.args.get('password')
-    
+
     if not username:
         return jsonify({"error": "Username is required"}), 400
     if not password:
         return jsonify({"error": "Password is required"}), 400
-    
+
     result = user_service.login_user(username, password)
     if "error" in result:
         return jsonify({"error": "Invalid credentials"}), 401  # Unauthorized
-    
+
     access_token = create_access_token(identity=result["user_id"])
     expires_in = current_app.config["JWT_ACCESS_TOKEN_EXPIRES"].total_seconds()
 
     return jsonify(access_token=access_token, expires_in=expires_in, user_id=result["user_id"])
+
 
 @api_bp.route("/logout", methods=['POST'])
 @jwt_required()
@@ -69,21 +73,23 @@ def logout():
         return jsonify({"error": "Logout failed"}), 500  # Internal Server Error
     return jsonify({"success": "User logged out successfully"}), 200
 
+
 # Contact management routes
 @api_bp.route("/addContact", methods=['POST'])
 @jwt_required()
 def add_contact():
     user_id = get_jwt_identity()
     contact_name = request.args.get('contact_name')
-    
+
     if not contact_name:
         return jsonify({"error": "Contact name is required"}), 400
-    
+
     result = contact_service.add_contact_by_name(user_id, contact_name)
     if "error" in result:
         return jsonify(result), 400
-    
+
     return jsonify({"success": "Contact was added successfully"}), 201
+
 
 @api_bp.route("/changeContact", methods=['POST'])
 @jwt_required()
@@ -91,17 +97,18 @@ def change_contact():
     user_id = get_jwt_identity()
     contact_id = request.args.get('contact_id')
     status = request.args.get('status')
-    
+
     if not contact_id:
         return jsonify({"error": "Contact ID is required"}), 400
     if not status:
         return jsonify({"error": "Status is required"}), 400
-    
+
     result = contact_service.change_contact_status_by_user_id(user_id, contact_id, status)
     if "error" in result:
         return jsonify({"error": "Failed to change contact status"}), 500
-    
+
     return jsonify({"success": "Contact status changed successfully"}), 200
+
 
 @api_bp.route("/getContacts", methods=['GET'])
 @jwt_required()
@@ -111,6 +118,7 @@ def get_contacts():
     if "error" in result:
         return jsonify(result), 500
     return jsonify({"contacts": result})
+
 
 # Message routes
 @api_bp.route("/getContactMessages", methods=['GET'])
@@ -122,9 +130,10 @@ def get_contact_messages():
 
     if not contact_id:
         return jsonify({"error": "No contactID provided for getContactMessages"}), 400
-    
+
     result, status_code = message_service.get_messages_with_contact(user_id, contact_id, page)
     return jsonify(result), status_code
+
 
 @api_bp.route("/saveMessage", methods=["POST"])
 @jwt_required()
@@ -136,7 +145,7 @@ def save_message():
 
     recipient_id = data.get("recipient_id")
     content = data.get("content")
-    
+
     # Handle isGroup that could be either a boolean or a string
     is_group_value = data.get("is_group", False)
     if isinstance(is_group_value, bool):
@@ -172,12 +181,14 @@ def save_message():
 
     return jsonify({"success": "Message saved successfully", "message_id": result["message_id"]})
 
+
 # Simple test endpoint
 @api_bp.route("/")
 @jwt_required()
 def default():
     current_user = get_jwt_identity()
     return jsonify(logged_in_as=current_user), 200
+
 
 # Debug endpoint
 @api_bp.route("/debugContacts", methods=['GET'])
@@ -187,9 +198,9 @@ def debug_contacts():
     user = User.query.filter_by(user_id=user_id).first()
     if not user:
         return jsonify({"error": "User not found"}), 400
-    
+
     contacts = UserContact.query.filter_by(user_id=user.user_id).all()
-    
+
     debug_info = {
         "user_id": user.user_id,
         "username": user.username,
@@ -202,5 +213,125 @@ def debug_contacts():
             } for c in contacts
         ]
     }
-    
+
     return jsonify(debug_info)
+
+
+# Group Endpoints
+
+@api_bp.route("/createGroup", methods=['POST'])
+@jwt_required()
+def create_group():
+    user_id = get_jwt_identity()
+    user = User.query.filter_by(user_id=user_id).first()
+
+    data = request.json if request.is_json else request.args
+    group_name = data.get('group_name')
+    group_pic = data.get('group_pic')
+    group_members = data.get('group_members', [])
+
+    if not user: return jsonify({"error": "User not found"}), 400
+    if not group_name: return jsonify({"error": "Group name is required"}), 400
+    if not group_members: return jsonify({"error": "Group members are required"}), 400
+    if not isinstance(group_members, list): return jsonify({"error": "Group members must be a list"}), 400
+    if len(group_members) < 2: return jsonify({"error": "Group must have at least 2 members"}), 400
+    if len(group_members) > 50: return jsonify({"error": "Group can have at most 50 members"}), 400
+
+    result = group_service.create_group(
+        user_id=user.user_id,
+        group_name=group_name,
+        group_pic=group_pic,
+        group_members=group_members
+    )
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"success": "Group created successfully", "group_id": result["group_id"]}), 201
+
+
+@api_bp.route("/deleteGroup", methods=['POST'])
+@jwt_required()
+def delete_group():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    group_id = data.get('group_id')
+
+    if not group_id:
+        return jsonify({"error": "Group ID is required"}), 400
+    if not UserService.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    if not GroupService.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 404
+
+    result = GroupService.delete_group(user_id, group_id)
+
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"success": "Group deleted successfully"}), 200
+
+
+
+@api_bp.route("/changeGroup", methods=['POST'])
+@jwt_required()
+def change_group():
+    user_id = get_jwt_identity()
+    user = User.query.filter_by(user_id=user_id).first()
+    if not user:
+        return jsonify({"error": "User not found"}), 400
+    data = request.json if request.is_json else request.args
+
+
+@api_bp.route("/addMember", methods=['POST'])
+@jwt_required()
+def add_member():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    group_id = data.get('group_id')
+    new_member_id = data.get('new_member_id')
+
+    if not group_id:
+        return jsonify({"error": "Group ID is required"}), 400
+    if not new_member_id:
+        return jsonify({"error": "New member ID is required"}), 400
+    if not UserService.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    if not UserService.does_user_exist(new_member_id):
+        return jsonify({"error": "New member not found"}), 400
+    if not GroupService.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 404
+    if not GroupService.is_user_admin(user_id, group_id):
+        return jsonify({"error": "User is not admin of the group"}), 403
+    if GroupService.is_user_member(new_member_id, group_id):
+        return jsonify({"error": "New member is already in the group"}), 409
+
+    result = GroupService.add_member(user_id, group_id, new_member_id)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"success": "Member added successfully"}), 200
+
+
+@api_bp.route("/removeMember", methods=['POST'])
+@jwt_required()
+def remove_member():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    group_id = data.get('group_id')
+    member_id = data.get('member_id')
+    if not group_id:
+        return jsonify({"error": "Group ID is required"}), 400
+    if not member_id:
+        return jsonify({"error": "Member ID is required"}), 400
+    if not UserService.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    if not UserService.does_user_exist(member_id):
+        return jsonify({"error": "Member not found"}), 400
+    if not GroupService.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 404
+    if not GroupService.is_user_admin(user_id, group_id):
+        return jsonify({"error": "User is not admin of the group"}), 403
+    if not GroupService.is_user_member(member_id, group_id):
+        return jsonify({"error": "Member is not in the group"}), 409
+
+    result = GroupService.remove_member(user_id, group_id, member_id)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"success": "Member removed successfully"}), 200
