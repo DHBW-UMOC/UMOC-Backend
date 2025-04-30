@@ -163,3 +163,172 @@ def handle_add_contact(data):
             'user_id': user.user_id,
             'username': user.username
         }, room=user_sids[contact.user_id])
+
+# New WebSocket Handlers
+@socketio.on('action')
+def handle_action(data):
+    """Handle various client actions based on the action field"""
+    action = data.get('action')
+    action_data = data.get('data', {})
+    session_id = action_data.get('sessionID')
+
+    sender = get_user_from_session(session_id)
+    if not sender:
+        return
+    
+    if action == 'typing':
+        handle_typing(sender, action_data)
+    elif action == 'sendMessage':
+        handle_send_message(sender, action_data)
+    elif action == 'useItem':
+        handle_use_item(sender, action_data)
+    elif action == 'system_message':
+        handle_system_message(sender, action_data)
+
+def handle_typing(sender, data):
+    """Handle typing event and notify recipients"""
+    recipient_id = data.get('recipient_id')
+    character = data.get('char')
+    is_group = data.get('is_group', False)
+    
+    if not recipient_id or not character:
+        return
+    
+    if is_group:
+        room_id = f"group_{recipient_id}"
+    else:
+        room_id = f"dm_{min(sender.user_id, recipient_id)}_{max(sender.user_id, recipient_id)}"
+    
+    emit('typing', {
+        'sender_id': sender.user_id,
+        'sender_username': sender.username,
+        'char': character,
+        'timestamp': datetime.utcnow().isoformat(),
+        'is_group': is_group
+    }, room=room_id)
+
+def handle_send_message(sender, data):
+    """Handle send message action"""
+    recipient_id = data.get('recipient_id')
+    content = data.get('content')
+    is_group = data.get('is_group', False)
+    msg_type = data.get('type', 'text')
+    
+    if not recipient_id or not content:
+        return
+    
+    message = Message(
+        message_id=str(uuid.uuid4()),
+        sender_user_id=sender.user_id,
+        recipient_user_id=recipient_id,
+        encrypted_content=content,
+        type=MessageTypeEnum(msg_type),
+        send_at=datetime.utcnow(),
+        is_group=is_group
+    )
+    db.session.add(message)
+    db.session.commit()
+    
+    if is_group:
+        room_id = f"group_{recipient_id}"
+    else:
+        room_id = f"dm_{min(sender.user_id, recipient_id)}_{max(sender.user_id, recipient_id)}"
+    
+    emit('new_message', {
+        'message_id': message.message_id,
+        'sender_id': sender.user_id,
+        'sender_username': sender.username,
+        'content': content,
+        'type': msg_type,
+        'timestamp': message.send_at.isoformat(),
+        'is_group': is_group
+    }, room=room_id)
+
+def handle_use_item(sender, data):
+    """Handle item usage"""
+    recipient_id = data.get('recipient_id')
+    item_id = data.get('item_id')
+    is_group = data.get('is_group', False)
+    
+    if not recipient_id or not item_id:
+        return
+    
+    # Here you'd add logic to process the item usage
+    # For now, we'll just notify the recipients
+    
+    if is_group:
+        room_id = f"group_{recipient_id}"
+    else:
+        room_id = f"dm_{min(sender.user_id, recipient_id)}_{max(sender.user_id, recipient_id)}"
+    
+    emit('item_used', {
+        'sender_id': sender.user_id,
+        'sender_username': sender.username,
+        'item_id': item_id,
+        'timestamp': datetime.utcnow().isoformat(),
+        'is_group': is_group
+    }, room=room_id)
+
+def handle_system_message(sender, data):
+    """Handle system messages"""
+    recipient_id = data.get('recipient_id')
+    content = data.get('content')
+    is_group = data.get('is_group', False)
+    
+    if not recipient_id or not content:
+        return
+    
+    if is_group:
+        room_id = f"group_{recipient_id}"
+    else:
+        if recipient_id in user_sids:
+            room_id = user_sids[recipient_id]
+        else:
+            return  # Recipient not online
+    
+    emit('system_message', {
+        'content': content,
+        'timestamp': datetime.utcnow().isoformat(),
+        'is_group': is_group
+    }, room=room_id)
+
+# Helper functions to send notifications
+def send_typing_notification(user_id, recipient_id, character, is_group=False):
+    """Send typing notification to recipient"""
+    user = User.query.get(user_id)
+    if not user:
+        return
+        
+    if is_group:
+        room_id = f"group_{recipient_id}"
+    else:
+        room_id = f"dm_{min(user_id, recipient_id)}_{max(user_id, recipient_id)}"
+    
+    socketio.emit('typing', {
+        'sender_id': user.user_id,
+        'sender_username': user.username,
+        'char': character,
+        'timestamp': datetime.utcnow().isoformat(),
+        'is_group': is_group
+    }, room=room_id)
+
+def send_message_notification(message):
+    """Send message notification to recipient"""
+    sender = User.query.get(message.sender_user_id)
+    if not sender:
+        return
+        
+    if message.is_group:
+        room_id = f"group_{message.recipient_user_id}"
+    else:
+        room_id = f"dm_{min(message.sender_user_id, message.recipient_user_id)}_{max(message.sender_user_id, message.recipient_user_id)}"
+    
+    socketio.emit('new_message', {
+        'message_id': message.message_id,
+        'sender_id': sender.user_id,
+        'sender_username': sender.username,
+        'content': message.encrypted_content,
+        'type': message.type.value,
+        'timestamp': message.send_at.isoformat(),
+        'is_group': message.is_group
+    }, room=room_id)
