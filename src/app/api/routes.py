@@ -332,8 +332,9 @@ def change_group():
     elif action == "picture":
         group_service.change_group_picture(user_id, group_id, new_value)
     elif action == "admin":
-        if not group_service.does_user_exist(new_value):
-            return jsonify({"error": ""}), 400
+        # FIX: Use user_service instead of group_service to check if the user exists
+        if not user_service.does_user_exist(new_value):
+            return jsonify({"error": "New admin user not found"}), 404
         group_service.change_group_admin(user_id, group_id, new_value)
     else:
         return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
@@ -414,4 +415,25 @@ def get_group_members():
     if "error" in result:
         return jsonify(result), 400
     return jsonify({"members": result}), 200
+
+# Add missing getGroupMessages endpoint
+@api_bp.route("/getGroupMessages", methods=['GET'])
+@jwt_required()
+def get_group_messages():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    group_id = data.get('group_id')
+    page = data.get('page', type=int)
+
+    if not group_id:
+        return jsonify({"error": "Group ID is required"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    if not group_service.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 404
+    if not group_service.is_user_member(user_id, group_id):
+        return jsonify({"error": "User is not a member of the group"}), 403
+
+    result, status_code = message_service.get_messages_with_groups(user_id, group_id, page)
+    return jsonify(result), status_code
 
