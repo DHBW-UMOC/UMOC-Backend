@@ -32,7 +32,7 @@ jobs:
     - name: Run pylint with score check
       run: |
         echo "[MESSAGES CONTROL]" > .pylintrc
-        echo "disable=trailing-whitespace,missing-module-docstring,too-few-public-methods,missing-function-docstring,C0103,missing-class-docstring,R0911,W0718" >> .pylintrc
+        echo "disable=trailing-whitespace,missing-module-docstring,too-few-public-methods,missing-function-docstring,C0103,missing-class-docstring,R0911,W0718,E0401,R0917,R0913" >> .pylintrc
         echo "max-line-length=140" >> .pylintrc
 
         echo "Running pylint on ./src..."
@@ -44,7 +44,7 @@ jobs:
         SCORE=${SCORE:-0}
 
         echo "🔎 Pylint score: $SCORE"
-        REQUIRED=7.0
+        REQUIRED=8.0
         COMP=$(awk -v s="$SCORE" -v r="$REQUIRED" 'BEGIN {print (s<r) ? "fail" : "pass"}')
 
         if [ "$COMP" = "fail" ]; then

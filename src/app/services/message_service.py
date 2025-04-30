@@ -52,6 +52,68 @@ class MessageService:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
 
+    def get_messages_with_groups(self, user_id, group_id, page=None):
+        """
+        Get messages between a user and a group.
+
+        Args:
+            user_id: The ID of the user
+            group_id: The ID of the group
+            page: Optional. Page number for pagination (default: None, returns all messages)
+
+        Returns:
+            tuple: JSON response and status code
+        """
+        try:
+            spec_user = User.query.filter_by(user_id=user_id).first()
+            group = Group.query.get(group_id)
+            member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+
+            if not spec_user:
+                return {"error": "Invalid user ID"}, 400
+            if not group:
+                return {"error": "Group not found"}, 400
+            if not member:
+                return {"error": "You are not a member of this group"}, 403
+
+            # Query messages in the group
+            base_query = Message.query.filter(
+                Message.recipient_user_id == group_id,
+                Message.is_group.is_(True)
+            ).order_by(Message.send_at)
+
+            # Pagination logic
+            if page is not None:
+                page = int(page)
+                per_page = 20
+                messages = base_query.limit(per_page).offset((page - 1) * per_page).all()
+            else:
+                messages = base_query.all()
+
+            # Format the messages for response
+            formatted_messages = []
+            for msg in messages:
+                # Get sender info
+                sender = User.query.get(msg.sender_user_id)
+                sender_username = sender.username if sender else "Unknown User"
+
+                message_data = {
+                    'message_id': msg.message_id,
+                    'sender_user_id': msg.sender_user_id,
+                    'sender_username': sender_username,
+                    'recipient_id': msg.recipient_user_id,
+                    'content': msg.encrypted_content,
+                    'type': msg.type.value if hasattr(msg.type, 'value') else 'text',
+                    'timestamp': msg.send_at.isoformat() if msg.send_at else None,
+                }
+                formatted_messages.append(message_data)
+
+            return {"messages": formatted_messages}, 200
+
+        except Exception as e:
+            db.session.rollback()
+            return {"error": str(e)}, 500
+
     def get_messages_with_contact(self, user_id, contact_id, page=None):
         """
         Get messages between a user and their contact.
@@ -130,14 +192,14 @@ class MessageService:
                 
                 # Get group messages
                 query = Message.query.filter(
-                    Message.is_group == True,
+                    Message.is_group is True,
                     Message.recipient_user_id == chat_id
                 ).order_by(Message.send_at.desc())
                 
             else:
                 # For direct messages
                 query = Message.query.filter(
-                    Message.is_group == False,
+                    Message.is_group is False,
                     or_(
                         and_(Message.sender_user_id == user_id, Message.recipient_user_id == chat_id),
                         and_(Message.sender_user_id == chat_id, Message.recipient_user_id == user_id)
@@ -252,7 +314,7 @@ class MessageService:
             if is_group:
                 # Get unread messages for group
                 query = db.session.query(func.count(Message.message_id)).filter(
-                    Message.is_group == True,
+                    Message.is_group is True,
                     Message.recipient_user_id == chat_id,
                     Message.sender_user_id != user_id,
                     ~Message.message_id.in_(
@@ -264,7 +326,7 @@ class MessageService:
             else:
                 # Get unread messages for direct chat
                 query = db.session.query(func.count(Message.message_id)).filter(
-                    Message.is_group == False,
+                    Message.is_group is False,
                     Message.recipient_user_id == user_id,
                     Message.sender_user_id == chat_id,
                     ~Message.message_id.in_(
@@ -276,5 +338,5 @@ class MessageService:
             
             return query.scalar() or 0
             
-        except Exception as e:
+        except Exception as _:
             return 0

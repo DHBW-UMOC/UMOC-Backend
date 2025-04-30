@@ -84,7 +84,7 @@ class ContactService:
                     "name": contact_user.username,
                     "status": contact.status.value,
                     "streak": contact.streak,
-                    "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+                    "url": contact_user.profile_picture
                 })
         
         return contact_list
@@ -175,7 +175,7 @@ class ContactService:
                     "name": contact_user.username,
                     "status": contact.status.value,
                     "streak": contact.streak,
-                    "url": "https://static.spektrum.de/fm/912/f2000/205090.jpg"
+                    "url": contact_user.profile_picture
                 })
         
         return contact_list
