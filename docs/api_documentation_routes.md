@@ -130,7 +130,7 @@ Change the status of a contact.
 
 Retrieve all contacts for the authenticated user.
 
-- **URL**: `/getContacts`
+- **URL**: `/getChats`
 - **Method**: `GET`
 - **Headers**:
   - `Authorization`: Bearer `<JWT access token>`
@@ -139,20 +139,30 @@ Retrieve all contacts for the authenticated user.
     - **Content**:
         ```json
         {
-          "contacts": [
+          "chats": [
             {
+              "is_group": false,
               "contact_id": "00000000-0000-0000-0000-000000000000",
               "name": "String",
               "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS",
               "streak": "int | null",
-              "url": "Link to JPG"
+              "picture_url": "Link to JPG"
             },
             {
+              "is_group": false,
               "contact_id": "00000000-0000-0000-0000-000000000000",
               "name": "String",
               "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS",
               "streak": "int | null",
-              "url": "Link to JPG"
+              "picture_url": "Link to JPG"
+            },
+            {
+              "is_group": true,
+              "group_id": "00000000-0000-0000-0000-000000000000",
+              "name": "String",
+              "picture_url": "Link to JPG",
+              "admin_user_id": "00000000-0000-0000-0000-000000000000",
+              "create_at": "Link to JPG"
             }
           ]
       }
@@ -167,12 +177,12 @@ Retrieve all contacts for the authenticated user.
 
 Retrieve all messages between the authenticated user and a specific contact.
 
-- **URL**: `/getContactMessages`
+- **URL**: `/getChatMessages`
 - **Method**: `GET`
 - **Headers**:
   - `Authorization`: Bearer `<JWT access token>`
 - **Query Parameters**:
-  - `contact_id`: ID of the contact
+  - `chat_id`: ID of the contact
   - `page`: Page number for pagination (optional; Page=20 messages); Bei None bekommt man alle Messages.
 - **Success Response**:
   - **Code**: 200
@@ -233,6 +243,167 @@ Save a new message.
     - **Content**: `{"error": "Content is required"}`
   - **Code**: 500
     - **Content**: `{"error": "Failed to save message"}`
+
+  
+## Group Endpoints
+
+### Create Group
+Create a new group.
+- **URL**: `/createGroup`
+- **Method**: `POST`
+- **Headers**:
+  - `Authorization`: Bearer `<JWT access token>`
+- **Request Body**:
+  ```json
+  {
+    "group_name": "group_name",
+    "group_pic": "https://group_pic_url.jpeg",
+    "group_members": ["contact_id1", "contact_id2"]
+  }
+  ```
+- **Success Response**:
+- **Code**: 201
+  - **Content**: `{"success": "Group created successfully", "group_id": "group_id"}`
+- **Error Response**:
+  - **Code**: 400
+    - **Content**: `{"error": "Group name is required"}`
+    - **Content**: `{"error": "Group name already exists"}`
+    - **Content**: `{"error": "Group picture URL is required"}`
+    - **Content**: `{"error": "Group members are required"}`
+    - **Content**: `{"error": "Group members not found."}`
+    - **Content**: `{"error": "Group members must be a list"}`
+    - **Content**: `{"error": "Group name must be between 3 and 25 characters long"}`
+    - **Content**: `{"error": "Group can have at most 50 members"}`
+    - **Content**: `{"error": "Group must have at least 2 members"}`
+    - **Content**: `"error": "Database error: str(e)"`
+
+### Delete Group
+Delete a group.
+- **URL**: `/deleteGroup`
+- **Method**: `POST`
+- **Headers**:
+  - `Authorization`: Bearer `<JWT access token>`
+- **Request Body**:
+  ```json
+  {
+    "group_id": "group_id"
+  }
+  ```
+- **Success Response**:
+- **Code**: 201
+  - **Content**: `{"success": "Group deleted successfully"}`
+- **Error Response**:
+  - **Code**: 400
+    - **Content**: `{"error": "Group ID is required"}`
+    - **Content**: `{"error": "User not found"}`
+    - **Content**: `{"error": "Group not found"}`
+    - **Content**: `{"error": "User is not admin of the group"}`
+    - **Content**: `{"error": "Database error: str(e)"}`
+
+### Change Group
+Change a group. Ethere the Name, Group picture or who the admin is.
+- **URL**: `/changeGroup`
+- **Method**: `POST`
+- **Headers**:
+  - `Authorization`: Bearer `<JWT access token>`
+- **Request Body**:
+  ```json
+  {
+    "action": "name | picture | admin",
+    "group_id": "group_id",
+    "new_value": "new_name/new_picture_url/new_admin_id"
+  }
+  ```
+- **Success Response**:
+- **Code**: 201
+  - **Content**: `{"success": "Group updated successfully"}`
+- **Error Response**:
+  - **Code**: 400
+    - **Content**: `{"error": "New value is required"}`
+    - **Content**: `{"error": "Action is required. Valid values: name, picture, admin"}`
+    - **Content**: `{"error": "User is not admin of the group"}`
+    - **Content**: `{"error": "Group not found"}`
+    - **Content**: `{"error": "User not found"}`
+
+### Add Member
+Add Member to a Group.
+- **URL**: `/addMember`
+- **Method**: `POST`
+- **Headers**:
+  - `Authorization`: Bearer `<JWT access token>`
+- **Request Body**:
+  ```json
+  {
+    "group_id": "group_id",
+    "new_member_id": "new_member_id"
+  }
+  ```
+- **Success Response**:
+- **Code**: 201
+  - **Content**: `{"success": "Group updated successfully"}`
+- **Error Response**:
+  - **Code**: 400
+    - **Content**: `{"error": "Group ID is required"}`
+    - **Content**: `{"error": "User not found"}`
+    - **Content**: `{"error": "New member not found"}`
+    - **Content**: `{"error": "Group not found"}`
+  - **Code**: 403
+    - **Content**: `{"error": "User is not admin of the group"}`
+  - **Code**: 409
+    - **Content**: `{"error": "New member is already in the group"}`
+
+### Remove member
+Remove a Member from a Group.
+- **URL**: `/removeMember`
+- **Method**: `POST`
+- **Headers**:
+  - `Authorization`: Bearer `<JWT access token>`
+- **Request Body**:
+  ```json
+  {
+    "group_id": "group_id",
+    "new_member_id": "new_member_id"
+  }
+  ```
+- **Success Response**:
+- **Code**: 201
+  - **Content**: `{"success": "Group created successfully", "group_id": "group_id"}`
+- **Error Response**:
+  - **Code**: 400
+    - **Content**: `{"error": "Group ID is required"}`
+    - **Content**: `{"error": "Member ID is required"}`
+    - **Content**: `{"error": "User not found"}`
+    - **Content**: `{"error": "Member not found"}`
+    - **Content**: `{"error": "Group not found"}`
+    - **Content**: `{"error": "User is not admin of the group"}`
+    - **Content**: `{"error": "Member is not in the group"}`
+
+### Get Group Members
+Get all Members of a group
+- **URL**: `/getGroupMembers`
+- **Method**: `GET`
+- **Headers**:
+  - `Authorization`: Bearer `<JWT access token>`
+- **Request Body**:
+  ```json
+  {
+    "group_id": "group_id"
+  }
+  ```
+- **Success Response**:
+  - **Code**: 201
+    - **Content**: 
+    ```json
+    {
+      "members": ["member1_id", "member2_id"]
+    }
+    ```
+- **Error Response**:
+  - **Code**: 400
+    - **Content**: `{"error": "User not found"}`
+    - **Content**: `{"error": "Group not found"}`
+    - **Content**: `{"error": "Group ID is required"}`
+
 
 ## Utility Endpoints
 

@@ -82,3 +82,7 @@ class UserService:
     
     def get_user_by_username(self, username):
         return User.query.filter_by(username=username).first()
+
+    def does_user_exist(self, user_id):
+        return User.query.filter_by(user_id=user_id).first() is not None
+
