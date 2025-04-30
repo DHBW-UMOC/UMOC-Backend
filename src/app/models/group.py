@@ -26,7 +26,7 @@ class Group(db.Model):
             'group_name': self.group_name,
             'group_picture': self.group_picture,
             'admin_user_id': self.admin_user_id,
-            'created_at': self.create_at.isoformat() if self.create_at else None
+            'created_at': self.created_at.isoformat() if self.created_at else None
         }
 
 class GroupMember(db.Model):
