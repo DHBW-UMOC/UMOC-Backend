@@ -1,18 +1,22 @@
 from datetime import datetime
 import uuid
 from flask import request
-from flask_socketio import SocketIO, emit, join_room
-from app.models import db, User, UserContact, Message, ContactStatusEnum, MessageTypeEnum
+from flask_socketio import SocketIO, emit
+from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
+from app.models import db, User, Message, MessageTypeEnum
+from app.models.user import UserContact, ContactStatusEnum
+from app.services.group_service import GroupService
 
 socketio = SocketIO()
+group_service = GroupService()
 user_sids = {}  # {user_id: socket_id}
 
 
-def get_user_from_session(session_id):
-    """Helper to get user from session ID"""
-    # if session_id not in active_sessions:
-    #     return None
-    return User.query.filter_by(session_id=session_id).first()
+def get_user_from_jwt():
+    """Helper to get user from JWT token"""
+    verify_jwt_in_request()
+    user_id = get_jwt_identity()
+    return User.query.get(user_id)
 
 
 ###########################
@@ -20,172 +24,122 @@ def get_user_from_session(session_id):
 ###########################
 @socketio.on('connect')
 def handle_connect():
-    session_id = request.args.get('sessionID')
-    print(f"Connection attempt with session ID: {session_id}")  # Debug log
+    try:
+        user = get_user_from_jwt()
+        if not user:
+            print("Rejecting: Invalid JWT token")
+            return False  # Reject connection
 
-    if not session_id:
-        print("Rejecting: Missing session ID")  # Debug log
-        return False  # Reject connection
+        print(f"Accepting connection for user: {user.username}")
+        user_sids[user.user_id] = request.sid  # Store the user's socket ID
 
-    # if session_id not in active_sessions:
-    #     print(f"Rejecting: Invalid session ID: {session_id}")  # Debug log
-    #     return False  # Reject connection
+        user.is_online = True
+        db.session.commit()
 
-    user = get_user_from_session(session_id)
-    if not user:
-        print(f"Rejecting: No user found for session ID: {session_id}")  # Debug log
-        return False  # Reject connection
+        # Notify all contacts that the user is online
+        emit('user_status', {
+            'user_id': user.user_id,
+            'username': user.username,
+            'status': 'online'
+        }, broadcast=True)
 
-    print(f"Accepting connection for user: {user.username}")  # Debug log
-    user_sids[user.user_id] = request.sid
+        return True
+    except Exception as e:
+        print(f"Connection error: {e}")
+        return False
 
-    user.is_online = True
-    db.session.commit()
 
-    # Join rooms for all contacts and groups
-    for contact in user.contacts:
-        if contact.status == ContactStatusEnum.FRIEND:
-            join_room(f"dm_{min(user.user_id, contact.contact_id)}_{max(user.user_id, contact.contact_id)}")
+@socketio.on('disconnect')
+def handle_disconnect():
+    try:
+        user = get_user_from_jwt()
+        if user:
+            # Update online status
+            user.is_online = False
+            db.session.commit()
+            
+            # Remove from tracking
+            user_sids.pop(user.user_id, None)
 
-    for membership in user.group_memberships:
-        join_room(f"group_{membership.group_id}")
-
-    # Notify contacts that user is online
-    for contact in user.contacts:
-        if contact.contact_id in user_sids:
+            # Notify all contacts that the user is offline
             emit('user_status', {
                 'user_id': user.user_id,
                 'username': user.username,
-                'status': 'online'
-            }, room=user_sids[contact.contact_id])
-
-    return True
-
-
-@socketio.on('disconnect', namespace='/')
-def handle_disconnect():
-    session_id = request.args.get('sessionID')
-    if not session_id:
-        return
-
-    user = get_user_from_session(session_id)
-    if user:
-        # Update online status
-        user.is_online = False
-        db.session.commit()
-
-        # Remove from tracking
-        user_sids.pop(user.user_id, None)
-
-        # Notify contacts user is offline
-        for contact in user.contacts:
-            if contact.contact_id in user_sids:
-                emit('user_status', {
-                    'user_id': user.user_id,
-                    'username': user.username,
-                    'status': 'offline'
-                }, room=user_sids[contact.contact_id])
+                'status': 'offline'
+            }, broadcast=True)
+    except Exception as e:
+        print(f"Disconnection error: {e}")
 
 
 @socketio.on('send_message')
 def handle_message(data):
-    session_id = data.get('sessionID')
-    recipient_id = data.get('recipient_id')
-    content = data.get('content')
-    is_group = data.get('is_group', False)
-    msg_type = data.get('type', 'text')
+    try:
+        user = get_user_from_jwt()
+        recipient_id = data.get('recipient_id')
+        content = data.get('content')
+        is_group = data.get('is_group', False)
+        msg_type = data.get('type', 'text')
 
-    sender = get_user_from_session(session_id)
-    if not sender:
-        return
+        if not user:
+            return
+        
+        if not recipient_id or not content:
+            emit('error', {'message': 'Recipient ID and content are required'})
+            return
 
-    message = Message(
-        message_id=str(uuid.uuid4()),
-        sender_user_id=sender.user_id,
-        recipient_user_id=recipient_id,
-        encrypted_content=content,
-        type=MessageTypeEnum(msg_type),
-        send_at=datetime.utcnow(),
-        is_group=is_group
-    )
-    db.session.add(message)
-    db.session.commit()
+        message = Message(
+            message_id=str(uuid.uuid4()),
+            sender_user_id=user.user_id,
+            recipient_user_id=recipient_id,
+            encrypted_content=content,
+            type=MessageTypeEnum(msg_type),
+            send_at=datetime.utcnow(),
+            is_group=is_group
+        )
+        db.session.add(message)
+        db.session.commit()
 
-    if is_group:
-        room_id = f"group_{recipient_id}"
-    else:
-        room_id = f"dm_{min(sender.user_id, recipient_id)}_{max(sender.user_id, recipient_id)}"
+        # Send message directly to recipient's socket if they are online
+        if recipient_id in user_sids:
+            emit('new_message', {
+                'message_id': message.message_id,
+                'sender_id': user.user_id,
+                'sender_username': user.username,
+                'content': content,
+                'type': msg_type,
+                'timestamp': message.send_at.isoformat(),
+                'is_group': is_group
+            }, room=user_sids[recipient_id])
+    except Exception as e:
+        print(f"Message handling error: {e}")
+        emit('error', {'message': 'Failed to send message'})
 
-    emit('new_message', {
-        'message_id': message.message_id,
-        'sender_id': sender.user_id,
-        'sender_username': sender.username,
-        'content': content,
-        'type': msg_type,
-        'timestamp': message.send_at.isoformat(),
-        'is_group': is_group
-    }, room=room_id)
-
-
-@socketio.on('add_contact')
-def handle_add_contact(data):
-    session_id = data.get('sessionID')
-    contact_username = data.get('contact_username')
-
-    user = get_user_from_session(session_id)
-    if not user:
-        return
-
-    contact = User.query.filter_by(username=contact_username).first()
-    if not contact:
-        emit('error', {'message': 'User not found'}, room=request.sid)
-        return
-
-    # Create contact relationship
-    new_contact = UserContact(
-        user_id=user.user_id,
-        contact_id=contact.user_id,
-        status=ContactStatusEnum.NEW
-    )
-    db.session.add(new_contact)
-    db.session.commit()
-
-    # Notify both users
-    contact_data = {
-        'user_id': contact.user_id,
-        'username': contact.username,
-        'status': ContactStatusEnum.NEW.value
-    }
-    emit('contact_added', contact_data, room=request.sid)
-
-    if contact.user_id in user_sids:
-        emit('contact_request', {
-            'user_id': user.user_id,
-            'username': user.username
-        }, room=user_sids[contact.user_id])
 
 # New WebSocket Handlers
 @socketio.on('action')
 def handle_action(data):
     """Handle various client actions based on the action field"""
-    action = data.get('action')
-    action_data = data.get('data', {})
-    session_id = action_data.get('sessionID')
+    try:
+        user = get_user_from_jwt()
+        if not user:
+            return
+            
+        action = data.get('action')
+        action_data = data.get('data', {})
+        
+        if action == 'typing':
+            handle_typing(user, action_data)
+        elif action == 'sendMessage':
+            handle_send_message(user, action_data)
+        elif action == 'useItem':
+            handle_use_item(user, action_data)
+        elif action == 'system_message':
+            handle_system_message(user, action_data)
+    except Exception as e:
+        print(f"Action handling error: {e}")
+        emit('error', {'message': 'Failed to process action'})
 
-    sender = get_user_from_session(session_id)
-    if not sender:
-        return
-    
-    if action == 'typing':
-        handle_typing(sender, action_data)
-    elif action == 'sendMessage':
-        handle_send_message(sender, action_data)
-    elif action == 'useItem':
-        handle_use_item(sender, action_data)
-    elif action == 'system_message':
-        handle_system_message(sender, action_data)
-
-def handle_typing(sender, data):
+def handle_typing(user, data):
     """Handle typing event and notify recipients"""
     recipient_id = data.get('recipient_id')
     character = data.get('char')
@@ -194,20 +148,33 @@ def handle_typing(sender, data):
     if not recipient_id or not character:
         return
     
-    if is_group:
-        room_id = f"group_{recipient_id}"
-    else:
-        room_id = f"dm_{min(sender.user_id, recipient_id)}_{max(sender.user_id, recipient_id)}"
-    
-    emit('typing', {
-        'sender_id': sender.user_id,
-        'sender_username': sender.username,
-        'char': character,
-        'timestamp': datetime.utcnow().isoformat(),
-        'is_group': is_group
-    }, room=room_id)
+    # Send typing notification directly to recipient's socket if they are online
+    if recipient_id in user_sids:
+        emit('typing', {
+            'sender_id': user.user_id,
+            'sender_username': user.username,
+            'char': character,
+            'timestamp': datetime.utcnow().isoformat(),
+            'is_group': is_group
+        }, room=user_sids[recipient_id])
+    elif is_group:
+        # For groups, send to all members
+        members = group_service.get_group_members(user.user_id, recipient_id)
+        if not isinstance(members, list):
+            return
+            
+        for member in members:
+            if member["user_id"] in user_sids and member["user_id"] != user.user_id:
+                emit('typing', {
+                    'sender_id': user.user_id,
+                    'sender_username': user.username,
+                    'char': character,
+                    'timestamp': datetime.utcnow().isoformat(),
+                    'is_group': True,
+                    'group_id': recipient_id
+                }, room=user_sids[member["user_id"]])
 
-def handle_send_message(sender, data):
+def handle_send_message(user, data):
     """Handle send message action"""
     recipient_id = data.get('recipient_id')
     content = data.get('content')
@@ -219,7 +186,7 @@ def handle_send_message(sender, data):
     
     message = Message(
         message_id=str(uuid.uuid4()),
-        sender_user_id=sender.user_id,
+        sender_user_id=user.user_id,
         recipient_user_id=recipient_id,
         encrypted_content=content,
         type=MessageTypeEnum(msg_type),
@@ -229,22 +196,37 @@ def handle_send_message(sender, data):
     db.session.add(message)
     db.session.commit()
     
-    if is_group:
-        room_id = f"group_{recipient_id}"
-    else:
-        room_id = f"dm_{min(sender.user_id, recipient_id)}_{max(sender.user_id, recipient_id)}"
-    
-    emit('new_message', {
-        'message_id': message.message_id,
-        'sender_id': sender.user_id,
-        'sender_username': sender.username,
-        'content': content,
-        'type': msg_type,
-        'timestamp': message.send_at.isoformat(),
-        'is_group': is_group
-    }, room=room_id)
+    # Send notification directly to recipient's socket if they are online
+    if recipient_id in user_sids:
+        emit('new_message', {
+            'message_id': message.message_id,
+            'sender_id': user.user_id,
+            'sender_username': user.username,
+            'content': content,
+            'type': msg_type,
+            'timestamp': message.send_at.isoformat(),
+            'is_group': is_group
+        }, room=user_sids[recipient_id])
+    elif is_group:
+        # For groups, send to all members
+        members = group_service.get_group_members(user.user_id, recipient_id)
+        if not isinstance(members, list):
+            return
+            
+        for member in members:
+            if member["user_id"] in user_sids and member["user_id"] != user.user_id:
+                emit('new_message', {
+                    'message_id': message.message_id,
+                    'sender_id': user.user_id,
+                    'sender_username': user.username,
+                    'content': content,
+                    'type': msg_type,
+                    'timestamp': message.send_at.isoformat(),
+                    'is_group': True,
+                    'group_id': recipient_id
+                }, room=user_sids[member["user_id"]])
 
-def handle_use_item(sender, data):
+def handle_use_item(user, data):
     """Handle item usage"""
     recipient_id = data.get('recipient_id')
     item_id = data.get('item_id')
@@ -253,23 +235,33 @@ def handle_use_item(sender, data):
     if not recipient_id or not item_id:
         return
     
-    # Here you'd add logic to process the item usage
-    # For now, we'll just notify the recipients
-    
-    if is_group:
-        room_id = f"group_{recipient_id}"
-    else:
-        room_id = f"dm_{min(sender.user_id, recipient_id)}_{max(sender.user_id, recipient_id)}"
-    
-    emit('item_used', {
-        'sender_id': sender.user_id,
-        'sender_username': sender.username,
-        'item_id': item_id,
-        'timestamp': datetime.utcnow().isoformat(),
-        'is_group': is_group
-    }, room=room_id)
+    # Send notification directly to recipient's socket if they are online
+    if recipient_id in user_sids:
+        emit('item_used', {
+            'sender_id': user.user_id,
+            'sender_username': user.username,
+            'item_id': item_id,
+            'timestamp': datetime.utcnow().isoformat(),
+            'is_group': is_group
+        }, room=user_sids[recipient_id])
+    elif is_group:
+        # For groups, send to all members
+        members = group_service.get_group_members(user.user_id, recipient_id)
+        if not isinstance(members, list):
+            return
+            
+        for member in members:
+            if member["user_id"] in user_sids and member["user_id"] != user.user_id:
+                emit('item_used', {
+                    'sender_id': user.user_id,
+                    'sender_username': user.username,
+                    'item_id': item_id,
+                    'timestamp': datetime.utcnow().isoformat(),
+                    'is_group': True,
+                    'group_id': recipient_id
+                }, room=user_sids[member["user_id"]])
 
-def handle_system_message(sender, data):
+def handle_system_message(user, data):
     """Handle system messages"""
     recipient_id = data.get('recipient_id')
     content = data.get('content')
@@ -278,51 +270,49 @@ def handle_system_message(sender, data):
     if not recipient_id or not content:
         return
     
-    if is_group:
-        room_id = f"group_{recipient_id}"
-    else:
-        if recipient_id in user_sids:
-            room_id = user_sids[recipient_id]
-        else:
-            return  # Recipient not online
-    
-    emit('system_message', {
-        'content': content,
-        'timestamp': datetime.utcnow().isoformat(),
-        'is_group': is_group
-    }, room=room_id)
+    # Send system message directly to recipient's socket if they are online
+    if recipient_id in user_sids:
+        emit('system_message', {
+            'content': content,
+            'timestamp': datetime.utcnow().isoformat(),
+            'is_group': is_group
+        }, room=user_sids[recipient_id])
+    elif is_group:
+        # For groups, send to all members
+        members = group_service.get_group_members(user.user_id, recipient_id)
+        if not isinstance(members, list):
+            return
+            
+        for member in members:
+            if member["user_id"] in user_sids and member["user_id"] != user.user_id:
+                emit('system_message', {
+                    'content': content,
+                    'timestamp': datetime.utcnow().isoformat(),
+                    'is_group': True,
+                    'group_id': recipient_id
+                }, room=user_sids[member["user_id"]])
 
 # Helper functions to send notifications
 def send_typing_notification(user_id, recipient_id, character, is_group=False):
     """Send typing notification to recipient"""
     user = User.query.get(user_id)
-    if not user:
+    if not user or recipient_id not in user_sids:
         return
         
-    if is_group:
-        room_id = f"group_{recipient_id}"
-    else:
-        room_id = f"dm_{min(user_id, recipient_id)}_{max(user_id, recipient_id)}"
-    
     socketio.emit('typing', {
         'sender_id': user.user_id,
         'sender_username': user.username,
         'char': character,
         'timestamp': datetime.utcnow().isoformat(),
         'is_group': is_group
-    }, room=room_id)
+    }, room=user_sids[recipient_id])
 
 def send_message_notification(message):
     """Send message notification to recipient"""
     sender = User.query.get(message.sender_user_id)
-    if not sender:
+    if not sender or message.recipient_user_id not in user_sids:
         return
         
-    if message.is_group:
-        room_id = f"group_{message.recipient_user_id}"
-    else:
-        room_id = f"dm_{min(message.sender_user_id, message.recipient_user_id)}_{max(message.sender_user_id, message.recipient_user_id)}"
-    
     socketio.emit('new_message', {
         'message_id': message.message_id,
         'sender_id': sender.user_id,
@@ -331,4 +321,4 @@ def send_message_notification(message):
         'type': message.type.value,
         'timestamp': message.send_at.isoformat(),
         'is_group': message.is_group
-    }, room=room_id)
+    }, room=user_sids[message.recipient_user_id])

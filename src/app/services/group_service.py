@@ -158,9 +158,8 @@ class GroupService:
         group = Group.query.filter_by(group_id=group_id).first()
         return group is not None
 
-    def get_group_members(self, user_id, group_id):
+    def get_group_members(self, group_id):
         if not self.does_group_exist(group_id): return {"error": "Group not found"}
-        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         members = GroupMember.query.filter_by(group_id=group_id).all()
         return [member.to_dict() for member in members]

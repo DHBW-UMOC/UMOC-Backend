@@ -268,8 +268,6 @@ def create_group():
     if len(group_name) < 3 or len(group_name) > 25: return jsonify({"error": "Group name must be between 3 and 50 characters long"}), 400
     if not group_name: return jsonify({"error": "Group name is required"}), 400
     if not group_members: return jsonify({"error": "Group members are required"}), 400
-    print(group_members)
-    print(type(group_members))
     if len(group_members) < 2: return jsonify({"error": "Group must have at least 2 members"}), 400
     if len(group_members) > 50: return jsonify({"error": "Group can have at most 50 members"}), 400
 
@@ -310,7 +308,6 @@ def delete_group():
 def change_group():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
-    print(data)
     action = data.get("action").lower()
     group_id = data.get("group_id")
     new_value = data.get("new_value")
@@ -324,7 +321,6 @@ def change_group():
     if not action:
         return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
     if not new_value:
-        print("New value is required")
         return jsonify({"error": "New value is required"}), 400
 
     if action == "name":
@@ -411,7 +407,7 @@ def get_group_members():
     if not group_service.does_group_exist(group_id):
         return jsonify({"error": "Group not found"}), 404
 
-    result = group_service.get_group_members(user_id, group_id)
+    result = group_service.get_group_members(group_id)
     if "error" in result:
         return jsonify(result), 400
     return jsonify({"members": result}), 200
