@@ -158,6 +158,20 @@ def get_chat_messages():
 
     return jsonify(result), status_code
 
+@api_bp.route("/getOwnProfile", methods=['GET'])
+@jwt_required()
+def get_own_profile():
+    user_id = get_jwt_identity()
+
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    user = user_service.get_user_by_id(user_id)
+    return jsonify({
+        "user_id": user.user_id,
+        "username": user.username,
+        "profile_picture": user.profile_picture
+    })
 
 @api_bp.route("/saveMessage", methods=["POST"])
 @jwt_required()
@@ -261,8 +275,6 @@ def create_group():
     if len(group_name) < 3 or len(group_name) > 25: return jsonify({"error": "Group name must be between 3 and 50 characters long"}), 400
     if not group_name: return jsonify({"error": "Group name is required"}), 400
     if not group_members: return jsonify({"error": "Group members are required"}), 400
-    print(group_members)
-    print(type(group_members))
     if len(group_members) < 2: return jsonify({"error": "Group must have at least 2 members"}), 400
     if len(group_members) > 50: return jsonify({"error": "Group can have at most 50 members"}), 400
 
@@ -303,7 +315,6 @@ def delete_group():
 def change_group():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
-    print(data)
     action = data.get("action").lower()
     group_id = data.get("group_id")
     new_value = data.get("new_value")
@@ -317,7 +328,6 @@ def change_group():
     if not action:
         return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
     if not new_value:
-        print("New value is required")
         return jsonify({"error": "New value is required"}), 400
 
     if action == "name":

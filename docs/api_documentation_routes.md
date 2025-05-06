@@ -281,7 +281,30 @@ Save a new message.
   - **Code**: 500
     - **Content**: `{"error": "Failed to save message"}`
 
-  
+### Get Own Profile
+- **URL**: `/getOwnProfile`
+- **Method**: `GET`
+- **Headers**:
+  - `Authorization`: Bearer `<JWT access token>`
+
+- **Success Response**:
+  - **Code**: 200
+  - **Content**:
+    ```json
+    {
+      "user_id": "00000000-0000-0000-0000-000000000000",
+      "username": "String",
+      "profile_picture": "Link to JPG"
+    }
+    ```
+- **Error Response**:
+  - **Code**: 400
+    - **Content**: `{"error": "Recipient ID is required"}`
+    - **Content**: `{"error": "Content is required"}`
+  - **Code**: 500
+    - **Content**: `{"error": "Failed to save message"}`
+
+
 ## Group Endpoints
 
 ### Create Group
@@ -415,10 +438,10 @@ Remove a Member from a Group.
     - **Content**: `{"error": "User is not admin of the group"}`
     - **Content**: `{"error": "Member is not in the group"}`
 
-### Get Group Members
+### Leave Group
 Get all Members of a group
-- **URL**: `/getGroupMembers`
-- **Method**: `GET`
+- **URL**: `/leaveGroup`
+- **Method**: `POST`
 - **Headers**:
   - `Authorization`: Bearer `<JWT access token>`
 - **Request Body**:
@@ -429,17 +452,13 @@ Get all Members of a group
   ```
 - **Success Response**:
   - **Code**: 201
-    - **Content**: 
-    ```json
-    {
-      "members": ["member1_id", "member2_id"]
-    }
-    ```
+    - **Content**: `{"success": "User left the group successfully"}`
 - **Error Response**:
   - **Code**: 400
     - **Content**: `{"error": "User not found"}`
     - **Content**: `{"error": "Group not found"}`
     - **Content**: `{"error": "Group ID is required"}`
+    - **Content**: `{"error": "User is not a member of the group"}`
 
 
 ## Utility Endpoints

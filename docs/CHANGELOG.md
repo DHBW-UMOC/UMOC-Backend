@@ -1,3 +1,16 @@
+## Changelog – Max - 07.05.2025
+
+### Neue Endpunkte
+- **POST `/leaveGroup`** – Eine Gruppe verlassen.
+- **POST `/getOwnProfile`** – eigenen Profil zurückgeben.
+
+### Geänderte Endpunkte
+- **POST `/getChatMessages `**:
+-  Rückgabe enthält memebers anstatt group_admin_id.
+
+### Gelöschte Endpunkte
+- **POST `/getGroupMembers`**
+
 ## Changelog – Max - 29.04.2025
 
 ### Neue Endpunkte

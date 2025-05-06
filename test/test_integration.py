@@ -780,6 +780,24 @@ class TestApiEndpoints(BaseTestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertIn('success', data)
 
+    def test_get_profile(self):
+        """Test the getProfile endpoint"""
+        # Set up users and login
+        headers, login_data = self.setup_users_and_login()
+
+        # Test getting profile
+        response = self.client.get(
+            f'/getOwnProfile',
+            headers=headers
+        )
+        if response.status_code != 200:
+            self.debug_response(response, '/getProfile')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('username', data)
+        self.assertEqual(data['username'], self.test_username)
+        self.assertIn('profile_picture', data)
+
     def test_send_message(self):
         """Test the sendMessage endpoint"""
         # Set up users and login
