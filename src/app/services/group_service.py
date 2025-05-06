@@ -163,7 +163,17 @@ class GroupService:
         if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         members = GroupMember.query.filter_by(group_id=group_id).all()
-        return [member.to_dict() for member in members]
+        result = []
+        for member in members:
+            user = member.user
+            result.append({
+                "contact_id": member.user_id,
+                "name": user.username,
+                "picture_url": user.profile_picture,
+                "role": member.role.value
+            })
+
+        return result
 
     def get_group_by_id(self, group_id):
         group = Group.query.filter_by(group_id=group_id).first()
@@ -179,10 +189,13 @@ class GroupService:
 
         if not groups: return {"error": "No groups found for this user"}
 
-        return [group.to_dict() for group in groups]
+        return [{
+            **group.to_dict(),
+            "members": self.get_group_members(user_id, group.group_id)
+        } for group in groups]
 
     def is_id_group(self, group_id):
         group = Group.query.filter_by(group_id=group_id).first()
-        if not group: return {"error": "Group not found"}
+        if not group: return False
 
         return True

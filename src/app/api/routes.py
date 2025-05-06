@@ -123,14 +123,10 @@ def get_chats():
     contacts = contact_service.get_user_contacts_by_user_id(user_id)
     if "error" in contacts:
         return jsonify(contacts), 500
-    for c in contacts:
-        c["is_group"] = False
 
     groups = group_service.get_groups_by_user_id(user_id)
     if "error" in groups:
         return jsonify(groups), 500
-    for g in groups:
-        g["is_group"] = True
 
     return jsonify({"chats": contacts + groups})
 
@@ -143,14 +139,13 @@ def get_chat_messages():
     data = request.json if request.is_json else request.args
     chat_id = data.get('chat_id')
     page = data.get('page', type=int)
-    is_group = data.get('is_group', type=bool, default=False)
 
     if not chat_id:
         return jsonify({"error": "No chatID provided for getContactMessages"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
-    if is_group or group_service.is_id_group(chat_id):
+    if group_service.is_id_group(chat_id):
         if not group_service.does_group_exist(chat_id):
             return jsonify({"error": "Group not found"}), 404
         if not group_service.is_user_member(user_id, chat_id):
@@ -159,8 +154,6 @@ def get_chat_messages():
     else:
         if not user_service.does_user_exist(chat_id):
             return jsonify({"error": "Contact not found"}), 404
-        if not contact_service.is_contact(user_id, chat_id):
-            return jsonify({"error": "User is not a contact"}), 403
         result, status_code = message_service.get_messages_with_contact(user_id, chat_id, page)
 
     return jsonify(result), status_code
@@ -396,25 +389,6 @@ def remove_member():
     if "error" in result:
         return jsonify(result), 400
     return jsonify({"success": "Member removed successfully"}), 200
-
-@api_bp.route("/getGroupMembers", methods=['GET'])
-@jwt_required()
-def get_group_members():
-    user_id = get_jwt_identity()
-    data = request.json if request.is_json else request.args
-    group_id = data.get('group_id')
-
-    if not group_id:
-        return jsonify({"error": "Group ID is required"}), 400
-    if not user_service.does_user_exist(user_id):
-        return jsonify({"error": "User not found"}), 400
-    if not group_service.does_group_exist(group_id):
-        return jsonify({"error": "Group not found"}), 404
-
-    result = group_service.get_group_members(user_id, group_id)
-    if "error" in result:
-        return jsonify(result), 400
-    return jsonify({"members": result}), 200
 
 # Add missing getGroupMessages endpoint
 @api_bp.route("/getGroupMessages", methods=['GET'])

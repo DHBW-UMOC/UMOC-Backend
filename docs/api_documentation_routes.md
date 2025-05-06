@@ -1,5 +1,42 @@
 # UMOC-Backend API Documentation
 
+# DTOs
+GroupMember DTO -> /getChats
+```ts
+export interface GroupMember {
+  user_id: string; // UUID
+  name: string;
+  profile_picture: string; // URL
+  role: 'admin' | 'member';
+}
+```
+
+Group DTO -> /getChats
+```ts
+export interface Group {
+  is_group: true;
+  contact_id: string; // UUID
+  name: string;
+  picture_url: string; // URL
+  created_at: string; // ISO8601 date string
+  members: GroupMember[];
+}
+```
+
+Contact DTO -> /getChats
+```ts
+export interface Contact {
+  is_group: false;
+  contact_id: string; // UUID
+  name: string;
+  picture_url: string; // URL
+  status: 'FRIEND' | 'BLOCKED' | 'NEW' | 'TIMEOUT' | 'LASTWORDS';
+  streak: number | null;
+}
+```
+
+---
+
 This document outlines all available endpoints for the UMOC-Backend API.
 
 ## Base URL
