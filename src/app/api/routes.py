@@ -411,3 +411,23 @@ def get_group_messages():
     result, status_code = message_service.get_messages_with_groups(user_id, group_id, page)
     return jsonify(result), status_code
 
+@api_bp.route("/leaveGroup", methods=['GET', 'POST'])
+@jwt_required()
+def leave_group():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    group_id = data.get('group_id')
+
+    if not group_id:
+        return jsonify({"error": "Group ID is required"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    if not group_service.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 404
+    if not group_service.is_user_member(user_id, group_id):
+        return jsonify({"error": "User is not a member of the group"}), 403
+
+    result = group_service.leave_group(user_id, group_id)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"success": "User left the group successfully"}), 200

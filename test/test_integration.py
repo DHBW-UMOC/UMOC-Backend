@@ -805,6 +805,43 @@ class TestApiEndpoints(BaseTestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertIn('success', data)
 
+    def test_leave_group(self):
+        """Test the leaveGroup endpoint"""
+        # Set up users and login
+        headers, login_data = self.setup_users_and_login()
+
+        # Get member IDs directly through login
+        member_ids = self.get_member_ids(2)
+        # Create a group first using JSON body
+        group_name = "Test Group"
+        response = self.client.post(
+            '/createGroup',
+            json={
+                "group_name": group_name,
+                "group_pic": "https://example.com/group_pic.jpg",
+                "group_members": member_ids
+            },
+            headers=headers
+        )
+        if response.status_code != 201:
+            self.debug_response(response, '/createGroup')
+            pytest.skip(f"Cannot test leaveGroup: Failed to create group: {response.data.decode('utf-8')}")
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+        # Test leaving the group using JSON body
+        response = self.client.post(
+            '/leaveGroup',
+            json={
+                "group_id": group_id
+            },
+            headers=headers
+        )
+        if response.status_code != 200:
+            self.debug_response(response, '/leaveGroup')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
 
 if __name__ == '__main__':
     unittest.main()

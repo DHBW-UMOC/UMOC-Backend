@@ -138,6 +138,21 @@ class GroupService:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
 
+    def leave_group(self, user_id, group_id):
+        if not self.does_group_exist(group_id): return {"error": "Group not found"}
+        if not self.is_user_member(user_id, group_id): return {"error": "User is not a member of the group"}
+
+        member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+        if not member: return {"error": "Member not found"}
+
+        db.session.delete(member)
+        try:
+            db.session.commit()
+            return {"success": True}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"Database error: {str(e)}"}
+
     ##############################
     ## HELPER FUNCTIONS
     ##############################
