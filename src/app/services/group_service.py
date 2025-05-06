@@ -138,6 +138,21 @@ class GroupService:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
 
+    def leave_group(self, user_id, group_id):
+        if not self.does_group_exist(group_id): return {"error": "Group not found"}
+        if not self.is_user_member(user_id, group_id): return {"error": "User is not a member of the group"}
+
+        member = GroupMember.query.filter_by(group_id=group_id, user_id=user_id).first()
+        if not member: return {"error": "Member not found"}
+
+        db.session.delete(member)
+        try:
+            db.session.commit()
+            return {"success": True}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"Database error: {str(e)}"}
+
     ##############################
     ## HELPER FUNCTIONS
     ##############################
@@ -163,7 +178,17 @@ class GroupService:
         if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         members = GroupMember.query.filter_by(group_id=group_id).all()
-        return [member.to_dict() for member in members]
+        result = []
+        for member in members:
+            user = member.user
+            result.append({
+                "contact_id": member.user_id,
+                "name": user.username,
+                "picture_url": user.profile_picture,
+                "role": member.role.value
+            })
+
+        return result
 
     def get_group_by_id(self, group_id):
         group = Group.query.filter_by(group_id=group_id).first()
@@ -179,10 +204,13 @@ class GroupService:
 
         #if not groups: return {"error": "No groups found for this user"}
 
-        return [group.to_dict() for group in groups]
+        return [{
+            **group.to_dict(),
+            "members": self.get_group_members(user_id, group.group_id)
+        } for group in groups]
 
     def is_id_group(self, group_id):
         group = Group.query.filter_by(group_id=group_id).first()
-        if not group: return {"error": "Group not found"}
+        if not group: return False
 
         return True

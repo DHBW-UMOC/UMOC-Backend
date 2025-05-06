@@ -123,14 +123,10 @@ def get_chats():
     contacts = contact_service.get_user_contacts_by_user_id(user_id)
     if "error" in contacts:
         return jsonify(contacts), 500
-    for c in contacts:
-        c["is_group"] = False
 
     groups = group_service.get_groups_by_user_id(user_id)
     if "error" in groups:
         return jsonify(groups), 500
-    for g in groups:
-        g["is_group"] = True
 
     return jsonify({"chats": contacts + groups})
 
@@ -143,14 +139,13 @@ def get_chat_messages():
     data = request.json if request.is_json else request.args
     chat_id = data.get('chat_id')
     page = data.get('page', type=int)
-    is_group = data.get('is_group', type=bool, default=False)
 
     if not chat_id:
         return jsonify({"error": "No chatID provided for getContactMessages"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
-    if is_group or group_service.is_id_group(chat_id):
+    if group_service.is_id_group(chat_id):
         if not group_service.does_group_exist(chat_id):
             return jsonify({"error": "Group not found"}), 404
         if not group_service.is_user_member(user_id, chat_id):
@@ -159,12 +154,24 @@ def get_chat_messages():
     else:
         if not user_service.does_user_exist(chat_id):
             return jsonify({"error": "Contact not found"}), 404
-        if not contact_service.is_contact(user_id, chat_id):
-            return jsonify({"error": "User is not a contact"}), 403
         result, status_code = message_service.get_messages_with_contact(user_id, chat_id, page)
 
     return jsonify(result), status_code
 
+@api_bp.route("/getOwnProfile", methods=['GET'])
+@jwt_required()
+def get_own_profile():
+    user_id = get_jwt_identity()
+
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    user = user_service.get_user_by_id(user_id)
+    return jsonify({
+        "user_id": user.user_id,
+        "username": user.username,
+        "profile_picture": user.profile_picture
+    })
 
 @api_bp.route("/saveMessage", methods=["POST"])
 @jwt_required()
@@ -268,8 +275,6 @@ def create_group():
     if len(group_name) < 3 or len(group_name) > 25: return jsonify({"error": "Group name must be between 3 and 50 characters long"}), 400
     if not group_name: return jsonify({"error": "Group name is required"}), 400
     if not group_members: return jsonify({"error": "Group members are required"}), 400
-    print(group_members)
-    print(type(group_members))
     if len(group_members) < 2: return jsonify({"error": "Group must have at least 2 members"}), 400
     if len(group_members) > 50: return jsonify({"error": "Group can have at most 50 members"}), 400
 
@@ -310,7 +315,6 @@ def delete_group():
 def change_group():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
-    print(data)
     action = data.get("action").lower()
     group_id = data.get("group_id")
     new_value = data.get("new_value")
@@ -324,7 +328,6 @@ def change_group():
     if not action:
         return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
     if not new_value:
-        print("New value is required")
         return jsonify({"error": "New value is required"}), 400
 
     if action == "name":
@@ -397,25 +400,6 @@ def remove_member():
         return jsonify(result), 400
     return jsonify({"success": "Member removed successfully"}), 200
 
-@api_bp.route("/getGroupMembers", methods=['GET'])
-@jwt_required()
-def get_group_members():
-    user_id = get_jwt_identity()
-    data = request.json if request.is_json else request.args
-    group_id = data.get('group_id')
-
-    if not group_id:
-        return jsonify({"error": "Group ID is required"}), 400
-    if not user_service.does_user_exist(user_id):
-        return jsonify({"error": "User not found"}), 400
-    if not group_service.does_group_exist(group_id):
-        return jsonify({"error": "Group not found"}), 404
-
-    result = group_service.get_group_members(user_id, group_id)
-    if "error" in result:
-        return jsonify(result), 400
-    return jsonify({"members": result}), 200
-
 # Add missing getGroupMessages endpoint
 @api_bp.route("/getGroupMessages", methods=['GET'])
 @jwt_required()
@@ -437,3 +421,23 @@ def get_group_messages():
     result, status_code = message_service.get_messages_with_groups(user_id, group_id, page)
     return jsonify(result), status_code
 
+@api_bp.route("/leaveGroup", methods=['GET', 'POST'])
+@jwt_required()
+def leave_group():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    group_id = data.get('group_id')
+
+    if not group_id:
+        return jsonify({"error": "Group ID is required"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    if not group_service.does_group_exist(group_id):
+        return jsonify({"error": "Group not found"}), 404
+    if not group_service.is_user_member(user_id, group_id):
+        return jsonify({"error": "User is not a member of the group"}), 403
+
+    result = group_service.leave_group(user_id, group_id)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"success": "User left the group successfully"}), 200
