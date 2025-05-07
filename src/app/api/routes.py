@@ -27,9 +27,9 @@ def register():
     profile_pic = data.get('profile_pic')
 
     if not username:
-        return jsonify({"error": "Username is required"}), 400
+        return jsonify({"error": "'username' is required"}), 400
     if not password:
-        return jsonify({"error": "Password is required"}), 400
+        return jsonify({"error": "'password' is required"}), 400
 
     if not re.match(r'^[a-zA-Z0-9._]+$', username):
         return jsonify({"error": "Username can only contain letters, numbers, dots (.) and underscores (_)"}), 400
@@ -53,9 +53,9 @@ def login():
     password = data.get('password')
 
     if not username:
-        return jsonify({"error": "Username is required"}), 400
+        return jsonify({"error": "'username' is required"}), 400
     if not password:
-        return jsonify({"error": "Password is required"}), 400
+        return jsonify({"error": "'password' is required"}), 400
 
     result = user_service.login_user(username, password)
     if "error" in result:
@@ -86,7 +86,7 @@ def add_contact():
     contact_name = data.get('contact_name')
 
     if not contact_name:
-        return jsonify({"error": "Contact name is required"}), 400
+        return jsonify({"error": "'contact_name' is required"}), 400
 
     result = contact_service.add_contact_by_name(user_id, contact_name)
     if "error" in result:
@@ -104,9 +104,9 @@ def change_contact():
     status = data.get('status')
 
     if not contact_id:
-        return jsonify({"error": "Contact ID is required"}), 400
+        return jsonify({"error": "'contact_id' is required"}), 400
     if not status:
-        return jsonify({"error": "Status is required"}), 400
+        return jsonify({"error": "'status' is required"}), 400
 
     result = contact_service.change_contact_status_by_user_id(user_id, contact_id, status)
     if "error" in result:
@@ -123,14 +123,10 @@ def get_chats():
     contacts = contact_service.get_user_contacts_by_user_id(user_id)
     if "error" in contacts:
         return jsonify(contacts), 500
-    for c in contacts:
-        c["is_group"] = False
 
     groups = group_service.get_groups_by_user_id(user_id)
     if "error" in groups:
         return jsonify(groups), 500
-    for g in groups:
-        g["is_group"] = True
 
     return jsonify({"chats": contacts + groups})
 
@@ -143,14 +139,13 @@ def get_chat_messages():
     data = request.json if request.is_json else request.args
     chat_id = data.get('chat_id')
     page = data.get('page', type=int)
-    is_group = data.get('is_group', type=bool, default=False)
 
     if not chat_id:
-        return jsonify({"error": "No chatID provided for getContactMessages"}), 400
+        return jsonify({"error": "'chat_id' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
-    if is_group or group_service.is_id_group(chat_id):
+    if group_service.is_id_group(chat_id):
         if not group_service.does_group_exist(chat_id):
             return jsonify({"error": "Group not found"}), 404
         if not group_service.is_user_member(user_id, chat_id):
@@ -159,12 +154,24 @@ def get_chat_messages():
     else:
         if not user_service.does_user_exist(chat_id):
             return jsonify({"error": "Contact not found"}), 404
-        if not contact_service.is_contact(user_id, chat_id):
-            return jsonify({"error": "User is not a contact"}), 403
         result, status_code = message_service.get_messages_with_contact(user_id, chat_id, page)
 
     return jsonify(result), status_code
 
+@api_bp.route("/getOwnProfile", methods=['GET'])
+@jwt_required()
+def get_own_profile():
+    user_id = get_jwt_identity()
+
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    user = user_service.get_user_by_id(user_id)
+    return jsonify({
+        "user_id": user.user_id,
+        "username": user.username,
+        "profile_picture": user.profile_picture
+    })
 
 @api_bp.route("/saveMessage", methods=["POST"])
 @jwt_required()
@@ -174,18 +181,15 @@ def save_message():
 
     recipient_id = data.get("recipient_id")
     content = data.get("content")
-
-    # Handle isGroup that could be either a boolean or a string
-    is_group_value = data.get("is_group", False)
-    if isinstance(is_group_value, bool):
-        is_group = is_group_value
+    if group_service.does_group_exist(recipient_id):
+        is_group = True
     else:
-        is_group = str(is_group_value).lower() == "true"
+        is_group = False
 
     if not recipient_id:
-        return jsonify({"error": "No recipientID provided for saveMessage"}), 400
+        return jsonify({"error": "'recipient_id' is required"}), 400
     if not content:
-        return jsonify({"error": "No content provided for saveMessage"}), 400
+        return jsonify({"error": "'content' is required"}), 400
 
     result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
     if "error" in result:
@@ -266,8 +270,9 @@ def create_group():
 
     if not user: return jsonify({"error": "User not found"}), 400
     if len(group_name) < 3 or len(group_name) > 25: return jsonify({"error": "Group name must be between 3 and 50 characters long"}), 400
-    if not group_name: return jsonify({"error": "Group name is required"}), 400
-    if not group_members: return jsonify({"error": "Group members are required"}), 400
+    if not group_name: return jsonify({"error": "'group_name' is required"}), 400
+    if not group_members: return jsonify({"error": "'group_members' are required"}), 400
+    if not group_pic: return jsonify({"error": "'group_pic' is required"}), 400
     if len(group_members) < 2: return jsonify({"error": "Group must have at least 2 members"}), 400
     if len(group_members) > 50: return jsonify({"error": "Group can have at most 50 members"}), 400
 
@@ -290,7 +295,7 @@ def delete_group():
     group_id = data.get('group_id')
 
     if not group_id:
-        return jsonify({"error": "Group ID is required"}), 400
+        return jsonify({"error": "'group_id' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
     if not group_service.does_group_exist(group_id):
@@ -312,6 +317,10 @@ def change_group():
     group_id = data.get("group_id")
     new_value = data.get("new_value")
 
+    if not group_id:
+        return jsonify({"error": "'group_id' is required"}), 400
+    if not new_value:
+        return jsonify({"error": "'new_value' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
     if not group_service.does_group_exist(group_id):
@@ -319,7 +328,7 @@ def change_group():
     if not group_service.is_user_admin(user_id, group_id):
         return jsonify({"error": "User is not admin of the group"}), 403
     if not action:
-        return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
+        return jsonify({"error": "'action' is required. Valid values: name, picture, admin"}), 400
     if not new_value:
         return jsonify({"error": "New value is required"}), 400
 
@@ -346,9 +355,9 @@ def add_member():
     new_member_id = data.get('new_member_id')
 
     if not group_id:
-        return jsonify({"error": "Group ID is required"}), 400
+        return jsonify({"error": "'group_id' is required"}), 400
     if not new_member_id:
-        return jsonify({"error": "New member ID is required"}), 400
+        return jsonify({"error": "'new_member_id' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
     if not user_service.does_user_exist(new_member_id):
@@ -393,36 +402,16 @@ def remove_member():
         return jsonify(result), 400
     return jsonify({"success": "Member removed successfully"}), 200
 
-@api_bp.route("/getGroupMembers", methods=['GET'])
+
+@api_bp.route("/leaveGroup", methods=['GET', 'POST'])
 @jwt_required()
-def get_group_members():
+def leave_group():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
     group_id = data.get('group_id')
 
     if not group_id:
-        return jsonify({"error": "Group ID is required"}), 400
-    if not user_service.does_user_exist(user_id):
-        return jsonify({"error": "User not found"}), 400
-    if not group_service.does_group_exist(group_id):
-        return jsonify({"error": "Group not found"}), 404
-
-    result = group_service.get_group_members(group_id)
-    if "error" in result:
-        return jsonify(result), 400
-    return jsonify({"members": result}), 200
-
-# Add missing getGroupMessages endpoint
-@api_bp.route("/getGroupMessages", methods=['GET'])
-@jwt_required()
-def get_group_messages():
-    user_id = get_jwt_identity()
-    data = request.json if request.is_json else request.args
-    group_id = data.get('group_id')
-    page = data.get('page', type=int)
-
-    if not group_id:
-        return jsonify({"error": "Group ID is required"}), 400
+        return jsonify({"error": "'group_id' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
     if not group_service.does_group_exist(group_id):
@@ -430,6 +419,7 @@ def get_group_messages():
     if not group_service.is_user_member(user_id, group_id):
         return jsonify({"error": "User is not a member of the group"}), 403
 
-    result, status_code = message_service.get_messages_with_groups(user_id, group_id, page)
-    return jsonify(result), status_code
-
+    result = group_service.leave_group(user_id, group_id)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"success": "User left the group successfully"}), 200

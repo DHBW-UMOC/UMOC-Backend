@@ -171,11 +171,12 @@ class ContactService:
             contact_user = self.user_service.get_user_by_id(contact.contact_id)
             if contact_user:
                 contact_list.append({
+                    "is_group": False,
                     "contact_id": contact.contact_id,
                     "name": contact_user.username,
+                    "picture_url": contact_user.profile_picture,
                     "status": contact.status.value,
                     "streak": contact.streak,
-                    "url": contact_user.profile_picture
                 })
         
         return contact_list

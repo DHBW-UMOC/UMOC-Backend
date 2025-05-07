@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone, UTC
 import uuid
 from flask import request
 from flask_socketio import SocketIO, emit
@@ -190,7 +190,7 @@ def handle_send_message(user, data):
         recipient_user_id=recipient_id,
         encrypted_content=content,
         type=MessageTypeEnum(msg_type),
-        send_at=datetime.utcnow(),
+        send_at=datetime.now(UTC),
         is_group=is_group
     )
     db.session.add(message)

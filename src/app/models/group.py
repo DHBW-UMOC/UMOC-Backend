@@ -1,6 +1,8 @@
 import enum
 import uuid
 from datetime import datetime
+from email.policy import default
+
 from sqlalchemy import Enum
 from app.extensions import db
 
@@ -15,18 +17,18 @@ class Group(db.Model):
     group_id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     group_name = db.Column(db.String, nullable=False)
     admin_user_id = db.Column(db.String, db.ForeignKey('user.user_id'))
-    group_picture = db.Column(db.String)
+    group_picture = db.Column(db.String, default='https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     admin = db.relationship('User', backref='administered_groups')
     
     def to_dict(self):
         return {
-            'group_id': self.group_id,
-            'group_name': self.group_name,
-            'group_picture': self.group_picture,
-            'admin_user_id': self.admin_user_id,
-            'created_at': self.created_at.isoformat() if self.created_at else None
+            'is_group': True,
+            'contact_id': self.group_id,
+            'name': self.group_name,
+            'picture_url': self.group_picture,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
         }
 
 class GroupMember(db.Model):

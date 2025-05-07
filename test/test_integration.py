@@ -689,45 +689,6 @@ class TestApiEndpoints(BaseTestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertIn('success', data)
 
-    def test_endpoint_get_group_members(self):
-        """Test the getGroupMembers endpoint"""
-        # Set up users and login
-        headers, login_data = self.setup_users_and_login()
-
-        # Get member IDs directly through login
-        member_ids = self.get_member_ids(2)  # Get 2 member IDs
-        
-        # Create a group first using JSON body
-        group_name = "Test Group"
-        response = self.client.post(
-            '/createGroup',
-            json={
-                "group_name": group_name,
-                "group_pic": "https://example.com/group_pic.jpg",
-                "group_members": member_ids
-            },
-            headers=headers
-        )
-        if response.status_code != 201:
-            self.debug_response(response, '/createGroup')
-            pytest.skip(f"Cannot test getGroupMembers: Failed to create group: {response.data.decode('utf-8')}")
-            
-        self.assertEqual(response.status_code, 201)
-        data = json.loads(response.data.decode('utf-8'))
-        group_id = data['group_id']
-
-        # Test getting group members
-        response = self.client.get(
-            f'/getGroupMembers?group_id={group_id}',
-            headers=headers
-        )
-        if response.status_code != 200:
-            self.debug_response(response, '/getGroupMembers')
-        self.assertEqual(response.status_code, 200)
-        data = json.loads(response.data.decode('utf-8'))
-        self.assertIn('members', data)
-        self.assertTrue(isinstance(data['members'], list))
-
     def test_add_group_member(self):
         """Test the addMember endpoint"""
         # Set up users and login
@@ -819,6 +780,24 @@ class TestApiEndpoints(BaseTestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertIn('success', data)
 
+    def test_get_profile(self):
+        """Test the getProfile endpoint"""
+        # Set up users and login
+        headers, login_data = self.setup_users_and_login()
+
+        # Test getting profile
+        response = self.client.get(
+            f'/getOwnProfile',
+            headers=headers
+        )
+        if response.status_code != 200:
+            self.debug_response(response, '/getProfile')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('username', data)
+        self.assertEqual(data['username'], self.test_username)
+        self.assertIn('profile_picture', data)
+
     def test_send_message(self):
         """Test the sendMessage endpoint"""
         # Set up users and login
@@ -844,6 +823,43 @@ class TestApiEndpoints(BaseTestCase):
         data = json.loads(response.data.decode('utf-8'))
         self.assertIn('success', data)
 
+    def test_leave_group(self):
+        """Test the leaveGroup endpoint"""
+        # Set up users and login
+        headers, login_data = self.setup_users_and_login()
+
+        # Get member IDs directly through login
+        member_ids = self.get_member_ids(2)
+        # Create a group first using JSON body
+        group_name = "Test Group"
+        response = self.client.post(
+            '/createGroup',
+            json={
+                "group_name": group_name,
+                "group_pic": "https://example.com/group_pic.jpg",
+                "group_members": member_ids
+            },
+            headers=headers
+        )
+        if response.status_code != 201:
+            self.debug_response(response, '/createGroup')
+            pytest.skip(f"Cannot test leaveGroup: Failed to create group: {response.data.decode('utf-8')}")
+        self.assertEqual(response.status_code, 201)
+        data = json.loads(response.data.decode('utf-8'))
+        group_id = data['group_id']
+        # Test leaving the group using JSON body
+        response = self.client.post(
+            '/leaveGroup',
+            json={
+                "group_id": group_id
+            },
+            headers=headers
+        )
+        if response.status_code != 200:
+            self.debug_response(response, '/leaveGroup')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
 
 if __name__ == '__main__':
     unittest.main()
