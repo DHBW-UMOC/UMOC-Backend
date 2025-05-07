@@ -6,7 +6,7 @@ GroupMember DTO -> /getChats
 export interface GroupMember {
   user_id: string; // UUID
   name: string;
-  profile_picture: string; // URL
+  picture_url: string; // URL
   role: 'admin' | 'member';
 }
 ```
