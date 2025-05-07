@@ -52,16 +52,20 @@ Register a new user account.
 - **URL**: `/register`
 - **Method**: `POST`
 - **URL Parameters**:
-  - `username`: User's desired username
-  - `password`: User's password
-  - `profile_picture`: URL to the user's profile picture (optional)
+ ```json
+  {
+    "username": "user_name",
+    "password": "user_password",
+    "profile_picture": "https://profile_picture_url.jpeg"
+  }
+  ```
 - **Success Response**:
   - **Code**: 201
   - **Content**: `{"success": "User registered successfully"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Username is required"}`
-    - **Content**: `{"error": "Password is required"}`
+    - **Content**: `{"error": "'username' is required"}`
+    - **Content**: `{"error": "'password' is required"}`
     - **Content**: `{"error": "Username can only contain letters, numbers, dots (.) and underscores (_)"}`
     - **Content**: `{"error": "Password must be between 4 and 100 characters long"}`
     - **Content**: `{"error": "Username must be between 3 and 25 characters long"}`
@@ -77,8 +81,12 @@ Authenticate a user and receive a JWT access token.
 - **URL**: `/login`
 - **Method**: `GET`
 - **URL Parameters**:
-  - `username`: User's username
-  - `password`: User's password
+```json
+  {
+    "username": "user_name",
+    "password": "user_password"
+  }
+  ```
 - **Success Response**:
   - **Code**: 200
   - **Content**:
@@ -90,8 +98,8 @@ Authenticate a user and receive a JWT access token.
     ```
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Username is required"}`
-    - **Content**: `{"error": "Password is required"}`
+    - **Content**: `{"error": "'username' is required"}`
+    - **Content**: `{"error": "'password' is required"}`
   - **Code**: 401
     - **Content**: `{"error": "Invalid credentials"}`
   - **Code**: 500
@@ -133,7 +141,7 @@ Add a new contact to a user's contact list.
   - **Content**: `{"success": "Contact was added successfully"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Contact name is required"}`
+    - **Content**: `{"error": "'contact_name' is required"}`
     - **Content**: `{"error": "Contact already exists"}`
     - **Content**: `{"error": "Contact not found.", "suggestions": ["contact_name", "contact_name2"]}`
     - **Content**: `{"error": "Contact not found."}`
@@ -149,8 +157,8 @@ Change the status of a contact.
 - **Request Body**:
   ```json
   {
-    "contact_id": "contact_user_id",
-    "status": "new_status"
+    "contact_id": "00000000-0000-0000-0000-000000000000",
+    "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS"
   }
   ```
 - **Success Response**:
@@ -158,8 +166,8 @@ Change the status of a contact.
   - **Content**: `{"success": "Contact status changed successfully"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Contact ID is required"}`
-    - **Content**: `{"error": "Status is required"}`
+    - **Content**: `{"error": "'contact_id' is required"}`
+    - **Content**: `{"error": "'status' is required"}`
   - **Code**: 500
     - **Content**: `{"error": "Failed to change contact status"}`
 
@@ -251,7 +259,7 @@ Retrieve all messages between the authenticated user and a specific contact.
 
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Contact ID is required"}`
+    - **Content**: `{"error": "'chat_id' is required"}`
   - **Code**: 500
     - **Content**: `{"error": "Failed to retrieve messages"}`
 
@@ -266,9 +274,8 @@ Save a new message.
 - **Request Body**:
   ```json
   {
-    "recipient_id": "recipient_user_id",
-    "content": "message_content",
-    "is_group": false
+    "recipient_id": "00000000-0000-0000-0000-000000000000",
+    "content": "string"
   }
   ```
 - **Success Response**:
@@ -276,8 +283,8 @@ Save a new message.
   - **Content**: `{"success": "Message saved successfully", "message_id": "message_id"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Recipient ID is required"}`
-    - **Content**: `{"error": "Content is required"}`
+    - **Content**: `{"error": "'recipient_id' is required"}`
+    - **Content**: `{"error": "'content' is required"}`
   - **Code**: 500
     - **Content**: `{"error": "Failed to save message"}`
 
@@ -294,15 +301,12 @@ Save a new message.
     {
       "user_id": "00000000-0000-0000-0000-000000000000",
       "username": "String",
-      "profile_picture": "Link to JPG"
+      "profile_picture": "https://profile_picture_url.jpeg"
     }
     ```
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Recipient ID is required"}`
-    - **Content**: `{"error": "Content is required"}`
-  - **Code**: 500
-    - **Content**: `{"error": "Failed to save message"}`
+    - **Content**: `{"error": "User not found"}`
 
 
 ## Group Endpoints
@@ -318,18 +322,18 @@ Create a new group.
   {
     "group_name": "group_name",
     "group_pic": "https://group_pic_url.jpeg",
-    "group_members": ["contact_id1", "contact_id2"]
+    "group_members": ["00000000-0000-0000-0000-000000000000", "00000000-0000-0000-0000-000000000000"]
   }
   ```
 - **Success Response**:
 - **Code**: 201
-  - **Content**: `{"success": "Group created successfully", "group_id": "group_id"}`
+  - **Content**: `{"success": "Group created successfully", "group_id": "00000000-0000-0000-0000-000000000000"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Group name is required"}`
+    - **Content**: `{"error": "'group_name' is required"}`
     - **Content**: `{"error": "Group name already exists"}`
-    - **Content**: `{"error": "Group picture URL is required"}`
-    - **Content**: `{"error": "Group members are required"}`
+    - **Content**: `{"error": "'group_pic' is required"}`
+    - **Content**: `{"error": "'group_members' are required"}`
     - **Content**: `{"error": "Group members not found."}`
     - **Content**: `{"error": "Group members must be a list"}`
     - **Content**: `{"error": "Group name must be between 3 and 25 characters long"}`
@@ -346,7 +350,7 @@ Delete a group.
 - **Request Body**:
   ```json
   {
-    "group_id": "group_id"
+    "group_id": "00000000-0000-0000-0000-000000000000"
   }
   ```
 - **Success Response**:
@@ -354,7 +358,7 @@ Delete a group.
   - **Content**: `{"success": "Group deleted successfully"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Group ID is required"}`
+    - **Content**: `{"error": "'group_id' is required"}`
     - **Content**: `{"error": "User not found"}`
     - **Content**: `{"error": "Group not found"}`
     - **Content**: `{"error": "User is not admin of the group"}`
@@ -370,8 +374,8 @@ Change a group. Ethere the Name, Group picture or who the admin is.
   ```json
   {
     "action": "name | picture | admin",
-    "group_id": "group_id",
-    "new_value": "new_name/new_picture_url/new_admin_id"
+    "group_id": "00000000-0000-0000-0000-000000000000",
+    "new_value": "new_name | new_picture_url | new_admin_id"
   }
   ```
 - **Success Response**:
@@ -379,8 +383,9 @@ Change a group. Ethere the Name, Group picture or who the admin is.
   - **Content**: `{"success": "Group updated successfully"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "New value is required"}`
-    - **Content**: `{"error": "Action is required. Valid values: name, picture, admin"}`
+    - **Content**: `{"error": "'new_value' is required"}`
+    - **Content**: `{"error": "'group_id' is required"}`
+    - **Content**: `{"error": "'action' is required. Valid values: name, picture, admin"}`
     - **Content**: `{"error": "User is not admin of the group"}`
     - **Content**: `{"error": "Group not found"}`
     - **Content**: `{"error": "User not found"}`
@@ -394,8 +399,8 @@ Add Member to a Group.
 - **Request Body**:
   ```json
   {
-    "group_id": "group_id",
-    "new_member_id": "new_member_id"
+    "group_id": "00000000-0000-0000-0000-000000000000",
+    "new_member_id": "00000000-0000-0000-0000-000000000000"
   }
   ```
 - **Success Response**:
@@ -403,7 +408,9 @@ Add Member to a Group.
   - **Content**: `{"success": "Group updated successfully"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Group ID is required"}`
+    - **Content**: `{"error": "'group_id' is required"}`
+    - **Content**: `{"error": "'new_member_id' is required"}`
+    - **Content**: `{"error": "'new_member_id' is required"}`
     - **Content**: `{"error": "User not found"}`
     - **Content**: `{"error": "New member not found"}`
     - **Content**: `{"error": "Group not found"}`
@@ -421,8 +428,8 @@ Remove a Member from a Group.
 - **Request Body**:
   ```json
   {
-    "group_id": "group_id",
-    "new_member_id": "new_member_id"
+    "group_id": "00000000-0000-0000-0000-000000000000",
+    "new_member_id": "00000000-0000-0000-0000-000000000000"
   }
   ```
 - **Success Response**:
@@ -430,8 +437,8 @@ Remove a Member from a Group.
   - **Content**: `{"success": "Group created successfully", "group_id": "group_id"}`
 - **Error Response**:
   - **Code**: 400
-    - **Content**: `{"error": "Group ID is required"}`
-    - **Content**: `{"error": "Member ID is required"}`
+    - **Content**: `{"error": "'group_id' is required"}`
+    - **Content**: `{"error": "'member_id' is required"}`
     - **Content**: `{"error": "User not found"}`
     - **Content**: `{"error": "Member not found"}`
     - **Content**: `{"error": "Group not found"}`
@@ -447,7 +454,7 @@ Get all Members of a group
 - **Request Body**:
   ```json
   {
-    "group_id": "group_id"
+    "group_id": "00000000-0000-0000-0000-000000000000"
   }
   ```
 - **Success Response**:
@@ -457,7 +464,7 @@ Get all Members of a group
   - **Code**: 400
     - **Content**: `{"error": "User not found"}`
     - **Content**: `{"error": "Group not found"}`
-    - **Content**: `{"error": "Group ID is required"}`
+    - **Content**: `{"error": "'group_id' is required"}`
     - **Content**: `{"error": "User is not a member of the group"}`
 
 
