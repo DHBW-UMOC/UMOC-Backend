@@ -173,9 +173,8 @@ class GroupService:
         group = Group.query.filter_by(group_id=group_id).first()
         return group is not None
 
-    def get_group_members(self, user_id, group_id):
+    def get_group_members(self, group_id):
         if not self.does_group_exist(group_id): return {"error": "Group not found"}
-        if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         members = GroupMember.query.filter_by(group_id=group_id).all()
         result = []
@@ -198,11 +197,11 @@ class GroupService:
 
     def get_groups_by_user_id(self, user_id):
         group_ids = GroupMember.query.filter_by(user_id=user_id).all()
-        if not group_ids: return {"error": "No groups found for this user"}
+        #if not group_ids: return {"error": "No groups found for this user"}
         group_ids = [group.group_id for group in group_ids]
         groups = Group.query.filter(Group.group_id.in_(group_ids)).all()
 
-        if not groups: return {"error": "No groups found for this user"}
+        #if not groups: return {"error": "No groups found for this user"}
 
         return [{
             **group.to_dict(),
