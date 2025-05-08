@@ -197,15 +197,12 @@ class GroupService:
 
     def get_groups_by_user_id(self, user_id):
         group_ids = GroupMember.query.filter_by(user_id=user_id).all()
-        #if not group_ids: return {"error": "No groups found for this user"}
         group_ids = [group.group_id for group in group_ids]
         groups = Group.query.filter(Group.group_id.in_(group_ids)).all()
 
-        #if not groups: return {"error": "No groups found for this user"}
-
         return [{
             **group.to_dict(),
-            "members": self.get_group_members(user_id, group.group_id)
+            "members": self.get_group_members(group.group_id)
         } for group in groups]
 
     def is_id_group(self, group_id):
