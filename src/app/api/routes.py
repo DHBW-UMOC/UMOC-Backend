@@ -101,7 +101,7 @@ def change_contact():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
     contact_id = data.get('contact_id')
-    status = data.get('status')
+    status = data.get('status').lower()
 
     if not contact_id:
         return jsonify({"error": "'contact_id' is required"}), 400
@@ -110,7 +110,7 @@ def change_contact():
 
     result = contact_service.change_contact_status_by_user_id(user_id, contact_id, status)
     if "error" in result:
-        return jsonify({"error": "Failed to change contact status"}), 500
+        return result, 500
 
     return jsonify({"success": "Contact status changed successfully"}), 200
 
@@ -170,7 +170,8 @@ def get_own_profile():
     return jsonify({
         "user_id": user.user_id,
         "username": user.username,
-        "profile_picture": user.profile_picture
+        "profile_picture": user.profile_picture,
+        "streak": user_service.get_user_streak(user_id),
     })
 
 @api_bp.route("/saveMessage", methods=["POST"])
