@@ -3,6 +3,9 @@ from datetime import datetime
 from app.extensions import db
 from app.models.user import User
 
+from app.models.user import UserContact
+
+
 class UserService:
     def register_user(self, username, password, profile_pic, public_key=""):
         # Check if user already exists
@@ -100,4 +103,16 @@ class UserService:
 
     def does_user_exist(self, user_id):
         return User.query.filter_by(user_id=user_id).first() is not None
+
+    def get_user_streak(self, user_id):
+        user = User.query.filter_by(user_id=user_id).first()
+        if not user:
+            return {"error": "User not found"}
+
+        streak = 0
+        contacts = UserContact.query.filter_by(user_id=user.user_id).all()
+        for contact in contacts:
+            streak += contact.streak
+        return streak
+
 
