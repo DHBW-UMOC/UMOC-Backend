@@ -32,7 +32,7 @@
   - Die Antwort enthält jetzt zusätzlich das Feld `am_admin`, das angibt, ob der aktuelle Benutzer Admin der Gruppe ist.
 
 - **GET `/changeGroup`**:
-  - Der Endpoint kann ab sofort nutzern den Admin Zugang entziehen, durch den Parameter `deadmin` kann dieser Vorgang durchgeführt werden.
+  - Der Endpoint kann ab sofort nutzern den Admin Zugang entziehen, durch den Parameter `action` mit dem Wert `deadmin` kann dieser Vorgang durchgeführt werden.
 
 
 
