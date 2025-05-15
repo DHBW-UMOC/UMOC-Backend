@@ -1,3 +1,41 @@
+## Changelog – Pascal - 15.05.2025
+
+### Neue Endpunkte
+
+- **GET `/getAllUsers`** – Sucht nach Benutzern anhand eines Suchbegriffs.
+  - Authentifizierung per JWT erforderlich.
+  - Query-Parameter: `searchBy` (Suchbegriff, z.B. Teil des Benutzernamens).
+  - Gibt eine Liste von Benutzern zurück, die dem Suchbegriff entsprechen.
+  - Fehler, falls kein Suchbegriff angegeben oder der User nicht gefunden wird.
+
+  **Beispiel-Request:**
+  ```
+  GET /getAllUsers?searchBy=alice
+  Authorization: Bearer <JWT>
+  ```
+
+  **Beispiel-Antwort (200):**
+  ```json
+  {
+    "users": [
+      {
+        "user_id": "123",
+        "username": "alice",
+        "profile_picture": "https://example.com/profile/alice.jpg"
+      }
+    ]
+  }
+  ```
+
+### Geänderte Endpunkte
+- **GET `/getChats`**:
+  - Die Antwort enthält jetzt zusätzlich das Feld `am_admin`, das angibt, ob der aktuelle Benutzer Admin der Gruppe ist.
+
+- **GET `/changeGroup`**:
+  - Der Endpoint kann ab sofort nutzern den Admin Zugang entziehen, durch den Parameter `deadmin` kann dieser Vorgang durchgeführt werden.
+
+
+
 ## Changelog – Max - 07.05.2025
 
 ### Neue Endpunkte
