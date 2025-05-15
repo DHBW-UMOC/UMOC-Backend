@@ -338,7 +338,12 @@ def change_group():
         # FIX: Use user_service instead of group_service to check if the user exists
         if not user_service.does_user_exist(new_value):
             return jsonify({"error": "New admin user not found"}), 404
-        group_service.change_group_admin(user_id, group_id, new_value)
+        group_service.change_group_admin(user_id, group_id, new_value, "add")
+    elif action == "deadmin":
+        # FIX: Use user_service instead of group_service to check if the user exists
+        if not user_service.does_user_exist(new_value):
+            return jsonify({"error": "User not found"}), 404
+        group_service.change_group_admin(user_id, group_id, new_value, "remove")
     else:
         return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
     return jsonify({"success": "Group updated successfully"}), 200

@@ -120,17 +120,27 @@ class GroupService:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
 
-    def change_group_admin(self, user_id, group_id, new_admin_id):
+    def change_group_admin(self, user_id, group_id, target_user_id, method):
+        if method not in ["add", "remove"]:
+            return {"error": "Invalid method. Use 'add' or 'remove'."}
+        
         if not self.does_group_exist(group_id): return {"error": "Group not found"}
         if not self.is_user_admin(user_id, group_id): return {"error": "User is not admin of the group"}
 
         group = Group.query.filter_by(group_id=group_id).first()
         if not group: return {"error": "Group not found"}
 
-        member = GroupMember.query.filter_by(group_id=group_id, user_id=new_admin_id).first()
+        member = GroupMember.query.filter_by(group_id=group_id, user_id=target_user_id).first()
         if not member: return {"error": "Member not found"}
 
-        member.role = GroupRoleEnum.ADMIN
+        if method == "add":
+            member.role = GroupRoleEnum.ADMIN
+        elif method == "remove":
+            # Count current admins
+            admin_count = GroupMember.query.filter_by(group_id=group_id, role=GroupRoleEnum.ADMIN).count()
+            if admin_count <= 1:
+                return {"error": "Cannot remove the last admin from the group."}
+            member.role = GroupRoleEnum.MEMBER
         try:
             db.session.commit()
             return {"success": True}
