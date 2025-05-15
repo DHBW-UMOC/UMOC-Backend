@@ -80,6 +80,21 @@ class UserService:
     def get_user_by_id(self, user_id):
         return User.query.filter_by(user_id=user_id).first()
     
+    def get_all_users_by_word(self, word):
+        try:
+            users = User.query.filter(User.username.ilike(f"{word}%")).limit(20).all()
+            result = []
+            for user in users:
+                result.append({
+                    "user_id": user.user_id,
+                    "username": user.username,
+                    "profile_picture": user.profile_picture
+                })
+            return result
+        except Exception as e:
+            return {"error": f"An unexpected error occurred: {e}"}
+        
+    
     def get_user_by_username(self, username):
         return User.query.filter_by(username=username).first()
 

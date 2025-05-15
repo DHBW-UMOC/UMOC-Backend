@@ -131,6 +131,24 @@ def get_chats():
     return jsonify({"chats": contacts + groups})
 
 
+@api_bp.route("/getAllUsers", methods=['GET'])
+@jwt_required()
+def get_all_users():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    searchBy = data.get('searchBy')
+
+    if not searchBy:
+        return jsonify({"error": "No search Filter provided for getAllUsers"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+    
+    result = user_service.get_all_users_by_word(searchBy)
+    if "error" in result:
+        return jsonify(result), 400
+    return jsonify({"users": result}), 200
+
+
 # Message routes
 @api_bp.route("/getChatMessages", methods=['GET'])
 @jwt_required()
@@ -158,6 +176,7 @@ def get_chat_messages():
 
     return jsonify(result), status_code
 
+
 @api_bp.route("/getOwnProfile", methods=['GET'])
 @jwt_required()
 def get_own_profile():
@@ -172,6 +191,7 @@ def get_own_profile():
         "username": user.username,
         "profile_picture": user.profile_picture
     })
+
 
 @api_bp.route("/saveMessage", methods=["POST"])
 @jwt_required()
@@ -405,6 +425,7 @@ def remove_member():
         return jsonify(result), 400
     return jsonify({"success": "Member removed successfully"}), 200
 
+
 # Add missing getGroupMessages endpoint
 @api_bp.route("/getGroupMessages", methods=['GET'])
 @jwt_required()
@@ -425,6 +446,7 @@ def get_group_messages():
 
     result, status_code = message_service.get_messages_with_groups(user_id, group_id, page)
     return jsonify(result), status_code
+
 
 @api_bp.route("/leaveGroup", methods=['GET', 'POST'])
 @jwt_required()
