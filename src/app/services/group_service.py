@@ -215,7 +215,8 @@ class GroupService:
 
         return [{
             **group.to_dict(),
-            "members": self.get_group_members(user_id, group.group_id)
+            "am_admin": self.is_user_admin(user_id, group.group_id),
+            "members": self.get_group_members(group.group_id)
         } for group in groups]
 
     def is_id_group(self, group_id):
