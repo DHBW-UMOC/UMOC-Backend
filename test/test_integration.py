@@ -335,6 +335,22 @@ class TestApiEndpoints(BaseTestCase):
             else:
                 self.fail("Response doesn't contain 'contacts' or 'chats' key")
     
+    def test_endpoint_get_all_users(self):
+        """Test the getAllUsers endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+        
+        # Test getting all users
+        response = self.client.get('/getAllUsers?searchBy=tes', headers=headers)
+        if response.status_code != 200:
+            self.debug_response(response, '/getAllUsers')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        
+        # Check if we got a list of users
+        self.assertIn('users', data)
+        self.assertTrue(isinstance(data['users'], list))
+
     def test_endpoint_change_contact(self):
         """Test the changeContact endpoint"""
         # Set up users, login, and add contact
