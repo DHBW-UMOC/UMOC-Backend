@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Tester</title>
+    <script src="https://cdn.socket.io/4.4.1/socket.io.min.js"></script>
+</head>
+<body>
+    <h2>WebSocket Test</h2>
+    <div>
+        <button onclick="connectSocket()">Connect</button>
+        <button onclick="disconnectSocket()">Disconnect</button>
+        <button onclick="sendTyping()">Send Typing</button>
+        <button onclick="sendMessage()">Send Message</button>
+        <button onclick="useItem()">Use Item</button>
+        <button onclick="sendSystemMessage()">System Message</button>
+    </div>
+    <pre id="log"></pre>
+
+    <script>
+        const socket = io('http://localhost:5000');
+
+        socket.on('connect', () => log("Connected"));
+        socket.on('disconnect', () => log("Disconnected"));
+        socket.on('typing', data => log("Typing: " + JSON.stringify(data)));
+        socket.on('new_message', data => log("Message: " + JSON.stringify(data)));
+        socket.on('item_used', data => log("Item used: " + JSON.stringify(data)));
+        socket.on('system_message', data => log("System msg: " + JSON.stringify(data)));
+        socket.on('user_status', data => log("User status: " + JSON.stringify(data)));
+        socket.on('error', data => log("Error: " + JSON.stringify(data)));
+
+        function connectSocket() {
+            if (!socket.connected) socket.connect();
+        }
+
+        function disconnectSocket() {
+            if (socket.connected) socket.disconnect();
+        }
+
+        function sendTyping() {
+            socket.emit('action', {
+                action: 'typing',
+                data: {
+                    recipient_id: '123',
+                    char: 'a'
+                }
+            });
+        }
+
+        function sendMessage() {
+            socket.emit('action', {
+                action: 'sendMessage',
+                data: {
+                    recipient_id: '123',
+                    content: 'Hello!',
+                    type: 'text'
+                }
+            });
+        }
+
+        function useItem() {
+            socket.emit('action', {
+                action: 'useItem',
+                data: {
+                    recipient_id: '123',
+                    item_id: 'item_42'
+                }
+            });
+        }
+
+        function sendSystemMessage() {
+            socket.emit('action', {
+                action: 'system_message',
+                data: {
+                    recipient_id: '123',
+                    content: 'System notification'
+                }
+            });
+        }
+
+        function log(msg) {
+            const logBox = document.getElementById("log");
+            logBox.textContent += msg + "\n";
+        }
+    </script>
+</body>
+</html>

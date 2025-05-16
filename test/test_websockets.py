@@ -9,7 +9,7 @@ import random
 import string
 
 from app import create_app
-from app.extensions import db, socketio
+from app import db, socketio
 from app.models.user import User, UserContact, ContactStatusEnum
 from app.models.message import Message, MessageTypeEnum
 from flask_jwt_extended import create_access_token

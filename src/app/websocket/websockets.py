@@ -1,13 +1,14 @@
 from datetime import datetime, timezone, UTC
 import uuid
 from flask import request
-from flask_socketio import SocketIO, emit
+from flask_socketio import emit, SocketIO
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
 from app.models import db, User, Message, MessageTypeEnum
 from app.models.user import UserContact, ContactStatusEnum
 from app.services.group_service import GroupService
+from app import app
 
-socketio = SocketIO()
+socketio = SocketIO(app, cors_allowed_origins="*")
 group_service = GroupService()
 user_sids = {}  # {user_id: socket_id}
 
@@ -24,6 +25,7 @@ def get_user_from_jwt():
 ###########################
 @socketio.on('connect')
 def handle_connect():
+    print("New connection established")
     try:
         user = get_user_from_jwt()
         if not user:
@@ -51,6 +53,7 @@ def handle_connect():
 
 @socketio.on('disconnect')
 def handle_disconnect():
+    print("User disconnected")
     try:
         user = get_user_from_jwt()
         if user:
@@ -71,60 +74,14 @@ def handle_disconnect():
         print(f"Disconnection error: {e}")
 
 
-# @socketio.on('send_message')
-# def handle_message(data):
-#     try:
-#         user = get_user_from_jwt()
-#         recipient_id = data.get('recipient_id')
-#         content = data.get('content')
-#         msg_type = data.get('type', 'text')
-#
-#         if not user:
-#             return
-#
-#         if not recipient_id or not content:
-#             emit('error', {'message': 'Recipient ID and content are required'})
-#             return
-#
-#         is_group = group_service.does_group_exist(recipient_id)
-#
-#
-#         message = Message(
-#             message_id=str(uuid.uuid4()),
-#             sender_user_id=user.user_id,
-#             recipient_user_id=recipient_id,
-#             encrypted_content=content,
-#             type=MessageTypeEnum(msg_type),
-#             send_at=datetime.utcnow(),
-#             is_group=is_group
-#         )
-#         db.session.add(message)
-#         db.session.commit()
-#
-#         # Send message directly to recipient's socket if they are online
-#         if recipient_id in user_sids:
-#             emit('new_message', {
-#                 'message_id': message.message_id,
-#                 'sender_id': user.user_id,
-#                 'sender_username': user.username,
-#                 'content': content,
-#                 'type': msg_type,
-#                 'timestamp': message.send_at.isoformat(),
-#                 'is_group': is_group
-#             }, room=user_sids[recipient_id])
-#     except Exception as e:
-#         print(f"Message handling error: {e}")
-#         emit('error', {'message': 'Failed to send message'})
-
-
 # New WebSocket Handlers
 @socketio.on('action')
 def handle_action(data):
+    print("Received action:", data)
     """Handle various client actions based on the action field"""
     try:
-        user = get_user_from_jwt()
-        if not user:
-            return
+        user_id = data.get()
+        user = User.query.get(user_id)
             
         action = data.get('action')
         action_data = data.get('data', {})
