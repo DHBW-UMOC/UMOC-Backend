@@ -2,7 +2,7 @@ from datetime import datetime, timezone, UTC
 import uuid
 from flask import request
 from flask_socketio import emit, SocketIO
-from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity
+from flask_jwt_extended import decode_token
 from app.models import db, User, Message, MessageTypeEnum
 from app.models.user import UserContact, ContactStatusEnum
 from app.services.group_service import GroupService
@@ -10,14 +10,9 @@ from app import app
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 group_service = GroupService()
-user_sids = {}  # {user_id: socket_id}
 
-
-def get_user_from_jwt():
-    """Helper to get user from JWT token"""
-    verify_jwt_in_request()
-    user_id = get_jwt_identity()
-    return User.query.get(user_id)
+user_sids = {}  # user_id → sid
+sid_users = {}  # sid → user_id
 
 
 ###########################
@@ -26,12 +21,20 @@ def get_user_from_jwt():
 @socketio.on('connect')
 def handle_connect():
     print("New connection established")
-    try:
-        user = get_user_from_jwt()
-        if not user:
-            print("Rejecting: Invalid JWT token")
-            return False  # Reject connection
+    token = request.args.get('token')
+    if not token:
+        print("No JWT token provided")
+        return False
 
+    try:
+        decoded = decode_token(token)
+        user_id = decoded["sub"]
+        user = User.query.get(user_id)
+        if not user:
+            return False
+
+        user_sids[user_id] = request.sid
+        sid_users[request.sid] = user_id
         print(f"Accepting connection for user: {user.username}")
         user_sids[user.user_id] = request.sid  # Store the user's socket ID
 
@@ -44,10 +47,9 @@ def handle_connect():
             'username': user.username,
             'status': 'online'
         }, broadcast=True)
-
         return True
     except Exception as e:
-        print(f"Connection error: {e}")
+        print(f"JWT decoding error: {e}")
         return False
 
 
@@ -55,14 +57,15 @@ def handle_connect():
 def handle_disconnect():
     print("User disconnected")
     try:
-        user = get_user_from_jwt()
+        user_id = sid_users.get(request.sid)
+        user = User.query.get(user_id)
         if user:
             # Update online status
             user.is_online = False
             db.session.commit()
-            
-            # Remove from tracking
-            user_sids.pop(user.user_id, None)
+
+            del user_sids[user_id]
+            del sid_users[request.sid]
 
             # Notify all contacts that the user is offline
             emit('user_status', {
@@ -80,7 +83,7 @@ def handle_action(data):
     print("Received action:", data)
     """Handle various client actions based on the action field"""
     try:
-        user_id = data.get()
+        user_id = sid_users.get(request.sid)
         user = User.query.get(user_id)
             
         action = data.get('action')
