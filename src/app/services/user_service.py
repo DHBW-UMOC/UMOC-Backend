@@ -76,6 +76,45 @@ class UserService:
         except Exception as e:
             db.session.rollback()
             return {"error": f"An unexpected error occurred during logout: {e}"}  # Internal error
+        
+    def change_name(self, user_id, new_username):
+        user = User.query.filter_by(user_id=user_id).first()
+        if not user:
+            return {"error": "User not found"}
+        user.username = new_username
+        try:
+            db.session.commit()
+            return {"success": True}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"An unexpected error occurred: {e}"}
+        
+    def change_profile_picture(self, user_id, new_profile_picture):
+        user = User.query.filter_by(user_id=user_id).first()
+        if not user:
+            return {"error": "User not found"}
+        user.profile_picture = new_profile_picture
+        try:
+            db.session.commit()
+            return {"success": True}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"An unexpected error occurred: {e}"}
+        
+    def change_password(self, user_id, old_password, new_password):
+        user = User.query.filter_by(user_id=user_id).first()
+        if not user:
+            return {"error": "User not found"}
+        if user.password != old_password:
+            return {"error": "Old password is incorrect"}
+        
+        user.password = new_password
+        try:
+            db.session.commit()
+            return {"success": True}
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"An unexpected error occurred: {e}"}
     
     def get_user_by_session(self, session_id):
         return User.query.filter_by(session_id=session_id).first()

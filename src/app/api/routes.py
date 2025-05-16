@@ -115,6 +115,35 @@ def change_contact():
     return jsonify({"success": "Contact status changed successfully"}), 200
 
 
+@api_bp.route("/deleteContact", methods=['POST'])
+@jwt_required()
+def change_profile():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+
+    action = data.get('action')
+
+    if not action:
+        return jsonify({"error": "'action' is required"}), 400
+    if action not in ["picture", "name", "password"]:
+        return jsonify({"error": "'action' must be either 'picture', 'name' or 'password'"}), 400
+    if action == "picture":
+        new_value = data.get('new_value')
+        if not new_value:
+            return jsonify({"error": "'new_value' is required"}), 400
+        result = user_service.change_profile_picture(user_id, new_value)
+    elif action == "name":
+        new_value = data.get('new_value')
+        if not new_value:
+            return jsonify({"error": "'new_value' is required"}), 400
+        result = user_service.change_username(user_id, new_value)
+    elif action == "password":
+        new_value = data.get('new_value')
+        if not new_value:
+            return jsonify({"error": "'new_value' is required"}), 400
+        result = user_service.change_password(user_id, new_value)
+
+
 @api_bp.route("/getChats", methods=['GET'])
 @jwt_required()
 def get_chats():
@@ -362,7 +391,7 @@ def change_group():
         if not user_service.does_user_exist(new_value):
             return jsonify({"error": "New admin user not found"}), 404
         group_service.change_group_admin(user_id, group_id, new_value, "add")
-    elif action == "de_admin":
+    elif action == "deadmin":
         # FIX: Use user_service instead of group_service to check if the user exists
         if not user_service.does_user_exist(new_value):
             return jsonify({"error": "User not found"}), 404
