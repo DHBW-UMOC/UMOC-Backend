@@ -1,3 +1,87 @@
+## Changelog - Max - 16.05.2025
+
+### Neue Websockets
+#### Verbindung aufbauen (mit JWT)
+
+- **Event**: `connect` (automatisch)
+- **Query Param**: `token=<JWT access token>`
+- **Beispiel (Client - JS)**:
+  ```js
+  const socket = io("http://localhost:5000", {
+    query: { token: "your_jwt_token" }
+  });
+
+  socket.on("connect", () => {
+    console.log("Connected!");
+  });
+
+  socket.on("user_status", (data) => {
+    console.log("Status update:", data);
+  });
+  ```
+  
+#### Disconnect
+Event: disconnect (automatisch bei Trennung)
+
+Serverreaktion: Kontakte erhalten Statusmeldung
+
+```js
+{
+  "user_id": "<user_id>",
+  "username": "<username>",
+  "status": "offline"
+}
+```
+
+#### Action
+Event: action
+
+Payload:
+```json
+{
+  "action": "<action_type>",
+  "data": { ... }
+}
+```
+
+#### Unterstützte Actions:
+
+- typing
+
+- sendMessage
+
+Beispiel: typing
+```js
+socket.emit("action", {
+  action: "typing",
+  data: {
+    recipient_id: "abc123",
+    char: "a"
+  }
+});
+```
+
+Beispiel: sendMessage
+```js
+socket.emit("action", {
+  action: "sendMessage",
+  data: {
+    recipient_id: "abc123",
+    content: "Hello!",
+    type: "text"
+  }
+});
+```
+
+#### Events vom Server:
+| Event            | Beschreibung                   |
+| ---------------- | ------------------------------ |
+| `typing`         | Nutzer tippt Nachricht         |
+| `new_message`    | Neue Nachricht empfangen       |
+| `item_used`      | Item wurde verwendet           |
+| `system_message` | Systemnachricht erhalten       |
+| `user_status`    | Online-/Offline-Statusänderung |
+
 ## Changelog – Pascal - 15.05.2025
 
 ### Neue Endpunkte
