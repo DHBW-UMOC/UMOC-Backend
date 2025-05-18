@@ -78,70 +78,55 @@ def handle_disconnect():
 
 
 # New WebSocket Handlers
-@socketio.on('action')
-def handle_action(data):
+@socketio.on('send_char')
+def send_char(data):
     print("Received action:", data)
     """Handle various client actions based on the action field"""
     try:
         user_id = sid_users.get(request.sid)
         user = User.query.get(user_id)
-            
-        action = data.get('action')
-        action_data = data.get('data', {})
-        
-        if action == 'typing':
-            handle_typing(user, action_data)
-        elif action == 'sendMessage':
-            handle_send_message(user, action_data)
-        elif action == 'useItem':
-            handle_use_item(user, action_data)
-        elif action == 'system_message':
-            handle_system_message(user, action_data)
+
+        recipient_id = data.get('recipient_id')
+        character = data.get('char')
+        is_group = group_service.does_group_exist(recipient_id)
+
+        if not recipient_id or not character:
+            return
+
+        # Send typing notification directly to recipient's socket if they are online
+        if recipient_id in user_sids:
+            emit('typing', {
+                'sender_id': user.user_id,
+                'sender_username': user.username,
+                'char': character,
+                'timestamp': datetime.utcnow().isoformat(),
+                'is_group': is_group
+            }, room=user_sids[recipient_id])
+        elif is_group:
+            # For groups, send to all members
+            members = group_service.get_group_members(user.user_id, recipient_id)
+            if not isinstance(members, list):
+                return
+
+            for member in members:
+                if member["user_id"] in user_sids and member["user_id"] != user.user_id:
+                    emit('typing', {
+                        'sender_id': user.user_id,
+                        'sender_username': user.username,
+                        'char': character,
+                        'timestamp': datetime.utcnow().isoformat(),
+                        'is_group': True,
+                        'group_id': recipient_id
+                    }, room=user_sids[member["user_id"]])
+
     except Exception as e:
         print(f"Action handling error: {e}")
         emit('error', {'message': 'Failed to process action'})
 
-def handle_typing(user, data):
-    """Handle typing event and notify recipients"""
-    recipient_id = data.get('recipient_id')
-    character = data.get('char')
-    is_group = group_service.does_group_exist(recipient_id)
-    
-    if not recipient_id or not character:
-        return
-    
-    # Send typing notification directly to recipient's socket if they are online
-    if recipient_id in user_sids:
-        emit('typing', {
-            'sender_id': user.user_id,
-            'sender_username': user.username,
-            'char': character,
-            'timestamp': datetime.utcnow().isoformat(),
-            'is_group': is_group
-        }, room=user_sids[recipient_id])
-    elif is_group:
-        # For groups, send to all members
-        members = group_service.get_group_members(user.user_id, recipient_id)
-        if not isinstance(members, list):
-            return
-            
-        for member in members:
-            if member["user_id"] in user_sids and member["user_id"] != user.user_id:
-                emit('typing', {
-                    'sender_id': user.user_id,
-                    'sender_username': user.username,
-                    'char': character,
-                    'timestamp': datetime.utcnow().isoformat(),
-                    'is_group': True,
-                    'group_id': recipient_id
-                }, room=user_sids[member["user_id"]])
 
-def handle_send_message(user, data):
+def send_message(user, recipient_id, content, is_group):
     """Handle send message action"""
-    recipient_id = data.get('recipient_id')
-    content = data.get('content')
-    is_group = group_service.does_group_exist(recipient_id)
-    msg_type = data.get('type', 'text')
+    msg_type = "text"
     
     if not recipient_id or not content:
         return
@@ -188,99 +173,18 @@ def handle_send_message(user, data):
                     'group_id': recipient_id
                 }, room=user_sids[member["user_id"]])
 
-def handle_use_item(user, data):
-    """Handle item usage"""
-    recipient_id = data.get('recipient_id')
-    item_id = data.get('item_id')
-    is_group = group_service.does_group_exist(recipient_id)
-    
-    if not recipient_id or not item_id:
-        return
-    
-    # Send notification directly to recipient's socket if they are online
-    if recipient_id in user_sids:
-        emit('item_used', {
-            'sender_id': user.user_id,
-            'sender_username': user.username,
-            'item_id': item_id,
-            'timestamp': datetime.utcnow().isoformat(),
-            'is_group': is_group
-        }, room=user_sids[recipient_id])
-    elif is_group:
-        # For groups, send to all members
-        members = group_service.get_group_members(user.user_id, recipient_id)
-        if not isinstance(members, list):
-            return
-            
-        for member in members:
-            if member["user_id"] in user_sids and member["user_id"] != user.user_id:
-                emit('item_used', {
-                    'sender_id': user.user_id,
-                    'sender_username': user.username,
-                    'item_id': item_id,
-                    'timestamp': datetime.utcnow().isoformat(),
-                    'is_group': True,
-                    'group_id': recipient_id
-                }, room=user_sids[member["user_id"]])
 
-def handle_system_message(user, data):
-    """Handle system messages"""
-    recipient_id = data.get('recipient_id')
-    content = data.get('content')
-    is_group = group_service.does_group_exist(recipient_id)
-    
-    if not recipient_id or not content:
-        return
-    
-    # Send system message directly to recipient's socket if they are online
-    if recipient_id in user_sids:
-        emit('system_message', {
-            'content': content,
-            'timestamp': datetime.utcnow().isoformat(),
-            'is_group': is_group
-        }, room=user_sids[recipient_id])
-    elif is_group:
-        # For groups, send to all members
-        members = group_service.get_group_members(user.user_id, recipient_id)
-        if not isinstance(members, list):
-            return
-            
-        for member in members:
-            if member["user_id"] in user_sids and member["user_id"] != user.user_id:
-                emit('system_message', {
-                    'content': content,
-                    'timestamp': datetime.utcnow().isoformat(),
-                    'is_group': True,
-                    'group_id': recipient_id
-                }, room=user_sids[member["user_id"]])
-
-# Helper functions to send notifications
-def send_typing_notification(user_id, recipient_id, character, is_group=False):
-    """Send typing notification to recipient"""
-    user = User.query.get(user_id)
-    if not user or recipient_id not in user_sids:
-        return
-        
-    socketio.emit('typing', {
-        'sender_id': user.user_id,
-        'sender_username': user.username,
-        'char': character,
-        'timestamp': datetime.utcnow().isoformat(),
-        'is_group': is_group
-    }, room=user_sids[recipient_id])
-
-def send_message_notification(message):
-    """Send message notification to recipient"""
-    sender = User.query.get(message.sender_user_id)
-    if not sender or message.recipient_user_id not in user_sids:
-        return
-        
-    socketio.emit('new_message', {
-        'message_id': message.message_id,
-        'sender_id': sender.user_id,
-        'sender_username': sender.username,
-        'content': message.encrypted_content,
-        'type': message.type.value,
-        'timestamp': message.send_at.isoformat(),
-        'is_group': message.is_group
-    }, room=user_sids[message.recipient_user_id])
+def chat_change(action, recipient_id, data):
+    """Handle chat change actions"""
+    groupmembers = group_service.get_group_members(recipient_id)
+    match action:
+        case "leaves_group":
+            ...
+        case "remove_member", "add_member":
+            ...
+        case "create_group":
+            ...
+        case "delete_group":
+            ...
+        case "change_group":
+            ...

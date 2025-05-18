@@ -33,22 +33,8 @@ Serverreaktion: Kontakte erhalten Statusmeldung
 }
 ```
 
-#### Action
-Event: action
-
-Payload:
-```json
-{
-  "action": "<action_type>",
-  "data": { ... }
-}
-```
-
-#### Unterstützte Actions:
-
-- typing
-
-- sendMessage
+#### Send Char
+Event: send_char
 
 Beispiel: typing
 ```js
@@ -56,31 +42,36 @@ socket.emit("action", {
   action: "typing",
   data: {
     recipient_id: "abc123",
-    char: "a"
+    char: "a" | "<DELETE>"
   }
 });
 ```
 
-Beispiel: sendMessage
+#### receving Events
+
+##### new_message
+Event: new_message
+Beispiel:
 ```js
-socket.emit("action", {
-  action: "sendMessage",
-  data: {
-    recipient_id: "abc123",
-    content: "Hello!",
-    type: "text"
-  }
-});
+{
+  "sender_id": "<sender_id>",
+  "message": "<message>",
+  "timestamp": "<timestamp>"
+}
 ```
 
-#### Events vom Server:
-| Event            | Beschreibung                   |
-| ---------------- | ------------------------------ |
-| `typing`         | Nutzer tippt Nachricht         |
-| `new_message`    | Neue Nachricht empfangen       |
-| `item_used`      | Item wurde verwendet           |
-| `system_message` | Systemnachricht erhalten       |
-| `user_status`    | Online-/Offline-Statusänderung |
+##### chat_change
+Event: chat_change
+
+Beispiel:
+```js
+{
+  "chat_id": "<chat_id>",
+  "action": "add" | "remove",
+  "user_id": "<user_id>"
+}
+```
+
 
 ## Changelog – Pascal - 15.05.2025
 

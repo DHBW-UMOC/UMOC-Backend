@@ -11,6 +11,8 @@ from app.services.contact_service import ContactService
 from app.services.group_service import GroupService
 from app import db
 
+from app.websocket import websockets
+
 api_bp = Blueprint('api', __name__)
 user_service = UserService()
 message_service = MessageService()
@@ -199,6 +201,7 @@ def get_own_profile():
 def save_message():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
+    user = User.query.filter_by(user_id=user_id).first()
 
     recipient_id = data.get("recipient_id")
     content = data.get("content")
@@ -213,6 +216,7 @@ def save_message():
         return jsonify({"error": "'content' is required"}), 400
 
     result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
+    websockets.send_message(user, recipient_id, content, is_group=is_group)
     if "error" in result:
         return jsonify(result), 400
 
