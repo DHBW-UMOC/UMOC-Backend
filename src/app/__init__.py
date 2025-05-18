@@ -53,6 +53,3 @@ def reset_database(app):
         from app.services.dummy_data import insert_example_data
         insert_example_data()
         print("Database reset completed with example data.")
-
-
-app = create_app()

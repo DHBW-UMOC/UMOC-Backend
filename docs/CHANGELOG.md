@@ -1,76 +1,25 @@
 ## Changelog - Max - 16.05.2025
 
 ### Neue Websockets
-#### Verbindung aufbauen (mit JWT)
+#### Sending Websockets
+- connect
+- disconnect
+- send_char
 
-- **Event**: `connect` (automatisch)
-- **Query Param**: `token=<JWT access token>`
-- **Beispiel (Client - JS)**:
-  ```js
-  const socket = io("http://localhost:5000", {
-    query: { token: "your_jwt_token" }
-  });
+#### Receiving Websockets
+- connect
+- disconnect
+- receve_char
+- new_message
+- chat_change
+  - leave_group
+  - change_group
+  - add_member
+  - remove_member
+  - create_group
+  - delete_group
 
-  socket.on("connect", () => {
-    console.log("Connected!");
-  });
-
-  socket.on("user_status", (data) => {
-    console.log("Status update:", data);
-  });
-  ```
-  
-#### Disconnect
-Event: disconnect (automatisch bei Trennung)
-
-Serverreaktion: Kontakte erhalten Statusmeldung
-
-```js
-{
-  "user_id": "<user_id>",
-  "username": "<username>",
-  "status": "offline"
-}
-```
-
-#### Send Char
-Event: send_char
-
-Beispiel: typing
-```js
-socket.emit("action", {
-  action: "typing",
-  data: {
-    recipient_id: "abc123",
-    char: "a" | "<DELETE>"
-  }
-});
-```
-
-#### receving Events
-
-##### new_message
-Event: new_message
-Beispiel:
-```js
-{
-  "sender_id": "<sender_id>",
-  "message": "<message>",
-  "timestamp": "<timestamp>"
-}
-```
-
-##### chat_change
-Event: chat_change
-
-Beispiel:
-```js
-{
-  "chat_id": "<chat_id>",
-  "action": "add" | "remove",
-  "user_id": "<user_id>"
-}
-```
+Diese Events werden an alle Clients gesendet, die betroffen sind.
 
 
 ## Changelog – Pascal - 15.05.2025

@@ -120,215 +120,6 @@ End a user's session.
   - **Code**: 500
     - **Content**: `{"error": "An unexpected error occurred during logout"}`
 
-## WebSocket Interface
-
-### Connection and Authentication
-
-To establish a WebSocket connection, clients must first obtain a JWT token through the REST API login endpoint. The JWT token is then used for WebSocket authentication.
-
-#### Connect
-
-Connect to the WebSocket server with authentication.
-
-- **Event**: `connect`
-- **Authentication**: Required (JWT token)
-- **Description**: Establishes a WebSocket connection and marks the user as online
-- **Success Response**:
-  - Server broadcasts a `user_status` event to all connected users:
-    ```json
-    {
-      "user_id": "user_uuid",
-      "username": "username",
-      "status": "online"
-    }
-    ```
-- **Error Response**:
-  - Connection is rejected if the JWT token is invalid
-
-#### Disconnect
-
-Terminate the WebSocket connection.
-
-- **Event**: `disconnect`
-- **Description**: Closes the WebSocket connection and marks the user as offline
-- **Success Response**:
-  - Server broadcasts a `user_status` event to all connected users:
-    ```json
-    {
-      "user_id": "user_uuid",
-      "username": "username",
-      "status": "offline"
-    }
-    ```
-
-### Messaging Events
-
-#### Send Message
-
-Send a message to another user or group.
-
-- **Event**: `send_message`
-- **Client Payload**:
-  ```json
-  {
-    "recipient_id": "recipient_user_id_or_group_id",
-    "content": "message_content",
-    "is_group": false,
-    "type": "text"
-  }
-  ```
-  - `recipient_id`: ID of the recipient user or group
-  - `content`: The message content
-  - `is_group`: Boolean indicating if the recipient is a group
-  - `type`: Message type (text, image, item, location, audio, video)
-- **Server Response**:
-  - Server emits a `new_message` event to the recipient:
-    ```json
-    {
-      "message_id": "message_uuid",
-      "sender_id": "sender_user_id",
-      "sender_username": "sender_username",
-      "content": "message_content",
-      "type": "text|image|item|location|audio|video",
-      "timestamp": "2023-12-31T23:59:59.999999",
-      "is_group": false
-    }
-    ```
-
-### Action Events
-
-The `action` event provides a unified interface for various client actions.
-
-#### Action: Typing
-
-Send typing indicator updates.
-
-- **Event**: `action`
-- **Client Payload**:
-  ```json
-  {
-    "action": "typing",
-    "data": {
-      "recipient_id": "recipient_user_id_or_group_id",
-      "char": "H",
-      "is_group": false
-    }
-  }
-  ```
-- **Server Response**:
-  - Server emits a `typing` event to the recipient:
-    ```json
-    {
-      "sender_id": "sender_user_id",
-      "sender_username": "sender_username",
-      "char": "H",
-      "timestamp": "2023-12-31T23:59:59.999999",
-      "is_group": false
-    }
-    ```
-
-#### Action: Send Message
-
-Send a message through the action handler.
-
-- **Event**: `action`
-- **Client Payload**:
-  ```json
-  {
-    "action": "sendMessage",
-    "data": {
-      "recipient_id": "recipient_user_id_or_group_id",
-      "content": "message_content",
-      "is_group": false,
-      "type": "text"
-    }
-  }
-  ```
-- **Server Response**:
-  - Server emits a `new_message` event to the recipient with the same format as the `send_message` event
-
-#### Action: Use Item
-
-Send an item usage notification.
-
-- **Event**: `action`
-- **Client Payload**:
-  ```json
-  {
-    "action": "useItem",
-    "data": {
-      "recipient_id": "recipient_user_id_or_group_id",
-      "item_id": "item_id",
-      "is_group": false
-    }
-  }
-  ```
-- **Server Response**:
-  - Server emits an `item_used` event to the recipient:
-    ```json
-    {
-      "sender_id": "sender_user_id",
-      "sender_username": "sender_username",
-      "item_id": "item_id",
-      "timestamp": "2023-12-31T23:59:59.999999",
-      "is_group": false
-    }
-    ```
-
-#### Action: System Message
-
-Send a system message.
-
-- **Event**: `action`
-- **Client Payload**:
-  ```json
-  {
-    "action": "system_message",
-    "data": {
-      "recipient_id": "recipient_user_id_or_group_id",
-      "content": "system_message_content",
-      "is_group": false
-    }
-  }
-  ```
-- **Server Response**:
-  - Server emits a `system_message` event to the recipient:
-    ```json
-    {
-      "content": "system_message_content",
-      "timestamp": "2023-12-31T23:59:59.999999",
-      "is_group": false
-    }
-    ```
-
-### Status Notifications
-
-#### User Status
-
-The server automatically broadcasts user status changes.
-
-- **Event**: `user_status`
-- **Server Payload**:
-  ```json
-  {
-    "user_id": "user_uuid",
-    "username": "username",
-    "status": "online|offline"
-  }
-  ```
-
-### Error Handling
-
-The server may emit error events in response to invalid requests.
-
-- **Event**: `error`
-- **Server Payload**:
-  ```json
-  {
-    "message": "Error message"
-  }
-  ```
-
 ## Contact Management Endpoints
 
 ### Add Contact
@@ -705,85 +496,175 @@ Debug endpoint to retrieve detailed contact information.
     - **Content**: `{"error": "User not found"}`
 
 
-# WebSocket Interface
 
-### Verbindung aufbauen (mit JWT)
+## WebSocket Interface
 
-- **Event**: `connect` (automatisch)
-- **Query Param**: `token=<JWT access token>`
-- **Beispiel (Client - JS)**:
-  ```js
-  const socket = io("http://localhost:5000", {
-    query: { token: "your_jwt_token" }
-  });
-
-  socket.on("connect", () => {
-    console.log("Connected!");
-  });
-
-  socket.on("user_status", (data) => {
-    console.log("Status update:", data);
-  });
-  ```
+### Connect
+Zum verbinden mit dem WebSocket-Server wird ein JWT-Token benötigt. 
+Der Token muss als Query-Parameter `token` übergeben werden.
+Beispiel: 
+```html
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<srcipt>
+  const SERVER_URL = "http://localhost:5000";
+  const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmV......"
   
-### Disconnect
-Event: disconnect (automatisch bei Trennung)
-
-Serverreaktion: Kontakte erhalten Statusmeldung
-
-```js
-{
-  "user_id": "<user_id>",
-  "username": "<username>",
-  "status": "offline"
-}
+  const socket = io(SERVER_URL, {
+    query: { token: TOKEN } 
+  });
+  
+  socket.on("connect", () => {
+    console.log("Connected");
+  });
+</srcipt>
 ```
 
-### Action
-Event: action
+### Disconnect
+Manuel muss man sich nicht trennen. Falls die Verbindung getrennt wird, wird der Client automatisch disconnected.
+```js
+socket.on("disconnect", () => {
+  console.log("Disconnected");
+});
+```
 
-Payload:
+### Send Char (Typing)
+event: `send_char`
+- **Client Payload**:
 ```json
 {
-  "action": "<action_type>",
-  "data": { ... }
+  "recipient_id": "00000000-0000-0000-0000-000000000000",
+  "char": "H" / "<DEL>",
+  "is_group": false | true
+}
+```
+Beispiel:
+```js
+socket.emit("send_char", {
+  recipient_id: "00000000-0000-0000-0000-000000000000",
+  char: "H",
+  is_group: false
+});
+```
+
+### receving_events
+Diese werden wie volgt empfangen:
+```js
+socket.on("receive_char", (data) => {
+  console.log(data);
+});
+```
+
+#### Receve Char
+event: "receive_char"
+- **Server Payload**:
+```json
+{
+  "sender_id": "00000000-0000-0000-0000-000000000000",
+  "char": "H" / "<DEL>",
+  "is_group": false | true,
+  "recipient_id": "00000000-0000-0000-0000-000000000000"
 }
 ```
 
-#### Unterstützte Actions:
-
-- typing
-
-- sendMessage
-
-Beispiel: typing
-```js
-socket.emit("action", {
-  action: "typing",
-  data: {
-    recipient_id: "abc123",
-    char: "a"
-  }
-});
+#### New Message
+event: "new_message"
+- **Server Payload**:
+```json
+{
+  "message_id": "00000000-0000-0000-0000-000000000000",
+  "sender_id": "00000000-0000-0000-0000-000000000000",
+  "content": "String",
+  "type": "TEXT | IMAGE | ITEM | LOCATION | AUDIO | VIDEO",
+  "timestamp": "2023-10-01T12:00:00.123456Z",
+  "is_group": false | true,
+  "recipient_id": "00000000-0000-0000-0000-000000000001"
+}
 ```
 
-Beispiel: sendMessage
-```js
-socket.emit("action", {
-  action: "sendMessage",
-  data: {
-    recipient_id: "abc123",
-    content: "Hello!",
-    type: "text"
+##### Chat Change
+event: "chat_change"
+Hier sind alle Änderungen von chats in einem Websocket verbunden.
+- **Server Payload**:
+```json
+{
+  "action": "leave_group | remove_member | add_member | change_group | delete_group",
+  "group_id": "00000000-0000-0000-0000-000000000000",
+  "data": {
+    ...
   }
-});
+}
 ```
 
-### Events vom Server
-| Event            | Beschreibung                   |
-| ---------------- | ------------------------------ |
-| `typing`         | Nutzer tippt Nachricht         |
-| `new_message`    | Neue Nachricht empfangen       |
-| `item_used`      | Item wurde verwendet           |
-| `system_message` | Systemnachricht erhalten       |
-| `user_status`    | Online-/Offline-Statusänderung |
+###### "leave_group"
+- **Server Payload**:
+```json
+{
+  "action": "leave_group",
+  "group_id": "00000000-0000-0000-0000-000000000000",
+  "data": {
+    "user_id": "00000000-0000-0000-0000-000000000000"
+  } 
+}
+```
+
+###### "remove_member"
+- **Server Payload**:
+```json
+{
+  "action": "remove_member",
+  "group_id": "00000000-0000-0000-0000-000000000000",
+  "data": {
+    "user_id": "00000000-0000-0000-0000-000000000001",
+    "by_user_id": "00000000-0000-0000-0000-000000000000"
+  } 
+}
+```
+
+###### "add_member"
+- **Server Payload**:
+```json
+{
+  "action": "add_member",
+  "group_id": "00000000-0000-0000-0000-000000000000",
+  "data": {
+    "user_id": "00000000-0000-0000-0000-000000000001",
+    "by_user_id": "00000000-0000-0000-0000-000000000001"
+  } 
+}
+```
+
+###### "create_group"
+- **Server Payload**:
+```json
+{
+  "action": "create_group",
+  "group_id": "00000000-0000-0000-0000-000000000000",
+  "data": {
+    "group_name": "String",
+    "group_pic": "https://group_pic_url.jpeg"
+  } 
+}
+```
+
+###### "delete_group"
+- **Server Payload**:
+```json
+{
+  "action": "delete_group",
+  "group_id": "00000000-0000-0000-0000-000000000000",
+  "data": {} 
+}
+```
+
+###### "cahnge_group"
+- **Server Payload**:
+```json
+{
+  "action": "change_group",
+  "group_id": "00000000-0000-0000-0000-000000000000",
+  "data": {
+    "action": "name | picture | admin",
+    "new_value": "String"
+  } 
+}
+```

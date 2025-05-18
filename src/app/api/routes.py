@@ -11,7 +11,7 @@ from app.services.contact_service import ContactService
 from app.services.group_service import GroupService
 from app import db
 
-from app.websocket import *
+from app.websocket import websockets
 
 api_bp = Blueprint('api', __name__)
 user_service = UserService()
@@ -309,6 +309,8 @@ def create_group():
     )
     if "error" in result:
         return jsonify(result), 400
+    websockets.chat_change("create_group", result["group_id"],
+                           {"group_pic": group_pic, "group_name": group_name, "group_id": result["group_id"]})
     return jsonify({"success": "Group created successfully", "group_id": result["group_id"]}), 201
 
 
@@ -326,6 +328,7 @@ def delete_group():
     if not group_service.does_group_exist(group_id):
         return jsonify({"error": "Group not found"}), 404
 
+    websockets.chat_change("delete_group", group_id, {})
     result = group_service.delete_group(user_id, group_id)
 
     if "error" in result:
@@ -373,6 +376,8 @@ def change_group():
         group_service.change_group_admin(user_id, group_id, new_value, "remove")
     else:
         return jsonify({"error": "Action is required. Valid values: name, picture, admin"}), 400
+
+    websockets.chat_change("change_group", group_id, {"action": action, "new_value": new_value})
     return jsonify({"success": "Group updated successfully"}), 200
 
 
@@ -402,6 +407,8 @@ def add_member():
     result = group_service.add_member(user_id, group_id, new_member_id)
     if "error" in result:
         return jsonify(result), 400
+
+    websockets.chat_change("add_member", group_id, {"new_member_id": new_member_id, "by_user_id": user_id})
     return jsonify({"success": "Member added successfully"}), 200
 
 
@@ -430,6 +437,8 @@ def remove_member():
     result = group_service.remove_member(user_id, group_id, member_id)
     if "error" in result:
         return jsonify(result), 400
+
+    websockets.chat_change("remove_member", group_id, {"member_id": member_id, "by_user_id": user_id})
     return jsonify({"success": "Member removed successfully"}), 200
 
 
@@ -452,4 +461,6 @@ def leave_group():
     result = group_service.leave_group(user_id, group_id)
     if "error" in result:
         return jsonify(result), 400
+
+    websockets.chat_change("leave_group", group_id, {"user_id": user_id})
     return jsonify({"success": "User left the group successfully"}), 200

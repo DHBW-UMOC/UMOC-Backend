@@ -8,17 +8,20 @@
 <body>
   <h1>WebSocket Test</h1>
   <button onclick="sendTyping()">Send Typing</button>
-  <button onclick="sendMessage()">Send Message</button>
+{#  <button onclick="sendMessage()">Send Message</button>#}
 <!--  <button onclick="sendSystemMessage()">Send System Message</button>-->
 <!--  <button onclick="useItem()">Use Item</button>-->
+  <br><br>
+  <div id="debug"></div>
 
   <script>
+      debug = document.getElementById("debug");
+
     // === CONFIG ===
     const SERVER_URL = "http://localhost:5000";
-    const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0NzQwNzU1NiwianRpIjoiM2EwODgyNTgtMmFlMy00ZTYzLTg2MmUtMzU0MTFmNmRiNTU5IiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMSIsIm5iZiI6MTc0NzQwNzU1NiwiY3NyZiI6ImNkYWZhYTkwLWRiNjEtNDk3Ni05Nzg2LThhZjQyYmI3ZDhhNiIsImV4cCI6MTc0NzQ5Mzk1Nn0.9XbtSPPUmY2flYQ2j32Sw7mnJud3rrgGD4f4zvsqNBo";
-    const RECIPIENT_ID = "00000000-0000-0000-0000-000000000002";
-    // const ITEM_ID = "item123";
-    const MESSAGE = "Hello from test!";
+    const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0NzYwNDg3OCwianRpIjoiNmU4Yjg0NTUtYmM4Ni00ZWIwLTk5OWQtMGZjZjk1MzA4OTRkIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMiIsIm5iZiI6MTc0NzYwNDg3OCwiY3NyZiI6IjRmZGMyMjc0LTBmNGItNDc4MC04MWRhLTZkYTRlZmNkNDRjMyIsImV4cCI6MTc0NzY5MTI3OH0.TrhUIbJVT8o_clmBXAVbxm01WU-UcaC_-NeyUkFKgAQ";
+    const RECIPIENT_ID = "00000000-0000-0000-0000-000000000001";
+    SENDER_ID = "00000000-0000-0000-0000-000000000002";
     const CHAR = "H";
 
     // === INIT SOCKET ===
@@ -28,61 +31,41 @@
 
     socket.on("connect", () => {
       console.log("Connected");
+      debug.innerText = "Connected";
     });
 
     socket.on("disconnect", () => {
       console.log("Disconnected");
+        debug.innerText = "Disconnected";
     });
 
     socket.on("new_message", (msg) => {
       console.log("New Message:", msg);
+        debug.innerText = "New Message: " + msg;
     });
 
-    socket.on("typing", (data) => {
+    socket.on("receive_char", (data) => {
       console.log("Typing:", data);
+        debug.innerText = "Typing: " + data;
+    });
+
+    socket.on("chat_change", (data) => {
+      console.log("chat_change:", data);
+        debug.innerText = "chat_change: " + data;
     });
 
     // === ACTIONS ===
     function sendTyping() {
-      socket.emit("action", {
-        action: "typing",
-        data: {
-          recipient_id: RECIPIENT_ID,
-          char: CHAR
+        console.log("Sending Typing...");
+            debug.innerText = "Sending Typing...";
+      socket.emit("send_char", {
+          "sender_id": SENDER_ID,
+          "recipient_id": RECIPIENT_ID,
+          "char": CHAR,
+          "is_group": false
         }
-      });
+      );
     }
-
-    function sendMessage() {
-      socket.emit("action", {
-        action: "sendMessage",
-        data: {
-          recipient_id: RECIPIENT_ID,
-          content: MESSAGE,
-          type: "text"
-        }
-      });
-    }
-
-    // function sendSystemMessage() {
-    //   socket.emit("action", {
-    //     action: "system_message",
-    //     data: {
-    //       recipient_id: RECIPIENT_ID,
-    //       content: "System message test"
-    //     }
-    //   });
-    // }
-    //
-    // function useItem() {
-    //   socket.emit("action", {
-    //     action: "useItem",
-    //     data: {
-    //       recipient_id: RECIPIENT_ID,
-    //       item_id: ITEM_ID
-    //     }
-    //   });
-    // }
   </script>
 </body>
 </html>
