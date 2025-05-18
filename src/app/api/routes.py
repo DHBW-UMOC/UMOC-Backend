@@ -11,7 +11,7 @@ from app.services.contact_service import ContactService
 from app.services.group_service import GroupService
 from app import db
 
-from app.websocket import websockets
+from app.websocket import *
 
 api_bp = Blueprint('api', __name__)
 user_service = UserService()

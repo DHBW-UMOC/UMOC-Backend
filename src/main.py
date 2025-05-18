@@ -5,7 +5,7 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from app import reset_database, app
-from app.websocket.websockets import socketio
+from app.websocket.websockets import *
 
 if __name__ == '__main__':
     # Reset database for development (comment out for production)

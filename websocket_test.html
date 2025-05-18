@@ -42,18 +42,6 @@
       console.log("Typing:", data);
     });
 
-    socket.on("user_status", (data) => {
-      console.log("User status:", data);
-    });
-
-    socket.on("item_used", (data) => {
-      console.log("Item used:", data);
-    });
-
-    socket.on("system_message", (data) => {
-      console.log("System message:", data);
-    });
-
     // === ACTIONS ===
     function sendTyping() {
       socket.emit("action", {
