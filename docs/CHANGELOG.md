@@ -1,3 +1,27 @@
+## Changelog - Max - 16.05.2025
+
+### Neue Websockets
+#### Sending Websockets
+- connect
+- disconnect
+- send_char
+
+#### Receiving Websockets
+- connect
+- disconnect
+- receve_char
+- new_message
+- chat_change
+  - leave_group
+  - change_group
+  - add_member
+  - remove_member
+  - create_group
+  - delete_group
+
+Diese Events werden an alle Clients gesendet, die betroffen sind.
+
+
 ## Changelog – Pascal - 15.05.2025
 
 ### Neue Endpunkte

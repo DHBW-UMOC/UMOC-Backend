@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from app.extensions import db
+from app import db
 from app.models.group import Group, GroupMember, GroupRoleEnum
 
 
