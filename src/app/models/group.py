@@ -4,7 +4,7 @@ from datetime import datetime
 from email.policy import default
 
 from sqlalchemy import Enum
-from app.extensions import db
+from app import db
 
 class GroupRoleEnum(enum.Enum):
     ADMIN = "admin"

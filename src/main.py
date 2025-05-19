@@ -4,15 +4,16 @@ import sys
 # Add src directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-from app import create_app, reset_database
-from app.extensions import socketio
+from app import reset_database, create_app
+from app.websocket.websockets import socketio, init_websockets
+
+app = create_app()
+init_websockets(app)
 
 if __name__ == '__main__':
-    app = create_app()
-    
     # Reset database for development (comment out for production)
     reset_database(app)
-    
+
     socketio.run(
         app,
         host='0.0.0.0',
@@ -20,3 +21,4 @@ if __name__ == '__main__':
         debug=os.getenv('DEBUG', 'True').lower() == 'true',
         allow_unsafe_werkzeug=True
     )
+

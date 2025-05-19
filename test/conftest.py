@@ -10,7 +10,7 @@ from test.compatibility_patch import *
 
 import pytest
 # Update import to create or access the Flask app correctly
-from src.app import create_app, db  # Try importing create_app instead of app directly
+from app import create_app, db  # Try importing create_app directly from app
 
 @pytest.fixture
 def app():

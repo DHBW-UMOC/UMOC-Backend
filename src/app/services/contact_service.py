@@ -1,4 +1,4 @@
-from app.extensions import db
+from app import db
 from app.models.user import User, UserContact, ContactStatusEnum
 from app.services.user_service import UserService
 from sqlalchemy import func
