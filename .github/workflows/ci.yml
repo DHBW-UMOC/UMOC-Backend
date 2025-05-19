@@ -87,6 +87,33 @@ jobs:
         # Using the options from pytest.ini
         python -m pytest test/ --cov=src --import-mode=importlib --disable-warnings
 
+  mesure_metrics:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Zyklomatische Komplexität
+        run: |
+          echo "Zyklomatische Komplexität"
+          radon cc src/ -nc 
+
+      - name: Response for Class (RFC)
+        run: |
+          echo "Response for Class (RFC)"
+          lizard src/
+
+      - name: Start Flask app
+        run: |
+          echo "Start Flask app"
+          # Start the Flask app in the background
+          nohup python src/app.py &
+          sleep 5  # Wait for the server to start
+
+      - name: API-Response-Zeit
+        run: |
+          echo "API-Response-Zeit"
+          locust -f test/locustfile.py --headless -u 10 -r 2 --run-time 20s --host http://localhost:5000
+
   publish:
     if: github.ref == 'refs/heads/main'
     needs:
