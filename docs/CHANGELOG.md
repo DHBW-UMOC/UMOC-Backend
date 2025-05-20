@@ -1,3 +1,104 @@
+## Chnagelog - Pascal - 20.05.2025
+
+### Neue Endpoints
+- changeProfile
+
+## Endpoint: `/changeProfile`
+
+**Method**: `POST`  
+**Authentication**: JWT token required  
+**Content-Type**: `application/json` or URL parameters
+
+### Parameters
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `action` | string | Yes | Type of profile change: `"picture"`, `"name"`, or `"password"` |
+| `new_value` | string | Yes | New value for the selected profile attribute |
+| `old_password` | string | Only for password changes | Current password required for verification |
+
+### Response
+
+**Success Response (200 OK)**
+```json
+{
+  "success": "Profile [action] updated successfully"
+}
+```
+
+**Error Responses (400 Bad Request)**
+```json
+{"error": "'action' is required"}
+{"error": "'action' must be either 'picture', 'name' or 'password'"}
+{"error": "'new_value' is required"}
+{"error": "'old_password' is required"} // For password changes
+```
+
+### Example Usage
+
+#### Change Profile Picture
+```http
+POST /api/changeProfile
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "action": "picture",
+  "new_value": "https://example.com/new-profile-image.jpg"
+}
+```
+
+#### Change Username
+```http
+POST /api/changeProfile
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "action": "name",
+  "new_value": "NewUsername123"
+}
+```
+
+#### Change Password
+```http
+POST /api/changeProfile
+Authorization: Bearer <jwt_token>
+Content-Type: application/json
+
+{
+  "action": "password",
+  "old_password": "currentPassword123",
+  "new_value": "newSecurePassword456"
+}
+```
+
+
+
+## Changelog - Max - 16.05.2025
+
+### Neue Websockets
+#### Sending Websockets
+- connect
+- disconnect
+- send_char
+
+#### Receiving Websockets
+- connect
+- disconnect
+- receve_char
+- new_message
+- chat_change
+  - leave_group
+  - change_group
+  - add_member
+  - remove_member
+  - create_group
+  - delete_group
+
+Diese Events werden an alle Clients gesendet, die betroffen sind.
+
+
 ## Changelog – Pascal - 15.05.2025
 
 ### Neue Endpunkte

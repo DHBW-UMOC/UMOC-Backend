@@ -8,8 +8,8 @@ import warnings
 from flask import request
 from flask_testing import TestCase
 
-# Update import to match conftest.py
-from src.app import create_app, db
+# Import from app directly to match the rest of the application
+from app import create_app, db
 
 # Filter out the known deprecation warnings from werkzeug/Flask
 warnings.filterwarnings("ignore", category=DeprecationWarning, 
@@ -32,12 +32,16 @@ class BaseTestCase(TestCase):
     
     def setUp(self):
         """Set up test data"""
-        db.create_all()
+        # Create all tables within the app context
+        with self.app.app_context():
+            db.create_all()
         
     def tearDown(self):
         """Clean up after tests"""
-        db.session.remove()
-        db.drop_all()
+        # Clean up within the app context
+        with self.app.app_context():
+            db.session.remove()
+            db.drop_all()
 
     def print_routes(self):
         """Helper method to print available routes for debugging"""
@@ -157,14 +161,13 @@ class TestApiEndpoints(BaseTestCase):
                         return debug_data['contacts'][0]['contact_id']
                     
                     print(f"\nContact found in debug but can't identify which one: {debug_data}")
-                else:
-                    print(f"\nNo contacts found in debug data: {debug_data}")
+                else:            print(f"\nNo contacts found in debug data: {debug_data}")
         else:
             print(f"\nFailed to add contact, status code: {response.status_code}")
             print(f"Response: {response.data.decode('utf-8')}")
             
         return None
-    
+        
     def get_user_id_by_username(self, username):
         """Helper to get user ID from username"""
         # Register the user if not already registered
@@ -176,7 +179,7 @@ class TestApiEndpoints(BaseTestCase):
             data = json.loads(response.data.decode('utf-8'))
             return data['user_id']
         return None
-        
+    
     def get_member_ids(self, count=1):
         """Helper to get multiple valid member user IDs"""
         member_ids = []

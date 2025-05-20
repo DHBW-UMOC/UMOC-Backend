@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 from sqlalchemy import Enum
-from app.extensions import db
+from app import db
 
 class ContactStatusEnum(enum.Enum):
     FRIEND = "friend"
