@@ -3,7 +3,7 @@
 ### Neue Endpoints
 - changeProfile
 
-## Endpoint: `/api/changeProfile`
+## Endpoint: `/changeProfile`
 
 **Method**: `POST`  
 **Authentication**: JWT token required  
