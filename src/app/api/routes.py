@@ -316,32 +316,20 @@ def create_group():
     user_id = get_jwt_identity()
     user = User.query.filter_by(user_id=user_id).first()
 
-    data = request.json if request.is_json else request.args
-    group_name = data.get('group_name')
-    group_pic = data.get('group_pic')
-    group_members = data.get('group_members')
-    if isinstance(group_members, str):
-        try:
-            group_members = json.loads(group_members)
-        except json.JSONDecodeError:
-            return jsonify({"error": "Invalid group_members format"}), 400
+    if not user: 
+        return jsonify({"error": "User not found"}), 400
 
-    if not user: return jsonify({"error": "User not found"}), 400
-    if len(group_name) < 3 or len(group_name) > 25: return jsonify({"error": "Group name must be between 3 and 50 characters long"}), 400
-    if not group_name: return jsonify({"error": "'group_name' is required"}), 400
-    if not group_members: return jsonify({"error": "'group_members' are required"}), 400
-    if not group_pic: return jsonify({"error": "'group_pic' is required"}), 400
-    if len(group_members) < 2: return jsonify({"error": "Group must have at least 2 members"}), 400
-    if len(group_members) > 50: return jsonify({"error": "Group can have at most 50 members"}), 400
-
+    # Group members are now optional, so we don't need all those checks
     result = group_service.create_group(
         user_id=user.user_id,
-        group_name=group_name,
-        group_pic=group_pic,
-        group_members=group_members
+        group_name="New Group",  # Static name as intended
+        group_pic="",  # Empty default picture
+        group_members={}  # Empty dict for no initial members
     )
+    
     if "error" in result:
         return jsonify(result), 400
+        
     return jsonify({"success": "Group created successfully", "group_id": result["group_id"]}), 201
 
 
