@@ -319,12 +319,12 @@ def create_group():
     if not user: 
         return jsonify({"error": "User not found"}), 400
 
-    # Group members are now optional, so we don't need all those checks
+    # Let group_service handle adding the creator as admin
     result = group_service.create_group(
         user_id=user.user_id,
         group_name="New Group",  # Static name as intended
-        group_pic="",  # Empty default picture
-        group_members={}  # Empty dict for no initial members
+        group_pic="https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png",  # Empty default picture
+        group_members=[]  # Don't add members here, let service handle it
     )
     
     if "error" in result:

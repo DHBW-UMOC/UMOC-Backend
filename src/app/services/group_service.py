@@ -6,10 +6,7 @@ from app.models.group import Group, GroupMember, GroupRoleEnum
 
 class GroupService:
     def create_group(self, user_id, group_name, group_pic, group_members):
-        # Check if group name already exists
-        existing_group = Group.query.filter_by(group_name=group_name).first()
-        if existing_group:
-            return {"error": "Group name already exists"}
+        
         # Create new group
         new_group = Group(
             group_id=str(uuid.uuid4()),
@@ -19,6 +16,14 @@ class GroupService:
             created_at=datetime.utcnow()
         )
         db.session.add(new_group)
+
+        # Add the creator as a member
+        new_member = GroupMember(
+            group_id=new_group.group_id,
+            user_id=user_id,
+            role=GroupRoleEnum.ADMIN,
+        )
+
 
         # Add group members
         for member_id in group_members:
