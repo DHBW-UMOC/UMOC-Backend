@@ -77,7 +77,7 @@ class UserService:
             db.session.rollback()
             return {"error": f"An unexpected error occurred during logout: {e}"}  # Internal error
         
-    def change_name(self, user_id, new_username):
+    def change_username(self, user_id, new_username):
         user = User.query.filter_by(user_id=user_id).first()
         if not user:
             return {"error": "User not found"}

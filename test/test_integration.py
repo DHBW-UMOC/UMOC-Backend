@@ -385,6 +385,27 @@ class TestApiEndpoints(BaseTestCase):
         debug_data = json.loads(debug_response.data.decode('utf-8'))
         updated_status = debug_data['contacts'][0]['status']
         self.assertEqual(updated_status, 'friend')
+
+    def test_endpoint_change_profile(self):
+        """Test the changeProfile endpoint"""
+        # Set up users and login
+        headers, _ = self.setup_users_and_login()
+        
+        # Test changing profile picture
+        new_profile_picture = "https://example.com/new_profile_pic.jpg"
+        response = self.client.post(
+            '/changeProfile',
+            json={
+                'action' : 'picture',
+                'new_value': new_profile_picture
+            },
+            headers=headers
+        )
+        if response.status_code != 200:
+            self.debug_response(response, '/changeProfile')
+        self.assertEqual(response.status_code, 200)
+        data = json.loads(response.data.decode('utf-8'))
+        self.assertIn('success', data)
     
     def test_endpoint_debug_contacts(self):
         """Test the debugContacts endpoint"""

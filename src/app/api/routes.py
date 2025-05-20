@@ -128,7 +128,6 @@ def change_profile():
     if action not in ["picture", "name", "password"]:
         return jsonify({"error": "'action' must be either 'picture', 'name' or 'password'"}), 400
     if action == "picture":
-        
         if not new_value:
             return jsonify({"error": "'new_value' is required"}), 400
         result = user_service.change_profile_picture(user_id, new_value)
@@ -145,6 +144,12 @@ def change_profile():
         if not old_password:
             return jsonify({"error": "'old_password' is required"}), 400
         result = user_service.change_password(user_id, old_password, new_value)
+        
+    # Check if there was an error in the service call
+    if "error" in result:
+        return jsonify(result), 400
+    
+    return jsonify({"success": f"Profile {action} updated successfully"}), 200
 
 
 @api_bp.route("/getChats", methods=['GET'])
