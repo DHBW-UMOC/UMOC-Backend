@@ -334,7 +334,7 @@ def create_group():
     if "error" in result:
         return jsonify(result), 400
     websockets.chat_change("create_group", result["group_id"],
-                           {"group_pic": group_pic, "group_name": group_name, "group_id": result["group_id"]})
+                           {"group_pic": "https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png", "group_name": "New Group", "group_id": result["group_id"]})
     return jsonify({"success": "Group created successfully", "group_id": result["group_id"]}), 201
 
 
