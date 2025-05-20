@@ -90,8 +90,11 @@ jobs:
   mesure_metrics:
     needs: build-and-test
     runs-on: ubuntu-latest
-
     steps:
+      - name: Vorbereitung
+        run: |
+          pip install radon lizard locust pytest pytest-benchmark
+
       - name: Zyklomatische Komplexität
         run: |
           echo "Zyklomatische Komplexität"
