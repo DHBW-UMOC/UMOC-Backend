@@ -28,6 +28,12 @@ docker run -d -p 5000:5000 umoc-backend
 ```
 The server will be running on http://127.0.0.1:5000
 
+# API response Time
+```bash
+pip install locust
+locust -f src/metrics/locustfile.py --headless -u 10 -r 2 --run-time 20s --host http://localhost:5000
+```
+
 # Example Data
 
 USERS:
