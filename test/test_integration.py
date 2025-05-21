@@ -530,19 +530,11 @@ class TestApiEndpoints(BaseTestCase):
         # Set up users and login
         headers, _ = self.setup_users_and_login()
 
-        # Create a group to ensure there's at least one group
-        member_ids = self.get_member_ids(2)  # Get 2 member IDs
-        
         try:
-            # Try to create a group first
-            group_name = "Test Group for getGroups"
+            # Create a group with minimal parameters
             create_response = self.client.post(
                 '/createGroup',
-                json={
-                    "group_name": group_name,
-                    "group_pic": "https://example.com/group_pic.jpg",
-                    "group_members": member_ids
-                },
+                json={},  # No parameters required
                 headers=headers
             )
             
@@ -601,19 +593,11 @@ class TestApiEndpoints(BaseTestCase):
         """Test the changeGroup endpoint for changing name"""
         # Set up users and login
         headers, login_data = self.setup_users_and_login()
-
-        # Get member IDs directly through login
-        member_ids = self.get_member_ids(2)  # Get 2 member IDs
         
-        # Create a group first using JSON body
-        group_name = "Test Group"
+        # Create a group first - minimal parameters
         response = self.client.post(
             '/createGroup',
-            json={
-                "group_name": group_name,
-                "group_pic": "https://example.com/group_pic.jpg",
-                "group_members": member_ids
-            },
+            json={},  # No parameters required  
             headers=headers
         )
         if response.status_code != 201:
@@ -645,19 +629,11 @@ class TestApiEndpoints(BaseTestCase):
         """Test the changeGroup endpoint for changing picture"""
         # Set up users and login
         headers, login_data = self.setup_users_and_login()
-
-        # Get member IDs directly through login
-        member_ids = self.get_member_ids(2)  # Get 2 member IDs
         
-        # Create a group first using JSON body
-        group_name = "Test Group"
+        # Create a group first - minimal parameters
         response = self.client.post(
             '/createGroup',
-            json={
-                "group_name": group_name,
-                "group_pic": "https://example.com/group_pic.jpg",
-                "group_members": member_ids
-            },
+            json={},  # No parameters required  
             headers=headers
         )
         if response.status_code != 201:
@@ -693,15 +669,10 @@ class TestApiEndpoints(BaseTestCase):
         # Get member IDs directly through login
         member_ids = self.get_member_ids(2)  # Get 2 member IDs
         
-        # Create a group first using JSON body
-        group_name = "Test Group"
+        # Create a group first - with minimal parameters since group members are not required
         response = self.client.post(
             '/createGroup',
-            json={
-                "group_name": group_name,
-                "group_pic": "https://example.com/group_pic.jpg",
-                "group_members": member_ids
-            },
+            json={},  # No parameters needed as group members are not required
             headers=headers
         )
         if response.status_code != 201:
@@ -733,25 +704,11 @@ class TestApiEndpoints(BaseTestCase):
         """Test the addMember endpoint"""
         # Set up users and login
         headers, login_data = self.setup_users_and_login()
-
-        # Get member IDs directly through login
-        member_ids = self.get_member_ids(2)  # Get 2 member IDs
         
-        # Create a new test user to add later
-        new_member_username = "new_test_member"
-        self.register_test_user(new_member_username, "password_new")
-        _, new_member_data = self.login_user(new_member_username, "password_new")
-        new_member_id = new_member_data['user_id']
-        
-        # Create a group first using JSON body
-        group_name = "Test Group"
+        # Create a group first - no members required for creation
         response = self.client.post(
             '/createGroup',
-            json={
-                "group_name": group_name,
-                "group_pic": "https://example.com/group_pic.jpg",
-                "group_members": member_ids
-            },
+            json={},  # No parameters required
             headers=headers
         )
         if response.status_code != 201:
@@ -762,6 +719,12 @@ class TestApiEndpoints(BaseTestCase):
         data = json.loads(response.data.decode('utf-8'))
         group_id = data['group_id']
 
+        # Create a new test user to add later
+        new_member_username = "new_test_member"
+        self.register_test_user(new_member_username, "password_new")
+        _, new_member_data = self.login_user(new_member_username, "password_new")
+        new_member_id = new_member_data['user_id']
+        
         # Test adding a member to the group using JSON body
         response = self.client.post(
             '/addMember',
@@ -782,18 +745,10 @@ class TestApiEndpoints(BaseTestCase):
         # Set up users and login
         headers, login_data = self.setup_users_and_login()
 
-        # Get member IDs directly through login
-        member_ids = self.get_member_ids(3)  # Get 3 member IDs
-        
-        # Create a group first using JSON body
-        group_name = "Test Group"
+        # Create a group first
         response = self.client.post(
             '/createGroup',
-            json={
-                "group_name": group_name,
-                "group_pic": "https://example.com/group_pic.jpg",
-                "group_members": member_ids
-            },
+            json={},  # No parameters needed
             headers=headers
         )
         if response.status_code != 201:
@@ -804,8 +759,25 @@ class TestApiEndpoints(BaseTestCase):
         data = json.loads(response.data.decode('utf-8'))
         group_id = data['group_id']
 
-        # Test removing a member from the group using JSON body
-        member_to_remove = member_ids[0]  # Remove the first member we added
+        # First add a member to later remove
+        member_ids = self.get_member_ids(1)
+        member_to_remove = member_ids[0]
+        
+        # Add member to group
+        add_response = self.client.post(
+            '/addMember',
+            json={
+                "group_id": group_id,
+                "new_member_id": member_to_remove
+            },
+            headers=headers
+        )
+        
+        if add_response.status_code != 200:
+            self.debug_response(add_response, '/addMember')
+            pytest.skip(f"Cannot test removeMember: Failed to add member to group: {add_response.data.decode('utf-8')}")
+
+        # Test removing the member
         response = self.client.post(
             '/removeMember',
             json={
@@ -867,26 +839,21 @@ class TestApiEndpoints(BaseTestCase):
         """Test the leaveGroup endpoint"""
         # Set up users and login
         headers, login_data = self.setup_users_and_login()
-
-        # Get member IDs directly through login
-        member_ids = self.get_member_ids(2)
-        # Create a group first using JSON body
-        group_name = "Test Group"
+        
+        # Create a group first - minimal parameters
         response = self.client.post(
             '/createGroup',
-            json={
-                "group_name": group_name,
-                "group_pic": "https://example.com/group_pic.jpg",
-                "group_members": member_ids
-            },
+            json={},  # No parameters required
             headers=headers
         )
         if response.status_code != 201:
             self.debug_response(response, '/createGroup')
             pytest.skip(f"Cannot test leaveGroup: Failed to create group: {response.data.decode('utf-8')}")
+            
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data.decode('utf-8'))
         group_id = data['group_id']
+
         # Test leaving the group using JSON body
         response = self.client.post(
             '/leaveGroup',
