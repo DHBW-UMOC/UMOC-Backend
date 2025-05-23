@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime
+import time
 from app import db
 from app.models.user import User
 
@@ -9,7 +10,10 @@ from app.models.user import UserContact
 class UserService:
     def register_user(self, username, password, profile_pic, public_key=""):
         # Check if user already exists
+        t0 = time.time()
         existing_user = User.query.filter_by(username=username).first()
+        print("Check existing user:", time.time() - t0)
+
         if existing_user:
             return {"error": "Username already exists"}  # Conflict
         
@@ -21,11 +25,15 @@ class UserService:
             created_at=datetime.utcnow(),
             public_key=public_key
         )
-        
-        db.session.add(new_user)
         try:
+            t1 = time.time()
+            db.session.add(new_user)
             db.session.commit()
+            print("Insert + commit:", time.time() - t1)
+            print("Total register time:", time.time() - t0)
+
             return {"success": True, "user_id": new_user.user_id}
+
         except Exception as e:
             db.session.rollback()
             return {"error": f"An unexpected error occurred during registration: {e}"}  # Internal error

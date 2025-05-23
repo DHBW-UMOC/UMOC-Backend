@@ -133,27 +133,16 @@ def send_message(user, recipient_id, content, is_group):
     if not recipient_id or not content:
         return
 
-    message = Message(
-        message_id=str(uuid.uuid4()),
-        sender_user_id=user.user_id,
-        recipient_user_id=recipient_id,
-        encrypted_content=content,
-        type=MessageTypeEnum(msg_type),
-        send_at=datetime.now(UTC),
-        is_group=is_group
-    )
-    db.session.add(message)
-    db.session.commit()
-
     # Send notification directly to recipient's socket if they are online
     if recipient_id in user_sids:
         emit('new_message', {
-            'message_id': message.message_id,
+            'message_id': str(uuid.uuid4()),
             'sender_id': user.user_id,
             'content': content,
             'type': msg_type,
-            'timestamp': message.send_at.isoformat(),
+            'timestamp': datetime.now(UTC).isoformat(),
             'is_group': False,
+            'recipient_id': recipient_id
         }, room=user_sids[recipient_id], namespace='/')
     elif is_group:
         # For groups, send to all members
@@ -166,11 +155,11 @@ def send_message(user, recipient_id, content, is_group):
             if member["user_id"] in user_sids and member["user_id"] != user.user_id:
                 print("websocket emiting: ", content)
                 emit('new_message', {
-                    'message_id': message.message_id,
+                    'message_id': str(uuid.uuid4()),
                     'sender_id': user.user_id,
                     'content': content,
                     'type': msg_type,
-                    'timestamp': message.send_at.isoformat(),
+                    'timestamp': datetime.now(UTC).isoformat(),
                     'is_group': True,
                     'recipient_id': recipient_id
                 }, room=user_sids[member["user_id"]], namespace='/')

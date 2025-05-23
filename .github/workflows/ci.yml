@@ -87,6 +87,24 @@ jobs:
         # Using the options from pytest.ini
         python -m pytest test/ --cov=src --import-mode=importlib --disable-warnings
 
+  mesure_metrics:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vorbereitung
+        run: |
+          pip install radon lizard locust pytest pytest-benchmark
+
+      - name: Zyklomatische Komplexität
+        run: |
+          echo "Zyklomatische Komplexität"
+          radon cc src/ -nc 
+
+      - name: Response for Class (RFC)
+        run: |
+          echo "Response for Class (RFC)"
+          lizard src/
+
   publish:
     if: github.ref == 'refs/heads/main'
     needs:
