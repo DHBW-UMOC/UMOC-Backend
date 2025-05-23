@@ -242,10 +242,7 @@ def save_message():
 
     recipient_id = data.get("recipient_id")
     content = data.get("content")
-    if group_service.does_group_exist(recipient_id):
-        is_group = True
-    else:
-        is_group = False
+    is_group = group_service.does_group_exist(recipient_id)
 
     if not recipient_id:
         return jsonify({"error": "'recipient_id' is required"}), 400
