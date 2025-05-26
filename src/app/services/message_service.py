@@ -252,6 +252,26 @@ class MessageService:
             db.session.rollback()
             return {"error": str(e)}
 
+    def get_last_message_date_for_contact(self, user_id, contact_id) -> str:
+        """Get the last message exchanged with a contact."""
+        try:
+            # Get the last message between user and contact
+            last_message = Message.query.filter(
+                or_(
+                    and_(Message.sender_user_id == user_id, Message.recipient_user_id == contact_id),
+                    and_(Message.sender_user_id == contact_id, Message.recipient_user_id == user_id)
+                )
+            ).order_by(Message.send_at.desc()).first()
+
+            if not last_message:
+                return "2001-09-11T12:46:00Z"
+
+            return last_message.send_at.isoformat()
+
+        except Exception as _:
+            db.session.rollback()
+            return "2001-09-11T12:46:00Z"
+
     def mark_as_read(self, message_id, reader_id):
         """Mark a message as read by a user."""
         try:

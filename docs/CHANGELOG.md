@@ -1,3 +1,19 @@
+
+## Changelog - Max - 26.05.2025 (2)
+### Get Chats
+- Es wurde das Attribut `last_message_timestamp` hinzugefügt, welches den Zeitstempel der letzten Nachricht in einem Chat enthält.
+  Falls es keine las message gibt wird bei Gruppen das beitritsdatum verwendet und bei Einzelchats der einen defaul timestamp.
+
+### Websocket "send_char"
+- Der Websocket "send_char" braucht jetzt nicht mehr das "is_group" Attriibute.
+Beispiel:
+```js
+socket.emit("send_char", {
+  recipient_id: "00000000-0000-0000-0000-000000000000",
+  char: "H"
+});
+```
+
 ## Chnagelog - Pascal - 20.05.2025
 
 ### Neue Endpoints

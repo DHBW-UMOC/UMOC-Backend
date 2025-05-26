@@ -191,7 +191,8 @@ Retrieve all contacts for the authenticated user.
               "name": "String",
               "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS",
               "streak": "int | null",
-              "picture_url": "Link to JPG"
+              "picture_url": "Link to JPG",
+              "last_message_timestamp": "2023-10-01T12:00:00.000000Z"
             },
             {
               "is_group": false,
@@ -199,7 +200,8 @@ Retrieve all contacts for the authenticated user.
               "name": "String",
               "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS",
               "streak": "int | null",
-              "picture_url": "Link to JPG"
+              "picture_url": "Link to JPG",
+              "last_message_timestamp": "2023-10-01T12:00:00.000000Z"
             },
             {
               "is_group": true,
@@ -207,7 +209,22 @@ Retrieve all contacts for the authenticated user.
               "name": "String",
               "picture_url": "Link to JPG",
               "admin_user_id": "00000000-0000-0000-0000-000000000000",
-              "create_at": "Link to JPG"
+              "create_at": "Link to JPG",
+              "last_message_timestamp": "2023-10-01T12:00:00.000000Z",
+              "members": [
+                {
+                  "user_id": "00000000-0000-0000-0000-000000000001",
+                  "name": "String",
+                  "picture_url": "Link to JPG",
+                  "role": "admin | member"
+                },
+                {
+                  "user_id": "00000000-0000-0000-0000-000000000002",
+                  "name": "String",
+                  "picture_url": "Link to JPG",
+                  "role": "admin | member"
+                }
+              ]
             }
           ]
       }
@@ -533,16 +550,14 @@ event: `send_char`
 ```json
 {
   "recipient_id": "00000000-0000-0000-0000-000000000000",
-  "char": "H" / "<DEL>",
-  "is_group": false | true
+  "char": "H" / "<DEL>"
 }
 ```
 Beispiel:
 ```js
 socket.emit("send_char", {
   recipient_id: "00000000-0000-0000-0000-000000000000",
-  char: "H",
-  is_group: false
+  char: "H"
 });
 ```
 

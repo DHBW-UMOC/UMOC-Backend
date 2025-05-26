@@ -7,6 +7,8 @@ from app.models import db, User, Message, MessageTypeEnum
 from app.models.user import UserContact, ContactStatusEnum
 from app.services.group_service import GroupService
 
+from src.app.api.routes import user_service
+
 socketio = SocketIO(cors_allowed_origins="*")
 group_service = GroupService()
 
@@ -107,7 +109,7 @@ def send_char(data):
             }, room=user_sids[recipient_id])
         elif is_group:
             # For groups, send to all members
-            members = group_service.get_group_members(user.user_id, recipient_id)
+            members = group_service.get_group_members(recipient_id)
             if not isinstance(members, list):
                 return
 
@@ -146,13 +148,13 @@ def send_message(user, recipient_id, content, is_group):
         }, room=user_sids[recipient_id], namespace='/')
     elif is_group:
         # For groups, send to all members
-        members = group_service.get_group_members(user.user_id, recipient_id)
+        members = group_service.get_group_members(recipient_id)
         if not isinstance(members, list):
             return
 
         for member in members:
             print("websocket: ", member)
-            if member["user_id"] in user_sids and member["user_id"] != user.user_id:
+            if member["contact_id"] in user_sids and member["contact_id"] != user.user_id:
                 print("websocket emiting: ", content)
                 emit('new_message', {
                     'message_id': str(uuid.uuid4()),
@@ -162,7 +164,7 @@ def send_message(user, recipient_id, content, is_group):
                     'timestamp': datetime.now(UTC).isoformat(),
                     'is_group': True,
                     'recipient_id': recipient_id
-                }, room=user_sids[member["user_id"]], namespace='/')
+                }, room=user_sids[member["contact_id"]], namespace='/')
 
 
 def chat_change(action, recipient_id, data):
@@ -186,7 +188,8 @@ def chat_change(action, recipient_id, data):
                         }
                     }, room=user_sids[member["contact_id"]], namespace='/')
 
-        case "remove_member" | "add_member":
+
+        case "remove_member":
             print("websocket groupmembers remove: ", groupmembers)
             for member in groupmembers:
                 print("websocket member in remove Group: ", member, type(member))
@@ -195,7 +198,33 @@ def chat_change(action, recipient_id, data):
                         'action': action,
                         'group_id': recipient_id,
                         'data': {
-                            'user_id': data["user_id"],
+                            'user_id': data["member_id"],
+                            'by_user_id': data["by_user_id"]
+                        }
+                    }, room=user_sids[member["contact_id"]], namespace='/')
+
+            if data["member_id"] in user_sids and data["member_id"]:
+                # Notify the user who was removed
+                emit('chat_change', {
+                    'action': action,
+                    'group_id': recipient_id,
+                    'data': {
+                        'user_id': data["member_id"],
+                        'by_user_id': data["by_user_id"]
+                    }
+                }, room=user_sids[data["member_id"]], namespace='/')
+
+
+        case "add_member":
+            print("websocket groupmembers add: ", groupmembers)
+            for member in groupmembers:
+                print("websocket member in remove Group: ", member, type(member))
+                if member["contact_id"] in user_sids and member["contact_id"]:
+                    emit('chat_change', {
+                        'action': action,
+                        'group_id': recipient_id,
+                        'data': {
+                            'user_id': data["member_id"],
                             'by_user_id': data["by_user_id"]
                         }
                     }, room=user_sids[member["contact_id"]], namespace='/')
