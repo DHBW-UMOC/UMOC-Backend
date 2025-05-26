@@ -1,3 +1,8 @@
+## Changelog - Max - 26.05.2025 (2)
+### Get Chats
+- Es wurde das Attribut `last_message_timestamp` hinzugefügt, welches den Zeitstempel der letzten Nachricht in einem Chat enthält.
+  Falls es keine las message gibt wird bei Gruppen das beitritsdatum verwendet und bei Einzelchats der einen defaul timestamp.
+
 ## Chnagelog - Pascal - 20.05.2025
 
 ### Neue Endpoints
