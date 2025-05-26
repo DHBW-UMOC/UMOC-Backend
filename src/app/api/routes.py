@@ -20,6 +20,33 @@ contact_service = ContactService()
 group_service = GroupService()
 
 
+#############################
+## HELPER FUNCTION
+#############################
+
+def add_last_message_to_chats(user_id, chats: list) -> list:
+    """
+    Adds the last message timestamp to each chat in the list of chats.
+    Or if group when joined. Else 2001-09-11T12:46:00Z.
+    """
+    for chat in chats:
+        last_message_date = message_service.get_last_message_date_for_contact(user_id, chat["contact_id"])
+
+        if last_message_date:
+            chat["last_message_timestamp"] = last_message_date
+        else:
+            if group_service.is_id_group(chat["contact_id"]):
+                chat["last_message_timestamp"] = chat.get("joined_at", "2001-09-11T12:46:00Z")
+            else:
+                chat["last_message_timestamp"] = "2001-09-11T12:46:00Z"
+    return chats
+
+
+
+#############################
+## ENDPOINTS
+#############################
+
 # User authentication routes
 @api_bp.route("/register", methods=['POST'])
 def register():
@@ -167,7 +194,7 @@ def get_chats():
     if "error" in groups:
         return jsonify(groups), 500
 
-    return jsonify({"chats": contacts + groups})
+    return jsonify({"chats": add_last_message_to_chats(user_id, contacts + groups)})
 
 
 @api_bp.route("/getAllUsers", methods=['GET'])
