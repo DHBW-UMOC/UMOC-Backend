@@ -429,7 +429,7 @@ def add_member():
     if "error" in result:
         return jsonify(result), 400
 
-    websockets.chat_change("add_member", group_id, {"new_member_id": new_member_id, "by_user_id": user_id})
+    websockets.chat_change("add_member", group_id, {"member_id": new_member_id, "by_user_id": user_id})
     return jsonify({"success": "Member added successfully"}), 200
 
 

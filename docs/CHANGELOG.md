@@ -1,3 +1,17 @@
+## Chnagelog - Max - 26.05.2025
+
+### Websocket "send_char"
+- Der Websocket "send_char" braucht jetzt nicht mehr das "is_group" Attriibute.
+Beispiel:
+```js
+socket.emit("send_char", {
+  recipient_id: "00000000-0000-0000-0000-000000000000",
+  char: "H"
+});
+```
+
+
+
 ## Chnagelog - Pascal - 20.05.2025
 
 ### Neue Endpoints
