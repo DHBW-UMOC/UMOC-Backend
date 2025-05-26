@@ -550,16 +550,14 @@ event: `send_char`
 ```json
 {
   "recipient_id": "00000000-0000-0000-0000-000000000000",
-  "char": "H" / "<DEL>",
-  "is_group": false | true
+  "char": "H" / "<DEL>"
 }
 ```
 Beispiel:
 ```js
 socket.emit("send_char", {
   recipient_id: "00000000-0000-0000-0000-000000000000",
-  char: "H",
-  is_group: false
+  char: "H"
 });
 ```
 
