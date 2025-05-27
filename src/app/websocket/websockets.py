@@ -6,11 +6,11 @@ from flask_jwt_extended import decode_token
 from app.models import db, User, Message, MessageTypeEnum
 from app.models.user import UserContact, ContactStatusEnum
 from app.services.group_service import GroupService
-
-from src.app.api.routes import user_service
+from app.services.user_service import UserService
 
 socketio = SocketIO(cors_allowed_origins="*")
 group_service = GroupService()
+user_service = UserService()
 
 user_sids = {}  # user_id → sid
 sid_users = {}  # sid → user_id
