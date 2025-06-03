@@ -12,7 +12,7 @@ init_websockets(app)
 
 if __name__ == '__main__':
     # Reset database for development (comment out for production)
-    # reset_database(app)
+    reset_database(app)
 
     socketio.run(
         app,
