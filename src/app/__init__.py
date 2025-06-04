@@ -41,8 +41,8 @@ def create_app(config_class=Config):
     return app
 
 
-def reset_database(app):
-    """Reset database and add example data - for development only"""
+def init_database(app):
+    """Initialize database and add example data - for development only"""
     with app.app_context():
         from app.models import db
         db.session.remove()
@@ -52,4 +52,15 @@ def reset_database(app):
         # Insert example data
         from app.services.dummy_data import insert_example_data
         insert_example_data()
-        print("Database reset completed with example data.")
+
+        from app.services.item_service import ItemService
+        item_service = ItemService()
+        item_service.reset_items()
+        print("Database initialized with example data.")
+
+def create_tables(app):
+    """Create database tables if they do not exist"""
+    with app.app_context():
+        from app.models import db
+        db.create_all()
+        print("Database tables created successfully.")
