@@ -355,7 +355,7 @@ class TestApiEndpoints(BaseTestCase):
         self.assertTrue(isinstance(data['users'], list))
 
     def test_endpoint_change_contact(self):
-        """Test the changeContact endpoint"""
+        """Test the changeContact endpoint with bidirectional friend logic"""
         # Set up users, login, and add contact
         headers, _ = self.setup_users_and_login()
         contact_id = self.add_contact(headers)
@@ -369,25 +369,57 @@ class TestApiEndpoints(BaseTestCase):
         print(f"Initial status: {initial_status}")
         print(f"Contact ID: {contact_id}")
         
-        # Use a valid status from ContactStatusEnum
+        # First friend request - should set both users to PENDINGFRIEND
         response = self.client.post(
             f'/changeContact?contact_id={contact_id}&status=friend',
             headers=headers
         )
         if response.status_code != 200:
             self.debug_response(response, '/changeContact')
-        
-        print(f"Change response: {response.status_code}")
+    
+        print(f"First friend request response: {response.status_code}")
         print(f"Response content: {response.data.decode('utf-8')}")
         
         # Assert the status code is 200 (success)
         self.assertEqual(response.status_code, 200)
         
-        # Verify the status was changed
+        # Verify the status was changed to PENDING_FRIEND (with underscore)
         debug_response = self.client.get('/debugContacts', headers=headers)
         debug_data = json.loads(debug_response.data.decode('utf-8'))
         updated_status = debug_data['contacts'][0]['status']
-        self.assertEqual(updated_status, 'friend')
+        self.assertEqual(updated_status, 'pending_friend')
+        
+        # Now login as the other user and add the first user as a contact
+        headers2, _ = self.login_user(self.test_user2, self.test_password2)
+        
+        # Add the first user as a contact for the second user
+        add_reverse_contact_response = self.client.post(
+            f'/addContact?contact_name={self.test_username}',
+            headers=headers2
+        )
+        print(f"Add reverse contact response: {add_reverse_contact_response.status_code}")
+        print(f"Add reverse contact content: {add_reverse_contact_response.data.decode('utf-8')}")
+        
+        # Get the first user's ID for the reverse contact
+        _, first_user_data = self.login_user(self.test_username, self.test_password)
+        first_user_id = first_user_data['user_id']
+        
+        # Second friend request from the other user - should make both FRIEND
+        response2 = self.client.post(
+            f'/changeContact?contact_id={first_user_id}&status=friend',
+            headers=headers2
+        )
+        
+        print(f"Second friend request response: {response2.status_code}")
+        print(f"Response content: {response2.data.decode('utf-8')}")
+        
+        self.assertEqual(response2.status_code, 200)
+        
+        # Verify both users are now friends
+        debug_response = self.client.get('/debugContacts', headers=headers)
+        debug_data = json.loads(debug_response.data.decode('utf-8'))
+        final_status = debug_data['contacts'][0]['status']
+        self.assertEqual(final_status, 'friend')
 
     def test_endpoint_change_profile(self):
         """Test the changeProfile endpoint"""

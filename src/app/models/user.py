@@ -6,10 +6,15 @@ from app import db
 
 class ContactStatusEnum(enum.Enum):
     FRIEND = "friend"
+    UNFRIEND = "unfriend"
+    PENDINGFRIEND = "pending_friend"
     LASTWORDS = "last_words"
     BLOCKED = "blocked"
+    FBLOCKED = "fblocked"
+    DEBLOCKED = "deblocked"
     NEW = "new"
     TIMEOUT = "timeout"
+    NTCON = "ntcon"  # Not connected
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -40,6 +45,7 @@ class UserContact(db.Model):
     user_id = db.Column(db.String, db.ForeignKey('user.user_id'), primary_key=True)
     contact_id = db.Column(db.String, db.ForeignKey('user.user_id'), primary_key=True)
     status = db.Column(Enum(ContactStatusEnum), nullable=False)
+    pending_block = db.Column(db.Boolean, default=False)
     time_out = db.Column(db.DateTime)
     streak = db.Column(db.Integer, default=0)
     continue_streak = db.Column(db.Boolean, default=True)
