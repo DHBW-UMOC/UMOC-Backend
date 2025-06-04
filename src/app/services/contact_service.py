@@ -157,6 +157,35 @@ class ContactService:
             except Exception as e:
                 db.session.rollback()
                 return {"error": f"Database error: {str(e)}"}
+        elif status == ContactStatusEnum.FRIEND:
+            # Check if the other user is blocked or has blocking status
+            if contact2 and (contact2.status == ContactStatusEnum.FBLOCKED or 
+                           contact2.status == ContactStatusEnum.LASTWORDS or 
+                           contact2.status == ContactStatusEnum.BLOCKED):
+                return {"error": "The user cant be added as a friend because of there is another rule preventing it"}
+            
+            # If the other user already has pending friend status, make them both friends
+            if contact2 and contact2.status == ContactStatusEnum.PENDINGFRIEND:
+                contact1.status = ContactStatusEnum.FRIEND
+                contact2.status = ContactStatusEnum.FRIEND
+                try:
+                    db.session.commit()
+                    return {"success": "You are now friends!"}
+                except Exception as e:
+                    db.session.rollback()
+                    return {"error": f"Database error: {str(e)}"}
+            else:
+                # First friend request - set requesting user to pending friend, other user gets notified
+                contact1.status = ContactStatusEnum.PENDINGFRIEND
+                # If contact2 exists, set them to PENDINGFRIEND too (they will see the request)
+                if contact2:
+                    contact2.status = ContactStatusEnum.PENDINGFRIEND
+                try:
+                    db.session.commit()
+                    return {"success": "Friend request sent!"}
+                except Exception as e:
+                    db.session.rollback()
+                    return {"error": f"Database error: {str(e)}"}
         else:
             # For other status changes, just update the requesting user's contact
             contact1.status = status
