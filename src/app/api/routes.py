@@ -137,11 +137,25 @@ def change_contact():
     if not status:
         return jsonify({"error": "'status' is required"}), 400
 
+    # Validate status is a valid enum value
+    valid_statuses = [e.value for e in ContactStatusEnum]
+    if status not in valid_statuses:
+        return jsonify({"error": f"Invalid status. Valid options: {', '.join(valid_statuses)}"}), 400
+
+    # Prevent manual setting of system-controlled statuses
+    if status in ["new", "last_words", "timeout"]:
+        return jsonify({"error": f"Status '{status}' cannot be set manually. It is controlled by the system."}), 400
+
+    # Only allow manual setting of friend, blocked, and timeout
+    allowed_manual_statuses = ["friend", "blocked", "deblocked"]
+    if status not in allowed_manual_statuses:
+        return jsonify({"error": f"Status '{status}' cannot be set manually. Allowed statuses: {', '.join(allowed_manual_statuses)}"}), 400
+
     result = contact_service.change_contact_status_by_user_id(user_id, contact_id, status)
     if "error" in result:
-        return result, 500
+        return jsonify(result), 500
 
-    return jsonify({"success": "Contact status changed successfully"}), 200
+    return jsonify(result), 200
 
 
 @api_bp.route("/changeProfile", methods=['POST'])
@@ -276,8 +290,25 @@ def save_message():
     if not content:
         return jsonify({"error": "'content' is required"}), 400
 
-    result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
-    websockets.send_message(user, recipient_id, content, is_group=is_group)
+    try:
+        # Check if the sender (current user) is blocked by the recipient
+        recipient_info = UserContact.query.filter_by(user_id=user_id, contact_id=recipient_id).first()
+    except:
+        return jsonify({"error": "recipient information could not be gathered"}), 400
+
+    # Check if sender is blocked by recipient
+    if recipient_info and (recipient_info.status == ContactStatusEnum.BLOCKED or recipient_info.status == ContactStatusEnum.FBLOCKED):
+        return jsonify({"error": "Unable to send message because of user rules"}), 403
+    # Check if sender is on last message with recipient
+    elif recipient_info and recipient_info.status == ContactStatusEnum.LASTWORDS:
+        result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
+        recipient_info.status = ContactStatusEnum.FBLOCKED
+        db.session.commit()
+        return jsonify({"success": "Your last message has been send you are now blocked"}), 200
+    else:
+        result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
+        websockets.send_message(user, recipient_id, content, is_group=is_group)
+    
     if "error" in result:
         return jsonify(result), 400
 
@@ -351,7 +382,7 @@ def create_group():
     result = group_service.create_group(
         user_id=user.user_id,
         group_name="New Group",  # Static name as intended
-        group_pic="https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png",  # Empty default picture
+        group_pic="https://www.svgrepo.com/show/4552/user-groups.svg",  # Empty default picture
         group_members=[]  # Don't add members here, let service handle it
     )
     

@@ -40,33 +40,7 @@ class ContactService:
         except Exception as e:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
-    
-    def change_contact_status(self, session_id, contact_id, status_str):
-        user = self.user_service.get_user_by_session(session_id)
-        if not user:
-            return {"error": "Invalid session ID"}
-        
-        try:
-            status = ContactStatusEnum(status_str)
-        except ValueError:
-            return {"error": f"Invalid status value: {status_str}"}
-        
-        contact = UserContact.query.filter_by(
-            user_id=user.user_id, 
-            contact_id=contact_id
-        ).first()
-        
-        if not contact:
-            return {"error": "Contact not found"}
-        
-        contact.status = status
-        
-        try:
-            db.session.commit()
-            return {"success": True}
-        except Exception as e:
-            db.session.rollback()
-            return {"error": f"Database error: {str(e)}"}
+
     
     def get_user_contacts(self, session_id):
         user = self.user_service.get_user_by_session(session_id)
@@ -142,22 +116,98 @@ class ContactService:
         except ValueError:
             return {"error": f"Invalid status value: {status_str}"}
         
-        contact = UserContact.query.filter_by(
+        # Find both contact relationships
+        # me -> contact
+        contact1 = UserContact.query.filter_by(
             user_id=user.user_id, 
             contact_id=contact_id
         ).first()
         
-        if not contact:
+        # contact -> me
+        contact2 = UserContact.query.filter_by(
+            user_id=contact_id, 
+            contact_id=user.user_id
+        ).first()
+        
+        if not contact1:
             return {"error": "Contact not found"}
         
-        contact.status = status
-        
+        # Handle blocked status: blocker gets BLOCKED, blocked user gets LASTWORDS
+        if status == ContactStatusEnum.BLOCKED:
+            contact1.status = ContactStatusEnum.BLOCKED
+            if contact2.status == ContactStatusEnum.BLOCKED:
+                pass
+            else:
+                contact2.status = ContactStatusEnum.LASTWORDS
+            try:
+                db.session.commit()
+                return {"success": "The user has been blocked"}
+            except Exception as e:
+                db.session.rollback()
+                return {"error": f"Database error: {str(e)}"}
+        elif status == ContactStatusEnum.DEBLOCKED and contact2.status == ContactStatusEnum.BLOCKED:
+            return {"error": "The user cant be unblocked because of there is another rule preventing it"}
+        elif status == ContactStatusEnum.DEBLOCKED and (contact2.status == ContactStatusEnum.LASTWORDS or contact2.status == ContactStatusEnum.FBLOCKED):
+            # If the other user has LASTWORDS or FBLOCKED, we can deblock
+            contact1.status = ContactStatusEnum.FRIEND
+            contact2.status = ContactStatusEnum.FRIEND
+            try:
+                db.session.commit()
+                return {"success": "The user has been deblocked"}
+            except Exception as e:
+                db.session.rollback()
+                return {"error": f"Database error: {str(e)}"}
+        elif status == ContactStatusEnum.FRIEND:
+            # Check if the other user is blocked or has blocking status
+            if contact2 and (contact2.status == ContactStatusEnum.FBLOCKED or 
+                           contact2.status == ContactStatusEnum.LASTWORDS or 
+                           contact2.status == ContactStatusEnum.BLOCKED):
+                return {"error": "The user cant be added as a friend because of there is another rule preventing it"}
+            
+            # If the other user already has pending friend status, make them both friends
+            if contact2 and contact2.status == ContactStatusEnum.PENDINGFRIEND:
+                contact1.status = ContactStatusEnum.FRIEND
+                contact2.status = ContactStatusEnum.FRIEND
+                try:
+                    db.session.commit()
+                    return {"success": "You are now friends!"}
+                except Exception as e:
+                    db.session.rollback()
+                    return {"error": f"Database error: {str(e)}"}
+            else:
+                # First friend request - set requesting user to pending friend, other user gets notified
+                contact1.status = ContactStatusEnum.PENDINGFRIEND
+                # If contact2 exists, set them to PENDINGFRIEND too (they will see the request)
+                if contact2:
+                    contact2.status = ContactStatusEnum.PENDINGFRIEND
+                try:
+                    db.session.commit()
+                    return {"success": "Friend request sent!"}
+                except Exception as e:
+                    db.session.rollback()
+                    return {"error": f"Database error: {str(e)}"}
+        elif status == ContactStatusEnum.UNFRIEND:
+            # If the contact is blocked, we can't unfriend
+            if contact2 and (contact2.status == ContactStatusEnum.BLOCKED or 
+                           contact2.status == ContactStatusEnum.FBLOCKED or 
+                           contact2.status == ContactStatusEnum.LASTWORDS):
+                return {"error": "The user cant be unfriended because of there is another rule preventing it"}
+            
+            # Unfriend both users
+            contact1.status = ContactStatusEnum.NTCON
+            if contact2:
+                contact2.status = ContactStatusEnum.NTCON
+        else:
+            # For other status changes, just update the requesting user's contact
+            contact1.status = status
+
         try:
             db.session.commit()
             return {"success": True}
         except Exception as e:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
+        
 
     def get_user_contacts_by_user_id(self, user_id):
         user = self.user_service.get_user_by_id(user_id)

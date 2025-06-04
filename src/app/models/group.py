@@ -17,7 +17,7 @@ class Group(db.Model):
     group_id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     group_name = db.Column(db.String, nullable=False)
     admin_user_id = db.Column(db.String, db.ForeignKey('user.user_id'))
-    group_picture = db.Column(db.String, default='https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png')
+    group_picture = db.Column(db.String, default='https://www.svgrepo.com/show/4552/user-groups.svg')
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     admin = db.relationship('User', backref='administered_groups')

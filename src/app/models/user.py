@@ -6,10 +6,15 @@ from app import db
 
 class ContactStatusEnum(enum.Enum):
     FRIEND = "friend"
+    UNFRIEND = "unfriend"
+    PENDINGFRIEND = "pending_friend"
     LASTWORDS = "last_words"
     BLOCKED = "blocked"
+    FBLOCKED = "fblocked"
+    DEBLOCKED = "deblocked"
     NEW = "new"
     TIMEOUT = "timeout"
+    NTCON = "ntcon"  # Not connected
 
 class User(db.Model):
     __tablename__ = 'user'
@@ -17,7 +22,7 @@ class User(db.Model):
     user_id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     username = db.Column(db.String(25), unique=True, index=True, nullable=False)
     password = db.Column(db.String, nullable=False)
-    profile_picture = db.Column(db.String, default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
+    profile_picture = db.Column(db.String, default="https://www.svgrepo.com/show/535711/user.svg")
     salt = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     session_id = db.Column(db.String)
@@ -40,6 +45,7 @@ class UserContact(db.Model):
     user_id = db.Column(db.String, db.ForeignKey('user.user_id'), primary_key=True)
     contact_id = db.Column(db.String, db.ForeignKey('user.user_id'), primary_key=True)
     status = db.Column(Enum(ContactStatusEnum), nullable=False)
+    pending_block = db.Column(db.Boolean, default=False)
     time_out = db.Column(db.DateTime)
     streak = db.Column(db.Integer, default=0)
     continue_streak = db.Column(db.Boolean, default=True)
