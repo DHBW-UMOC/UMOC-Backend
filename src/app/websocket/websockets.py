@@ -53,6 +53,7 @@ def handle_connect():
             'username': user.username,
             'status': 'online'
         }, broadcast=True)
+
         return True
     except Exception as e:
         print(f"JWT decoding error: {e}")
@@ -265,3 +266,13 @@ def chat_change(action, recipient_id, data):
                             'new_value': data["new_value"]
                         }
                     }, room=user_sids[member["contact_id"]], namespace='/')
+
+
+def use_item(from_user_id, to_user_id, item_name):
+    """Handle use item action"""
+    print("Websocket Use item action:", item_name, from_user_id, to_user_id)
+
+    emit('item_used', {
+        'item_name': item_name,
+        'from_user_id': from_user_id
+    }, room=user_sids[to_user_id], namespace='/')

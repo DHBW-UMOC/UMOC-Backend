@@ -9,6 +9,7 @@ from app.services.user_service import UserService
 from app.services.message_service import MessageService
 from app.services.contact_service import ContactService
 from app.services.group_service import GroupService
+from app.services.item_service import ItemService
 from app import db
 
 from app.websocket import websockets
@@ -18,6 +19,7 @@ user_service = UserService()
 message_service = MessageService()
 contact_service = ContactService()
 group_service = GroupService()
+items_service = ItemService()
 
 
 #############################
@@ -543,3 +545,75 @@ def leave_group():
 
     websockets.chat_change("leave_group", group_id, {"user_id": user_id})
     return jsonify({"success": "User left the group successfully"}), 200
+
+
+#######################
+### Endpoints for Items
+#######################
+
+@api_bp.route("/getItemList", methods=['GET'])
+def get_item_list():
+    items = items_service.get_item_list()
+    return jsonify({"items": items}), 200
+
+
+@api_bp.route("/getInventory", methods=['GET'])
+@jwt_required()
+def get_inventory():
+    user_id = get_jwt_identity()
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    inventory = items_service.get_inventory(user_id)
+    return jsonify({"inventory": inventory}), 200
+
+@api_bp.route("/getActiveItems", methods=['GET'])
+@jwt_required()
+def get_active_items():
+    user_id = get_jwt_identity()
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    active_items = items_service.get_active_items(user_id)
+    return jsonify({"active_items": [item.to_dict() for item in active_items]}), 200
+
+
+@api_bp.route("/useItem", methods=['POST'])
+@jwt_required()
+def use_item():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    item_name = data.get('item_name')
+    to_user_id = data.get('to_user_id')
+
+    if not item_name:
+        return jsonify({"error": "'item_id' is required"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    result = items_service.use_item(item_name, user_id, to_user_id)
+    if "error" in result:
+        return jsonify(result), 400
+
+    websockets.use_item(user_id, to_user_id, item_name)
+
+    return jsonify({"success": "Item used successfully"}), 200
+
+
+@api_bp.route("/buyItem", methods=['POST'])
+@jwt_required()
+def buy_item():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    item_name = data.get('item_name')
+
+    if not item_name:
+        return jsonify({"error": "'item_id' is required"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    result = items_service.buy_item(item_name, user_id)
+    if "error" in result:
+        return jsonify(result), 400
+
+    return jsonify({"success": "Item bought successfully"}), 200
