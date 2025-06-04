@@ -382,7 +382,7 @@ def create_group():
     result = group_service.create_group(
         user_id=user.user_id,
         group_name="New Group",  # Static name as intended
-        group_pic="https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png",  # Empty default picture
+        group_pic="https://www.svgrepo.com/show/4552/user-groups.svg",  # Empty default picture
         group_members=[]  # Don't add members here, let service handle it
     )
     

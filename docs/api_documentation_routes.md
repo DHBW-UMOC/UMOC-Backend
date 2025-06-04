@@ -575,8 +575,11 @@ event: `send_char`
 - **Client Payload**:
 ```json
 {
+  "sender_id": "00000000-0000-0000-0000-000000000000",
+  "sender_username": "String",
+  "char": "H" / "<DEL>",
+  "is_group": false | true,
   "recipient_id": "00000000-0000-0000-0000-000000000000",
-  "char": "H" / "<DEL>"
 }
 ```
 Beispiel:
