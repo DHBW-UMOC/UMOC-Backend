@@ -186,6 +186,17 @@ class ContactService:
                 except Exception as e:
                     db.session.rollback()
                     return {"error": f"Database error: {str(e)}"}
+        elif status == ContactStatusEnum.UNFRIEND:
+            # If the contact is blocked, we can't unfriend
+            if contact2 and (contact2.status == ContactStatusEnum.BLOCKED or 
+                           contact2.status == ContactStatusEnum.FBLOCKED or 
+                           contact2.status == ContactStatusEnum.LASTWORDS):
+                return {"error": "The user cant be unfriended because of there is another rule preventing it"}
+            
+            # Unfriend both users
+            contact1.status = ContactStatusEnum.NTCON
+            if contact2:
+                contact2.status = ContactStatusEnum.NTCON
         else:
             # For other status changes, just update the requesting user's contact
             contact1.status = status

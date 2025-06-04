@@ -6,6 +6,7 @@ from app import db
 
 class ContactStatusEnum(enum.Enum):
     FRIEND = "friend"
+    UNFRIEND = "unfriend"
     PENDINGFRIEND = "pending_friend"
     LASTWORDS = "last_words"
     BLOCKED = "blocked"
@@ -13,6 +14,7 @@ class ContactStatusEnum(enum.Enum):
     DEBLOCKED = "deblocked"
     NEW = "new"
     TIMEOUT = "timeout"
+    NTCON = "ntcon"  # Not connected
 
 class User(db.Model):
     __tablename__ = 'user'
