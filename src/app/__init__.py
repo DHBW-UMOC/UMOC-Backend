@@ -41,8 +41,8 @@ def create_app(config_class=Config):
     return app
 
 
-def reset_database(app):
-    """Reset database and add example data - for development only"""
+def init_database(app):
+    """Initialize database and add example data - for development only"""
     with app.app_context():
         from app.models import db
         db.session.remove()
@@ -52,4 +52,4 @@ def reset_database(app):
         # Insert example data
         from app.services.dummy_data import insert_example_data
         insert_example_data()
-        print("Database reset completed with example data.")
+        print("Database initialized with example data.")
