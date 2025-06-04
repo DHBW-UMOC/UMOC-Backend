@@ -158,18 +158,44 @@ Change the status of a contact.
   ```json
   {
     "contact_id": "00000000-0000-0000-0000-000000000000",
-    "status": "FRIEND | BLOCKED | NEW | TIMEOUT | LASTWORDS"
+    "status": "friend | blocked | deblocked"
   }
   ```
+- **Status Description**:
+  - `friend`: Add as friend or accept friend request
+  - `blocked`: Block the contact
+  - `deblocked`: Unblock the contact
+  - System-controlled statuses (cannot be set manually):
+    - `new`: Newly added contact
+    - `last_words`: Contact can send one final message before being fully blocked
+    - `timeout`: Contact is in timeout
+    - `pending_friend`: Friend request is pending
+    - `fblocked`: Fully blocked (after last words)
+    - `unfriend`: Removed as friend
+    - `ntcon`: Not connected
+
 - **Success Response**:
   - **Code**: 200
-  - **Content**: `{"success": "Contact status changed successfully"}`
+    - **Content**: `{"success": "The user has been blocked"}`
+    - **Content**: `{"success": "The user has been deblocked"}`
+    - **Content**: `{"success": "You are now friends!"}`
+    - **Content**: `{"success": "Friend request sent!"}`
+    - **Content**: `{"success": true}`
+
 - **Error Response**:
   - **Code**: 400
     - **Content**: `{"error": "'contact_id' is required"}`
     - **Content**: `{"error": "'status' is required"}`
+    - **Content**: `{"error": "Invalid status. Valid options: friend, unfriend, pending_friend, last_words, blocked, fblocked, deblocked, new, timeout, ntcon"}`
+    - **Content**: `{"error": "Status 'new' cannot be set manually. It is controlled by the system."}`
+    - **Content**: `{"error": "Status 'pending_friend' cannot be set manually. Allowed statuses: friend, blocked, deblocked"}`
+    - **Content**: `{"error": "Contact not found"}`
+    - **Content**: `{"error": "The user cant be unblocked because of there is another rule preventing it"}`
+    - **Content**: `{"error": "The user cant be added as a friend because of there is another rule preventing it"}`
+    - **Content**: `{"error": "The user cant be unfriended because of there is another rule preventing it"}`
   - **Code**: 500
     - **Content**: `{"error": "Failed to change contact status"}`
+    - **Content**: `{"error": "Database error: str(e)"}`
 
 ### Get Contacts
 

@@ -1,3 +1,33 @@
+## Changelog - Pascal - 04.06.2025
+
+### Enhanced Contact Status System
+- **Revamped contact status system** with more granular states:
+  - `friend`: Active friendship between users
+  - `unfriend`: Removed as friend
+  - `pending_friend`: Friend request awaiting acceptance
+  - `last_words`: User can send one final message before being fully blocked
+  - `blocked`: User has blocked another user
+  - `fblocked`: User is fully blocked (after last words)
+  - `deblocked`: User has been unblocked
+  - `new`: Newly added contact
+  - `timeout`: Contact is in timeout
+  - `ntcon`: Not connected
+
+### API Changes
+- **POST `/changeContact`**:
+  - **Limited manual status changes** to `friend`, `blocked`, and `deblocked` only
+  - System-controlled statuses (`new`, `last_words`, `timeout`, etc.) cannot be set manually
+  - More specific success responses based on action:
+    - `{"success": "The user has been blocked"}`
+    - `{"success": "The user has been deblocked"}`
+    - `{"success": "You are now friends!"}`
+    - `{"success": "Friend request sent!"}`
+  - Enhanced validation with descriptive error messages
+  - Two-way status synchronization between users
+  - Smart status transitions:
+    - Blocking a user gives them `last_words` status to send one final message
+    - After sending message in `last_words` status, user moves to `fblocked`
+    - Friend requests follow two-step confirmation process
 
 ## Changelog - Max - 26.05.2025 (2)
 ### Get Chats
