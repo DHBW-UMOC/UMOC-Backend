@@ -1,3 +1,17 @@
+## Changelog - Max - 04.06.2025
+- send_char Websocket:
+  - Der Websocket "send_char" wurde mit username erweitert.
+  - Beispiel:
+  ```json
+  {
+      'sender_id': "00000000-0000-0000-0000-000000000000",
+      'sender_username': "MaxMustermann",
+      'char': "H",
+      'is_group': True | False,
+      'recipient_id': "00000000-0000-0000-0000-000000000000"
+  }
+  ```
+
 
 ## Changelog - Max - 26.05.2025 (2)
 ### Get Chats

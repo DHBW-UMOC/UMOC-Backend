@@ -17,7 +17,7 @@ class User(db.Model):
     user_id = db.Column(db.String, primary_key=True, default=lambda: str(uuid.uuid4()))
     username = db.Column(db.String(25), unique=True, index=True, nullable=False)
     password = db.Column(db.String, nullable=False)
-    profile_picture = db.Column(db.String, default="https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png")
+    profile_picture = db.Column(db.String, default="https://www.svgrepo.com/show/535711/user.svg")
     salt = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
     session_id = db.Column(db.String)

@@ -93,16 +93,16 @@ def send_char(data):
         user = User.query.get(user_id)
 
         recipient_id = data.get('recipient_id')
-        character = data.get('char')
+        character = data.get('char', '')
         is_group = group_service.does_group_exist(recipient_id)
-
-        if not recipient_id or not character:
+        if not recipient_id:
             return
 
         # Send typing notification directly to recipient's socket if they are online
         if recipient_id in user_sids:
             emit('receive_char', {
                 'sender_id': user.user_id,
+                'sender_username': user.username,
                 'char': character,
                 'is_group': is_group,
                 'recipient_id': recipient_id,
@@ -112,15 +112,15 @@ def send_char(data):
             members = group_service.get_group_members(recipient_id)
             if not isinstance(members, list):
                 return
-
             for member in members:
-                if member["user_id"] in user_sids and member["user_id"] != user.user_id:
+                if member["contact_id"] in user_sids and member["contact_id"] != user.user_id:
                     emit('receive_char', {
                         'sender_id': user.user_id,
+                        'sender_username': user.username,
                         'char': character,
                         'is_group': True,
                         'recipient_id': recipient_id
-                    }, room=user_sids[member["user_id"]])
+                    }, room=user_sids[member["contact_id"]])
 
     except Exception as e:
         print(f"Action handling error: {e}")
