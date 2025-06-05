@@ -165,13 +165,13 @@ Change the status of a contact.
   - `friend`: Add as friend or accept friend request
   - `blocked`: Block the contact
   - `deblocked`: Unblock the contact
+  - `unfirend`: Unfriend the contact
   - System-controlled statuses (cannot be set manually):
     - `new`: Newly added contact
     - `last_words`: Contact can send one final message before being fully blocked
     - `timeout`: Contact is in timeout
     - `pending_friend`: Friend request is pending
     - `fblocked`: Fully blocked (after last words)
-    - `unfriend`: Removed as friend
     - `ntcon`: Not connected
 
 - **Success Response**:
@@ -810,6 +810,7 @@ Hier sind alle Änderungen von chats in einem Websocket verbunden.
   } 
 }
 ```
+
 
 ###### Item Used
 event: "item_used"
