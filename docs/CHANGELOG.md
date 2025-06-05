@@ -1,14 +1,18 @@
 ## Changelog - Pascal - 04.06.2025
 
 ### Enhanced Contact Status System
-- **Revamped contact status system** with more granular states:
-  - `friend`: Active friendship between users
-  - `unfriend`: Removed as friend
+
+Statuses you can USE! -> this is what you SEND! a user cannot have these as status!!:
+friend: Add as friend or accept friend request
+blocked: Block the contact
+deblocked: Unblock the contact
+unfirend: Unfriend the contact
+
+states you cannot use -> these are returned as a state:
   - `pending_friend`: Friend request awaiting acceptance
   - `last_words`: User can send one final message before being fully blocked
   - `blocked`: User has blocked another user
   - `fblocked`: User is fully blocked (after last words)
-  - `deblocked`: User has been unblocked
   - `new`: Newly added contact
   - `timeout`: Contact is in timeout
   - `ntcon`: Not connected
