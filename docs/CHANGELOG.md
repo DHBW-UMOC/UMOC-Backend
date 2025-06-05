@@ -12,7 +12,7 @@
   - `pending_friend`: Friend request awaiting acceptance
   - `last_words`: User can send one final message before being fully blocked
   - `blocked`: User has blocked another user
-  - `fblocked`: User is fully blocked (after last words)
+  - `fblocked`: You are blocked by a other user that you havent blocked
   - `new`: Newly added contact
   - `timeout`: Contact is in timeout
   - `ntcon`: Not connected
