@@ -325,6 +325,7 @@ def save_message():
                 streak=0,
                 continue_streak=True
             ))
+            websockets.new_contact(cid, uid)
     try:
         db.session.commit()
     except Exception as e:

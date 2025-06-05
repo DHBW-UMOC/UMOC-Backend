@@ -276,3 +276,12 @@ def use_item(from_user_id, to_user_id, item_name):
         'item_name': item_name,
         'from_user_id': from_user_id
     }, room=user_sids[to_user_id], namespace='/')
+
+def new_contact(contact_id, user_id):
+    print("New contact added", contact_id, user_id)
+    """Handle new contact action"""
+    if contact_id in user_sids:
+        emit('chat_change', {
+            'user_id': user_id,
+        }, room=user_sids[contact_id])
+
