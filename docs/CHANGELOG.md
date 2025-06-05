@@ -2,13 +2,13 @@
 
 ### Enhanced Contact Status System
 
-Statuses you can USE! -> this is what you SEND! a user cannot have these as status!!:
-friend: Add as friend or accept friend request
-blocked: Block the contact
-deblocked: Unblock the contact
-unfirend: Unfriend the contact
+**actions** you can **USE**! -> this is what you **SEND**! a user **cannot have these as status!!**:
+- `friend`: Add as friend or accept friend request
+- `blocked`: Block the contact
+- `deblocked`: Unblock the contact
+- `unfirend`: Unfriend the contact
 
-states you cannot use -> these are returned as a state:
+**states** you **cannot** use -> these are returned as a state -> DO NOT USE THESE:
   - `pending_friend`: Friend request awaiting acceptance
   - `last_words`: User can send one final message before being fully blocked
   - `blocked`: User has blocked another user
