@@ -511,6 +511,104 @@ Get all Members of a group
     - **Content**: `{"error": "User is not a member of the group"}`
 
 
+### Get Item List
+Get all Items that exist.
+- **URL**: `/getItemList`
+- **Method**: `GET`
+- **Response**:
+  - **Code**: 200
+  - **Content**:
+    ```json
+    {
+      "items": [
+        {
+          "name": "String",
+          "price": 10
+        },
+        {
+          "name": "String",
+          "price": 5
+        }
+      ]
+    }
+    ```
+    
+### Get Inventory
+Get all Items that the user has.
+- **URL**: `/getInventory`
+- **Method**: `GET`
+- Response:
+  - **Code**: 200
+  - **Content**:
+    ```json
+    {
+      "items": [
+        {
+          "name": "String",
+          "amount": 10
+        },
+        {
+          "name": "String",
+          "amount": 5
+        }
+      ]
+    }
+    ```
+    
+### Get Active Items
+Get all Items that effect the user.
+- **URL**: `/getActiveItems`
+- **Method**: `GET`
+- Response:
+  - **Code**: 200
+  - **Content**:
+```json
+{
+  "items": [
+    {
+        "item": "String",
+        "user_id": "00000000-0000-0000-0000-000000000000",
+        "send_by_user_id": "00000000-0000-0000-0000-000000000001",
+        "active_until": "2023-10-01T12:00:00.000000Z"
+    },
+    {
+        "item": "String",
+        "user_id": "00000000-0000-0000-0000-000000000002",
+        "send_by_user_id": "00000000-0000-0000-0000-000000000003",
+        "active_until": "2023-10-01T12:00:00.000000Z"
+    }
+  ]
+}
+```
+
+### Use Item
+Use an Item from the Inventory.
+- **URL**: `/useItem`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "item_name": "String",
+    "to_user_id": "00000000-0000-0000-0000-000000000000"
+  }
+  ```
+  
+### Buy Item
+Buy an Item from the Item List.
+- **URL**: `/buyItem`
+- **Method**: `POST`
+- **Request Body**:
+  ```json
+  {
+    "item_name": "String",
+    "amount": 1
+  }
+  ```
+- **Success Response**:
+- **Code**: 201
+  - **Content**: `{"success": "Item bought successfully"}`
+
+
 ## Utility Endpoints
 
 ### API Root
@@ -700,7 +798,7 @@ Hier sind alle Änderungen von chats in einem Websocket verbunden.
 }
 ```
 
-###### "cahnge_group"
+###### "change_group"
 - **Server Payload**:
 ```json
 {
@@ -710,5 +808,18 @@ Hier sind alle Änderungen von chats in einem Websocket verbunden.
     "action": "name | picture | admin",
     "new_value": "String"
   } 
+}
+```
+
+
+###### Item Used
+event: "item_used"
+- **Server Payload**:
+```json
+{
+  "item_name": "Lightmode",
+  "from_user_id": "00000000-0000-0000-0000-000000000001",
+  "send_by_user_id": "00000000-0000-0000-0000-000000000002",
+  "active_until": "2023-10-01T12:00:00.000000Z"
 }
 ```

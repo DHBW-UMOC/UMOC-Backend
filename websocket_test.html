@@ -19,7 +19,7 @@
 
     // === CONFIG ===
     const SERVER_URL = "http://localhost:5000";
-    const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0ODI3OTAyNSwianRpIjoiMDNlNTc2NGEtM2Y4ZS00N2E0LWJkMTctODI0OTZlNDg1MDYxIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMiIsIm5iZiI6MTc0ODI3OTAyNSwiY3NyZiI6IjY0YTZiYWQ2LWFmMDktNDU3YS05ZDkwLWI0OTIzZTEyZDUxYSIsImV4cCI6MTc0ODM2NTQyNX0.GCPv--I_hgT1Lq2hlzs6b77N9orqcGc7I3-kdDmG67s";
+    const TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmcmVzaCI6ZmFsc2UsImlhdCI6MTc0OTA1NDI4MywianRpIjoiNGUxZDE2MjgtOTRiZi00ZDk5LWJjZjgtZTJlMjI3NWQyNzAyIiwidHlwZSI6ImFjY2VzcyIsInN1YiI6IjAwMDAwMDAwLTAwMDAtMDAwMC0wMDAwLTAwMDAwMDAwMDAwMiIsIm5iZiI6MTc0OTA1NDI4MywiY3NyZiI6ImQxOGViZTQyLTM4NmItNDYxMC1iZmQyLTc5NDFjZGY0Yzc4MyIsImV4cCI6MTc0OTE0MDY4M30.0NTYEA7sV7u3rFrmwUzDtnOC92QuLL993_IHacru1ys";
     const RECIPIENT_ID = "00000000-0000-0000-0000-000000000001";
     SENDER_ID = "00000000-0000-0000-0000-000000000002";
     const CHAR = "H";
@@ -50,6 +50,11 @@
     });
 
     socket.on("chat_change", (data) => {
+      console.log("chat_change:", data);
+        debug.innerText = "chat_change: " + data;
+    });
+
+    socket.on("item_used", (data) => {
       console.log("chat_change:", data);
         debug.innerText = "chat_change: " + data;
     });

@@ -1,3 +1,106 @@
+## Changelog - Max - 04.06.2025
+
+### API Changes
+- **GET `/getItemList`**:
+  - Returns a list of items that exist.
+  - Example response:
+    ```json
+    {
+      "items": [
+        {
+          "name": "Lightmode",
+          "price": 5
+        },
+        {
+          "name": "Alt_Chat",
+          "price": 5
+        },
+        {
+          "name": "Ad",
+          "price": 2
+        }
+      ]
+    }
+    ```
+
+  - **GET `/getInventory`**:
+    - Returns the inventory of the user.
+    - The inventory is a list of items that the user has bought.
+    - Example response:
+      ```json
+      {
+        "items": [
+          {
+            "name": "String",
+            "amount": 10
+          },
+          {
+            "name": "String",
+            "amount": 5
+          }
+        ]
+      }
+      ```
+    
+    - **GET `/getActiveItems`**:
+      - Returns a list of items that are currently active for the user.
+      - Example response:
+    ```json
+    {
+    "items": [
+      {
+          "item": "String",
+          "user_id": "00000000-0000-0000-0000-000000000000",
+          "send_by_user_id": "00000000-0000-0000-0000-000000000001",
+          "active_until": "2023-10-01T12:00:00.000000Z"
+      },
+      {
+          "item": "String",
+          "user_id": "00000000-0000-0000-0000-000000000002",
+          "send_by_user_id": "00000000-0000-0000-0000-000000000003",
+          "active_until": "2023-10-01T12:00:00.000000Z"
+      }
+    ]
+    }
+    ```
+    
+- **POST `/buyItem`**:
+- Allows users to buy an item from the list of available items.
+  - Requires `item_name` parameter in the request body.
+  - Example request:
+    ```json
+    {
+      "item_name": "Lightmode",
+      "amount": 1
+    }
+    ```
+    
+- **POST `/useItem`**:
+  - Allows users to use an item from their inventory.
+  - Requires `item_name` parameter in the request body.
+  - Example request:
+    ```json
+    {
+      "item_name": "Lightmode",
+      "to_user_id": "00000000-0000-0000-0000-000000000001"
+    }
+    ```
+
+- Websocket `item_used`:
+  - Comes, when a user uses an item on you.
+  - Example response:
+    ```json
+    {
+      "item_name": "Lightmode",
+      "from_user_id": "00000000-0000-0000-0000-000000000001",
+      "send_by_user_id": "00000000-0000-0000-0000-000000000002",
+      "active_until": "2023-10-01T12:00:00.000000Z"
+    }
+    ```
+
+
+
+
 ## Changelog - Pascal - 04.06.2025
 
 ### Enhanced Contact Status System
