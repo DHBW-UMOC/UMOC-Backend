@@ -42,7 +42,11 @@ class GroupService:
         db.session.add(new_member)
         try:
             db.session.commit()
-            return {"success": True, "group_id": new_group.group_id}
+            return {
+                "group": new_group,
+                "members": self.get_group_members(new_group.group_id),
+                "am_admin": True  # Creator is always admin
+            }
         except Exception as e:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}
