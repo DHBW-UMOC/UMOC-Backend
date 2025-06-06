@@ -302,7 +302,7 @@ class TestApiEndpoints(BaseTestCase):
         self.assertIn('success', data)
     
     def test_endpoint_get_chats(self):
-        """Test the getChats endpoint"""
+        """Test the getChats/getContacts endpoint"""
         # Set up users, login, and add contact
         headers, _ = self.setup_users_and_login()
         self.client.post(
@@ -638,7 +638,7 @@ class TestApiEndpoints(BaseTestCase):
             
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data.decode('utf-8'))
-        group_id = data['group_id']
+        group_id = data['group']['contact_id']
 
         # Test changing the group name using changeGroup endpoint with action=name
         new_group_name = "Updated Group Name"
@@ -674,7 +674,7 @@ class TestApiEndpoints(BaseTestCase):
             
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data.decode('utf-8'))
-        group_id = data['group_id']
+        group_id = data['group']['contact_id']
 
         # Test changing the group picture using changeGroup endpoint with action=picture
         new_picture_url = "http://example.com/new_picture.jpg"
@@ -713,7 +713,7 @@ class TestApiEndpoints(BaseTestCase):
             
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data.decode('utf-8'))
-        group_id = data['group_id']
+        group_id = data['group']['contact_id']
 
         # Test changing the group admin using changeGroup endpoint with action=admin
         new_admin_id = member_ids[0]  # Use the first member as the new admin
@@ -749,7 +749,7 @@ class TestApiEndpoints(BaseTestCase):
             
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data.decode('utf-8'))
-        group_id = data['group_id']
+        group_id = data['group']['contact_id']
 
         # Create a new test user to add later
         new_member_username = "new_test_member"
@@ -789,7 +789,7 @@ class TestApiEndpoints(BaseTestCase):
             
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data.decode('utf-8'))
-        group_id = data['group_id']
+        group_id = data['group']['contact_id']
 
         # First add a member to later remove
         member_ids = self.get_member_ids(1)
@@ -884,7 +884,7 @@ class TestApiEndpoints(BaseTestCase):
             
         self.assertEqual(response.status_code, 201)
         data = json.loads(response.data.decode('utf-8'))
-        group_id = data['group_id']
+        group_id = data['group']['contact_id']
 
         # Test leaving the group using JSON body
         response = self.client.post(

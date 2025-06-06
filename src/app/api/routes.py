@@ -325,6 +325,7 @@ def save_message():
                 streak=0,
                 continue_streak=True
             ))
+            websockets.new_contact(cid, uid)
     try:
         db.session.commit()
     except Exception as e:
@@ -390,9 +391,17 @@ def create_group():
     
     if "error" in result:
         return jsonify(result), 400
-    websockets.chat_change("create_group", result["group_id"],
-                           {"group_pic": "https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png", "group_name": "New Group", "group_id": result["group_id"]})
-    return jsonify({"success": "Group created successfully", "group_id": result["group_id"]}), 201
+    
+    # Create complete group structure like in get_groups_by_user_id
+    group_data = {
+        **result["group"].to_dict(),
+        "am_admin": result["am_admin"],
+        "members": result["members"]
+    }
+    
+    # Pass the result directly to websocket (let it handle serialization)
+    websockets.chat_change("create_group", result["group"].group_id, result)
+    return jsonify({"group": group_data}), 201
 
 
 @api_bp.route("/deleteGroup", methods=['POST'])
