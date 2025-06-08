@@ -400,7 +400,7 @@ def create_group():
     }
     
     # Pass the result directly to websocket (let it handle serialization)
-    websockets.chat_change("create_group", result["group"].group_id, result)
+    websockets.chat_change("create_group", result["group"].group_id, group_data)
     return jsonify({"group": group_data}), 201
 
 
