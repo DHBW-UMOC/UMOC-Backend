@@ -30,7 +30,7 @@ export interface Contact {
   contact_id: string; // UUID
   name: string;
   picture_url: string; // URL
-  status: 'FRIEND' | 'BLOCKED' | 'NEW' | 'TIMEOUT' | 'LASTWORDS';
+  status: 'FRIEND' | 'BLOCK' | 'NEW' | 'TIMEOUT' | 'LASTWORDS';
   streak: number | null;
 }
 ```
@@ -158,13 +158,12 @@ Change the status of a contact.
   ```json
   {
     "contact_id": "00000000-0000-0000-0000-000000000000",
-    "status": "friend | blocked | deblocked"
+    "status": "friend | block | unblock"
   }
   ```
 - **Status Description**:
-  - `friend`: Add as friend or accept friend request
-  - `blocked`: Block the contact
-  - `deblocked`: Unblock the contact
+  - `friend`: Add as friend or accept friend request  - `block`: Block the contact
+  - `unblock`: Unblock the contact
   - `unfirend`: Unfriend the contact
   - System-controlled statuses (cannot be set manually):
     - `new`: Newly added contact
@@ -175,9 +174,8 @@ Change the status of a contact.
     - `ntcon`: Not connected
 
 - **Success Response**:
-  - **Code**: 200
-    - **Content**: `{"success": "The user has been blocked"}`
-    - **Content**: `{"success": "The user has been deblocked"}`
+  - **Code**: 200    - **Content**: `{"success": "The user has been blocked"}`
+    - **Content**: `{"success": "The user has been unblocked"}`
     - **Content**: `{"success": "You are now friends!"}`
     - **Content**: `{"success": "Friend request sent!"}`
     - **Content**: `{"success": true}`
@@ -186,9 +184,9 @@ Change the status of a contact.
   - **Code**: 400
     - **Content**: `{"error": "'contact_id' is required"}`
     - **Content**: `{"error": "'status' is required"}`
-    - **Content**: `{"error": "Invalid status. Valid options: friend, unfriend, pending_friend, last_words, blocked, fblocked, deblocked, new, timeout, ntcon"}`
+    - **Content**: `{"error": "Invalid status. Valid options: friend, unfriend, pending_friend, last_words, block, fblocked, unblock, new, timeout, ntcon"}`
     - **Content**: `{"error": "Status 'new' cannot be set manually. It is controlled by the system."}`
-    - **Content**: `{"error": "Status 'pending_friend' cannot be set manually. Allowed statuses: friend, blocked, deblocked"}`
+    - **Content**: `{"error": "Status 'pending_friend' cannot be set manually. Allowed statuses: friend, block, unblock"}`
     - **Content**: `{"error": "Contact not found"}`
     - **Content**: `{"error": "The user cant be unblocked because of there is another rule preventing it"}`
     - **Content**: `{"error": "The user cant be added as a friend because of there is another rule preventing it"}`

@@ -10,9 +10,9 @@ class ContactStatusEnum(enum.Enum):
     UNFRIEND = "unfriend"
     PENDINGFRIEND = "pending_friend"
     LASTWORDS = "last_words"
-    BLOCKED = "blocked"
+    BLOCK = "block"
     FBLOCKED = "fblocked"
-    DEBLOCKED = "deblocked"
+    UNBLOCK = "unblock"
     NEW = "new"
     TIMEOUT = "timeout"
     NTCON = "ntcon"  # Not connected
