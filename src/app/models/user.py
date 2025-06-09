@@ -6,6 +6,7 @@ from app import db
 
 class ContactStatusEnum(enum.Enum):
     FRIEND = "friend"
+    FFRIEND = "ffriend"  
     UNFRIEND = "unfriend"
     PENDINGFRIEND = "pending_friend"
     LASTWORDS = "last_words"
