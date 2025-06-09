@@ -239,8 +239,11 @@ def chat_change(action, recipient_id, data):
                         "action": action,
                         "group_id": recipient_id,
                         "data": {
-                            'group_name': data["group"].group_name,
-                            'group_pic': data["group"].group_picture
+                            'group_name': data["name"],
+                            'group_pic': data["picture_url"],
+                            'members': data["members"],
+                            'am_admin': data["am_admin"],
+                            'created_at': data["created_at"]
                         }
                     }, room=user_sids[member["contact_id"]], namespace='/')
 
