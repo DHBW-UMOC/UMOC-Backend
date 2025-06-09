@@ -301,18 +301,22 @@ def save_message():
     # Check if sender is blocked by recipient
     if recipient_info and (recipient_info.status == ContactStatusEnum.BLOCKED or recipient_info.status == ContactStatusEnum.FBLOCKED):
         return jsonify({"error": "Unable to send message because of user rules"}), 403
-    # Check if sender is on last message with recipient
-    elif recipient_info and recipient_info.status == ContactStatusEnum.LASTWORDS:
-        result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
-        recipient_info.status = ContactStatusEnum.FBLOCKED
-        db.session.commit()
-        return jsonify({"success": "Your last message has been send you are now blocked"}), 200
-    else:
-        result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
-        websockets.send_message(user, recipient_id, content, is_group=is_group)
+
+    # Save the message first
+    result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
     
     if "error" in result:
         return jsonify(result), 400
+
+    # Handle LASTWORDS status after successful message save
+    is_last_words = recipient_info and recipient_info.status == ContactStatusEnum.LASTWORDS
+    if is_last_words:
+        recipient_info.status = ContactStatusEnum.FBLOCKED
+        db.session.commit()
+
+    # Send websocket message (unless it was last words)
+    if not is_last_words:
+        websockets.send_message(user, recipient_id, content, is_group=is_group)
 
     # Kontakte automatisch hinzufügen (beidseitig)
     for uid, cid in [(user_id, recipient_id), (recipient_id, user_id)]:
@@ -326,13 +330,18 @@ def save_message():
                 continue_streak=True
             ))
             websockets.new_contact(cid, uid)
+    
     try:
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Contact add failed: {str(e)}"}), 500
 
-    return jsonify({"success": "Message saved successfully", "message_id": result["message_id"]})
+    # Return appropriate response based on status
+    if is_last_words:
+        return jsonify({"success": "Your last message has been send you are now blocked"}), 200
+    else:
+        return jsonify({"success": "Message saved successfully", "message_id": result["message_id"]})
 
 
 # Simple test endpoint
