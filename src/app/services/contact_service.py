@@ -163,9 +163,18 @@ class ContactService:
                            contact2.status == ContactStatusEnum.LASTWORDS or 
                            contact2.status == ContactStatusEnum.BLOCKED):
                 return {"error": "The user cant be added as a friend because of there is another rule preventing it"}
-            
-            # If the other user already has pending friend status, make them both friends
+              # If the other user already has pending friend status, make them both friends
             if contact2 and contact2.status == ContactStatusEnum.PENDINGFRIEND:
+                contact1.status = ContactStatusEnum.FRIEND
+                contact2.status = ContactStatusEnum.FRIEND
+                try:
+                    db.session.commit()
+                    return {"success": "You are now friends!"}
+                except Exception as e:
+                    db.session.rollback()
+                    return {"error": f"Database error: {str(e)}"}            # If the other user has FFRIEND status, they are responding to friend request - make both friends immediately
+            elif contact2 and contact2.status == ContactStatusEnum.FFRIEND:
+                # User is responding to a friend request - both become friends in this same request
                 contact1.status = ContactStatusEnum.FRIEND
                 contact2.status = ContactStatusEnum.FRIEND
                 try:
@@ -175,11 +184,11 @@ class ContactService:
                     db.session.rollback()
                     return {"error": f"Database error: {str(e)}"}
             else:
-                # First friend request - set requesting user to pending friend, other user gets notified
+                # First friend request - set requesting user to pending friend, other user to FFRIEND
                 contact1.status = ContactStatusEnum.PENDINGFRIEND
-                # If contact2 exists, set them to PENDINGFRIEND too (they will see the request)
+                # If contact2 exists, set them to FFRIEND (they received a friend request)
                 if contact2:
-                    contact2.status = ContactStatusEnum.PENDINGFRIEND
+                    contact2.status = ContactStatusEnum.FFRIEND
                 try:
                     db.session.commit()
                     return {"success": "Friend request sent!"}
