@@ -131,11 +131,10 @@ class ContactService:
         
         if not contact1:
             return {"error": "Contact not found"}
-        
-        # Handle blocked status: blocker gets BLOCKED, blocked user gets LASTWORDS
-        if status == ContactStatusEnum.BLOCKED:
-            contact1.status = ContactStatusEnum.BLOCKED
-            if contact2.status == ContactStatusEnum.BLOCKED:
+          # Handle block status: blocker gets BLOCK, blocked user gets LASTWORDS
+        if status == ContactStatusEnum.BLOCK:
+            contact1.status = ContactStatusEnum.BLOCK
+            if contact2.status == ContactStatusEnum.BLOCK:
                 pass
             else:
                 contact2.status = ContactStatusEnum.LASTWORDS
@@ -144,16 +143,16 @@ class ContactService:
                 return {"success": "The user has been blocked"}
             except Exception as e:
                 db.session.rollback()
-                return {"error": f"Database error: {str(e)}"}
-        elif status == ContactStatusEnum.DEBLOCKED and contact2.status == ContactStatusEnum.BLOCKED:
+                return {"error": f"Database error: {str(e)}"}        
+            
+        elif status == ContactStatusEnum.UNBLOCK and contact2.status == ContactStatusEnum.BLOCK:
             return {"error": "The user cant be unblocked because of there is another rule preventing it"}
-        elif status == ContactStatusEnum.DEBLOCKED and (contact2.status == ContactStatusEnum.LASTWORDS or contact2.status == ContactStatusEnum.FBLOCKED):
-            # If the other user has LASTWORDS or FBLOCKED, we can deblock
+        elif status == ContactStatusEnum.UNBLOCK and (contact2.status == ContactStatusEnum.LASTWORDS or contact2.status == ContactStatusEnum.FBLOCKED):            # If the other user has LASTWORDS or FBLOCKED, we can unblock
             contact1.status = ContactStatusEnum.FRIEND
             contact2.status = ContactStatusEnum.FRIEND
             try:
                 db.session.commit()
-                return {"success": "The user has been deblocked"}
+                return {"success": "The user has been unblocked"}
             except Exception as e:
                 db.session.rollback()
                 return {"error": f"Database error: {str(e)}"}
@@ -161,7 +160,7 @@ class ContactService:
             # Check if the other user is blocked or has blocking status
             if contact2 and (contact2.status == ContactStatusEnum.FBLOCKED or 
                            contact2.status == ContactStatusEnum.LASTWORDS or 
-                           contact2.status == ContactStatusEnum.BLOCKED):
+                           contact2.status == ContactStatusEnum.BLOCK):
                 return {"error": "The user cant be added as a friend because of there is another rule preventing it"}
               # If the other user already has pending friend status, make them both friends
             if contact2 and contact2.status == ContactStatusEnum.PENDINGFRIEND:
@@ -197,7 +196,7 @@ class ContactService:
                     return {"error": f"Database error: {str(e)}"}
         elif status == ContactStatusEnum.UNFRIEND:
             # If the contact is blocked, we can't unfriend
-            if contact2 and (contact2.status == ContactStatusEnum.BLOCKED or 
+            if contact2 and (contact2.status == ContactStatusEnum.BLOCK or 
                            contact2.status == ContactStatusEnum.FBLOCKED or 
                            contact2.status == ContactStatusEnum.LASTWORDS):
                 return {"error": "The user cant be unfriended because of there is another rule preventing it"}

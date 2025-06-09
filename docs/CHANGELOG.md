@@ -108,7 +108,7 @@
 **actions** you can **USE**! -> this is what you **SEND**! a user **cannot have these as status!!**:
 - `friend`: Add as friend or accept friend request
 - `blocked`: Block the contact
-- `deblocked`: Unblock the contact
+- `unblock`: Unblock the contact
 - `unfirend`: Unfriend the contact
 
 **states** you **cannot** use -> these are returned as a state -> DO NOT USE THESE:
@@ -122,11 +122,11 @@
 
 ### API Changes
 - **POST `/changeContact`**:
-  - **Limited manual status changes** to `friend`, `blocked`, and `deblocked` only
+  - **Limited manual status changes** to `friend`, `block`, and `unblock` only
   - System-controlled statuses (`new`, `last_words`, `timeout`, etc.) cannot be set manually
   - More specific success responses based on action:
     - `{"success": "The user has been blocked"}`
-    - `{"success": "The user has been deblocked"}`
+    - `{"success": "The user has been unblocked"}`
     - `{"success": "You are now friends!"}`
     - `{"success": "Friend request sent!"}`
   - Enhanced validation with descriptive error messages

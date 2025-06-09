@@ -148,8 +148,8 @@ def change_contact():
     if status in ["new", "last_words", "timeout"]:
         return jsonify({"error": f"Status '{status}' cannot be set manually. It is controlled by the system."}), 400
 
-    # Only allow manual setting of friend, blocked, and timeout
-    allowed_manual_statuses = ["friend", "blocked", "deblocked"]
+    # Only allow manual setting of friend, block, and timeout
+    allowed_manual_statuses = ["friend", "block", "unblock", "unfriend"]
     if status not in allowed_manual_statuses:
         return jsonify({"error": f"Status '{status}' cannot be set manually. Allowed statuses: {', '.join(allowed_manual_statuses)}"}), 400
 
@@ -299,7 +299,7 @@ def save_message():
         return jsonify({"error": "recipient information could not be gathered"}), 400
 
     # Check if sender is blocked by recipient
-    if recipient_info and (recipient_info.status == ContactStatusEnum.BLOCKED or recipient_info.status == ContactStatusEnum.FBLOCKED):
+    if recipient_info and (recipient_info.status == ContactStatusEnum.BLOCK or recipient_info.status == ContactStatusEnum.FBLOCKED):
         return jsonify({"error": "Unable to send message because of user rules"}), 403
 
     # Save the message first
@@ -312,24 +312,23 @@ def save_message():
     is_last_words = recipient_info and recipient_info.status == ContactStatusEnum.LASTWORDS
     if is_last_words:
         recipient_info.status = ContactStatusEnum.FBLOCKED
-        db.session.commit()
-
-    # Send websocket message (unless it was last words)
+        db.session.commit()    # Send websocket message (unless it was last words)
     if not is_last_words:
         websockets.send_message(user, recipient_id, content, is_group=is_group)
 
-    # Kontakte automatisch hinzufügen (beidseitig)
-    for uid, cid in [(user_id, recipient_id), (recipient_id, user_id)]:
-        exists = UserContact.query.filter_by(user_id=uid, contact_id=cid).first()
-        if not exists:
-            db.session.add(UserContact(
-                user_id=uid,
-                contact_id=cid,
-                status=ContactStatusEnum.NEW,
-                streak=0,
-                continue_streak=True
-            ))
-            websockets.new_contact(cid, uid)
+    # Kontakte automatisch hinzufügen (beidseitig) - only for direct messages, not groups
+    if not is_group:
+        for uid, cid in [(user_id, recipient_id), (recipient_id, user_id)]:
+            exists = UserContact.query.filter_by(user_id=uid, contact_id=cid).first()
+            if not exists:
+                db.session.add(UserContact(
+                    user_id=uid,
+                    contact_id=cid,
+                    status=ContactStatusEnum.NEW,
+                    streak=0,
+                    continue_streak=True
+                ))
+                websockets.new_contact(cid, uid)
     
     try:
         db.session.commit()
