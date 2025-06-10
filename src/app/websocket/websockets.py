@@ -294,5 +294,5 @@ def new_contact(contact_id, user_id):
     if contact_id in user_sids:
         emit('chat_change', {
             'user_id': user_id,
-        }, room=user_sids[contact_id])
+        }, room=user_sids[contact_id], namespace='/')
 
