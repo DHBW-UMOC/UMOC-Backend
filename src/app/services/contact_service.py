@@ -1,7 +1,9 @@
+from datetime import datetime, timedelta
 from app import db
 from app.models.user import User, UserContact, ContactStatusEnum
+from app.models.message import Message
 from app.services.user_service import UserService
-from sqlalchemy import func
+from sqlalchemy import func, or_, and_
 
 class ContactService:
     def __init__(self):
@@ -236,5 +238,83 @@ class ContactService:
                     "status": contact.status.value,
                     "streak": contact.streak,
                 })
-        
+            # update streak
+            self.update_streak(user.user_id, contact.contact_id)
         return contact_list
+    
+    def update_streak(self, user_id, contact_id):
+        """Update streak if both users sent messages in the last 24 hours, reset if older."""
+        try:
+            current_date = datetime.utcnow().date()
+            twenty_four_hours_ago = datetime.utcnow() - timedelta(hours=24)
+            
+            # Get both contact relationships
+            contacts = UserContact.query.filter(
+                or_(
+                    and_(UserContact.user_id == user_id, UserContact.contact_id == contact_id),
+                    and_(UserContact.user_id == contact_id, UserContact.contact_id == user_id)
+                )
+            ).all()
+            
+            if len(contacts) != 2:
+                return {"error": "Contact relationship not found"}
+            
+            # Check if streak was already updated today
+            if any(contact.last_streak_update == current_date for contact in contacts):
+                return {
+                    "success": True,
+                    "streak_updated": False,
+                    "message": "Streak already updated today"
+                }
+            
+            # Check if both users sent messages to each other in last 24h
+            user_sent = Message.query.filter(
+                Message.sender_user_id == user_id,
+                Message.recipient_user_id == contact_id,
+                Message.send_at >= twenty_four_hours_ago,
+                Message.is_group == False
+            ).first()
+            
+            contact_sent = Message.query.filter(
+                Message.sender_user_id == contact_id,
+                Message.recipient_user_id == user_id,
+                Message.send_at >= twenty_four_hours_ago,
+                Message.is_group == False
+            ).first()
+            
+            # Get both users for points update
+            user = self.user_service.get_user_by_id(user_id)
+            contact_user = self.user_service.get_user_by_id(contact_id)
+            
+            if user_sent and contact_sent:
+                # Both users messaged in last 24h - increase streak and award points
+                for contact in contacts:
+                    contact.streak += 1
+                    contact.last_streak_update = current_date
+                
+                user.points += 1
+                contact_user.points += 1
+                
+                db.session.commit()
+                return {
+                    "success": True,
+                    "streak_updated": True,
+                    "new_streak": contacts[0].streak
+                }
+            else:
+                # Not both users messaged in last 24h - reset streaks to 0
+                for contact in contacts:
+                    contact.streak = 0
+                    contact.last_streak_update = current_date
+                
+                db.session.commit()
+                return {
+                    "success": True,
+                    "streak_updated": False,
+                    "streak_reset": True
+                }
+            
+        except Exception as e:
+            db.session.rollback()
+            return {"error": f"Database error: {str(e)}"}
+
