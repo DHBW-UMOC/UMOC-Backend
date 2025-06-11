@@ -14,8 +14,7 @@ class Item(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'name': self.name,
+            'item_name': self.name,
             'price': self.price,
         }
 
@@ -49,8 +48,7 @@ class Inventory(db.Model):
 
     def to_dict(self):
         return {
-            'item_id': self.item_id,
-            'name': Item.query.get(self.item_id).name if self.item_id else None,
+            'item_name': Item.query.get(self.item_id).name if self.item_id else None,
             'user_id': self.user_id,
             'quantity': self.quantity,
         }

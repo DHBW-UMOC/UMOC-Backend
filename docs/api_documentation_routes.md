@@ -553,11 +553,11 @@ Get all Items that the user has.
     {
       "items": [
         {
-          "name": "String",
+          "item_name": "String",
           "amount": 10
         },
         {
-          "name": "String",
+          "item_name": "String",
           "amount": 5
         }
       ]
@@ -575,13 +575,13 @@ Get all Items that effect the user.
 {
   "items": [
     {
-        "item": "String",
+        "item_name": "String",
         "user_id": "00000000-0000-0000-0000-000000000000",
         "send_by_user_id": "00000000-0000-0000-0000-000000000001",
         "active_until": "2023-10-01T12:00:00.000000Z"
     },
     {
-        "item": "String",
+        "item_name": "String",
         "user_id": "00000000-0000-0000-0000-000000000002",
         "send_by_user_id": "00000000-0000-0000-0000-000000000003",
         "active_until": "2023-10-01T12:00:00.000000Z"

@@ -611,7 +611,7 @@ def use_item():
     to_user_id = data.get('to_user_id')
 
     if not item_name:
-        return jsonify({"error": "'item_id' is required"}), 400
+        return jsonify({"error": "'item_name' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
@@ -632,7 +632,7 @@ def buy_item():
     item_name = data.get('item_name')
 
     if not item_name:
-        return jsonify({"error": "'item_id' is required"}), 400
+        return jsonify({"error": "'item_name' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 

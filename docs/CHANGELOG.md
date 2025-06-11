@@ -97,15 +97,15 @@
     {
       "items": [
         {
-          "name": "Lightmode",
+          "item": "Lightmode",
           "price": 5
         },
         {
-          "name": "Alt_Chat",
+          "item": "Alt_Chat",
           "price": 5
         },
         {
-          "name": "Ad",
+          "item": "Ad",
           "price": 2
         }
       ]
