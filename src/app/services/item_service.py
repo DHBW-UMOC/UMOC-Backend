@@ -114,7 +114,6 @@ class ItemService:
         self.create_item("timeout", 5)
         self.create_item("alt_background", 5)
         self.create_item("show_ads", 2)
-        self.create_item("Timeout", 7)
 
         try:
             db.session.commit()

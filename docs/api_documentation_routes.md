@@ -283,7 +283,7 @@ Retrieve all messages between the authenticated user and a specific contact.
             "sender_user_id":"00000000-0000-0000-0000-000000000000",
             "sender_username":"String",
             "timestamp":"0000-00-00T00:00:00.000000",
-            "type":"TEXT | IMAGE | ITEM | LOCATION | AUDIO | VIDEO"
+            "type":"text | deleted_text | item"
           },
           {
             "content":"String",
@@ -292,7 +292,7 @@ Retrieve all messages between the authenticated user and a specific contact.
             "sender_user_id":"00000000-0000-0000-0000-000000000000",
             "sender_username":"String",
             "timestamp":"0000-00-00T00:00:00.000000",
-            "type":"TEXT | IMAGE | ITEM | LOCATION | AUDIO | VIDEO"
+            "type":"text | deleted_text | item"
           }
       ]
     }
@@ -826,9 +826,7 @@ event: "item_used"
 - **Server Payload**:
 ```json
 {
-  "item_name": "Lightmode",
-  "from_user_id": "00000000-0000-0000-0000-000000000001",
-  "send_by_user_id": "00000000-0000-0000-0000-000000000002",
+  "item_name": "lightmode",
   "active_until": "2023-10-01T12:00:00.000000Z"
 }
 ```
