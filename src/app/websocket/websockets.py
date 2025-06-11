@@ -278,19 +278,19 @@ def chat_change(action, recipient_id, data):
                     }, room=user_sids[member["contact_id"]], namespace='/')
 
 
-def use_item(from_user_id, to_user_id, item_name):
+def use_item(from_user_id, to_user_id, item_name, active_until):
     """Handle use item action"""
     print("Websocket Use item action:", item_name, from_user_id, to_user_id)
 
     try:
-        if from_user_id not in user_sids or to_user_id not in user_sids:
+        if to_user_id not in user_sids:
             print("User not connected")
             return
 
         # Emit the item used event to the recipient
         emit('item_used', {
             'item_name': item_name,
-            'from_user_id': from_user_id
+            'active_until': active_until.isoformat() if active_until else None,
         }, room=user_sids[to_user_id], namespace='/')
     except Exception as e:
         print("Error emitting item_used event:", e)

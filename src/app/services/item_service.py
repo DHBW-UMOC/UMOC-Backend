@@ -35,11 +35,11 @@ class ItemService:
         """user uses item from inventory. This will create an active item"""
         item = Item.query.filter_by(name=item_name).first()
         if not item:
-            return {"error": "Item not found"}
+            return {"error": "Item not found"}, None
 
         inventory_item = Inventory.query.filter_by(item_id=item.id, user_id=user_id).first()
         if not inventory_item or inventory_item.quantity <= 0:
-            return {"error": "Item not in inventory or quantity is zero"}
+            return {"error": "Item not in inventory or quantity is zero"}, None
 
         if ActiveItems.query.filter_by(item=item.name, user_id=to_user_id).first():
             return {"error": "Item already active for this user"}
@@ -58,10 +58,10 @@ class ItemService:
 
         try:
             db.session.commit()
-            return {"success": True}
+            return {"success": True}, datetime.utcnow() + timedelta(days=1)
         except Exception as e:
             db.session.rollback()
-            return {"error": f"Database error: {str(e)}"}
+            return {"error": f"Database error: {str(e)}"}, None
 
     def get_item_list(self):
         """Get list of all items"""
@@ -111,9 +111,9 @@ class ItemService:
         db.session.query(Inventory).delete()
 
         # Add default items
-        self.create_item("Lightmode", 5)
-        self.create_item("Alt_Chat", 5)
-        self.create_item("Ad", 2)
+        self.create_item("timeout", 5)
+        self.create_item("alt_background", 5)
+        self.create_item("show_ads", 2)
         self.create_item("Timeout", 7)
 
         try:

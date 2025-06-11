@@ -1,4 +1,3 @@
-from datetime import datetime
 import re
 from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import create_access_token
@@ -193,7 +192,7 @@ def change_profile():
             return jsonify({"error": "'old_password' is required"}), 400
         result = user_service.change_password(user_id, old_password, new_value)
     websockets.chat_change_alone(user_id)
-        
+
     # Check if there was an error in the service call
     if "error" in result:
         return jsonify(result), 400
@@ -616,11 +615,11 @@ def use_item():
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
-    result = items_service.use_item(item_name, user_id, to_user_id)
+    result, date = items_service.use_item(item_name, user_id, to_user_id)
     if "error" in result:
         return jsonify(result), 400
 
-    websockets.use_item(user_id, to_user_id, item_name)
+    websockets.use_item(user_id, to_user_id, item_name, date)
 
     return jsonify({"success": "Item used successfully"}), 200
 

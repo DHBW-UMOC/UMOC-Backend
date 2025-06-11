@@ -32,10 +32,8 @@ class ActiveItems(db.Model):
 
     def to_dict(self):
         return {
-            'item': self.item,
-            'user_id': self.user_id,
-            'send_by_user_id': self.send_by_user_id,
-            'active_until': self.active_until.isoformat()
+            'item_name': self.item,
+            'active_until': self.active_until.isoformat(),
         }
 
 class Inventory(db.Model):

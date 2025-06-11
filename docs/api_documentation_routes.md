@@ -524,12 +524,21 @@ Delete a message from a chat.
 Get all Items that exist.
 - **URL**: `/getItemList`
 - **Method**: `GET`
-  - **Response**:
+- **Response**:
   - **Code**: 200
   - **Content**:
     ```json
     {
-      "message_id": "00000000-0000-0000-0000-000000000000"
+      "items": [
+        {
+          "item_name": "String",
+          "price": 10
+        },
+        {
+          "item_name": "String",
+          "price": 5
+        }
+      ]
     }
     ```
     
