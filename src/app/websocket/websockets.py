@@ -7,10 +7,12 @@ from app.models import db, User, Message, MessageTypeEnum
 from app.models.user import UserContact, ContactStatusEnum
 from app.services.group_service import GroupService
 from app.services.user_service import UserService
+from app.services.item_service import ItemService
 
 socketio = SocketIO(cors_allowed_origins="*")
 group_service = GroupService()
 user_service = UserService()
+items_service = ItemService()
 
 user_sids = {}  # user_id → sid
 sid_users = {}  # sid → user_id
@@ -98,6 +100,11 @@ def send_char(data):
         is_group = group_service.does_group_exist(recipient_id)
         if not recipient_id:
             return
+
+        active_items = items_service.get_active_items(user_id)
+        for item in active_items:
+            if item['item'] == "Timeout":
+                return
 
         # Send typing notification directly to recipient's socket if they are online
         if recipient_id in user_sids:
@@ -288,11 +295,56 @@ def use_item(from_user_id, to_user_id, item_name):
     except Exception as e:
         print("Error emitting item_used event:", e)
 
+def chat_change_alone(user_id):
+    print("Chat Change", user_id)
+    """Handle chat Change"""
+    contacts = UserContact.query.filter_by(user_id=user_id).all()
+    print("Contacts for user:", contacts)
+    for contact in contacts:
+
+        # Notify the user that the contact has changed
+        if contact.contact_id in user_sids:
+            print("Emitting chat change for contact:", contact.contact_id)
+            emit('chat_change', {
+                'user_id': user_id,
+            }, room=user_sids[contact.contact_id], namespace='/')
+
 def new_contact(contact_id, user_id):
     print("New contact added", contact_id, user_id)
     """Handle new contact action"""
     if contact_id in user_sids:
         emit('chat_change', {
             'user_id': user_id,
-        }, room=user_sids[contact_id])
+        }, room=user_sids[contact_id], namespace='/')
 
+def updated_message(recipient_id, sender_id):
+    """Handle updated message action"""
+    print("Websocket Updated message:", recipient_id)
+    is_group = group_service.does_group_exist(recipient_id)
+    try:
+        if is_group:
+            members = group_service.get_group_members(recipient_id)
+            print("Group members:", members)
+            if not isinstance(members, list):
+                return
+            for member in members:
+                print("websocket member: ", member, type(member))
+                if member["contact_id"] in user_sids:
+                    emit('new_message', {
+                        'recipient_id': recipient_id,
+                        'is_group': is_group,
+                        'sender_id': sender_id,
+                    }, room=user_sids[member["contact_id"]], namespace='/')
+        else:
+            print("Single recipient:", recipient_id)
+            if recipient_id in user_sids:
+                print("Emitting updated_message to recipient:", recipient_id)
+            else:
+                print("Recipient not connected:", recipient_id)
+            emit('new_message', {
+                'recipient_id': recipient_id,
+                'is_group': is_group,
+                'sender_id': sender_id,
+            }, room=user_sids[recipient_id], namespace='/')
+    except Exception as e:
+        print("Error emitting updated_message event:", e)

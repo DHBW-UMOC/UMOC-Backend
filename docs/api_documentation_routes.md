@@ -508,26 +508,28 @@ Get all Members of a group
     - **Content**: `{"error": "'group_id' is required"}`
     - **Content**: `{"error": "User is not a member of the group"}`
 
+### Delete Message
+Delete a message from a chat.
+- **URL**: `/deleteMessage`
+- **Method**: `POST`
+- Request Body:
+  ```json
+  {
+    "message_id": "00000000-0000-0000-0000-000000000000"
+  }
+  ```
+
 
 ### Get Item List
 Get all Items that exist.
 - **URL**: `/getItemList`
 - **Method**: `GET`
-- **Response**:
+  - **Response**:
   - **Code**: 200
   - **Content**:
     ```json
     {
-      "items": [
-        {
-          "name": "String",
-          "price": 10
-        },
-        {
-          "name": "String",
-          "price": 5
-        }
-      ]
+      "message_id": "00000000-0000-0000-0000-000000000000"
     }
     ```
     
