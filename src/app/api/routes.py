@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import create_access_token
@@ -290,6 +291,11 @@ def save_message():
     content = data.get("content")
     is_group = group_service.does_group_exist(recipient_id)
 
+    active_items = items_service.get_active_items(user_id)
+    for item in active_items:
+        if item['item'] == "Timeout":
+            return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
+
     if not recipient_id:
         return jsonify({"error": "'recipient_id' is required"}), 400
     if not content:
@@ -379,7 +385,6 @@ def debug_contacts():
     }
 
     return jsonify(debug_info)
-
 
 # Group Endpoints
 

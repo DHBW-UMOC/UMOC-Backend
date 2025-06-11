@@ -7,10 +7,12 @@ from app.models import db, User, Message, MessageTypeEnum
 from app.models.user import UserContact, ContactStatusEnum
 from app.services.group_service import GroupService
 from app.services.user_service import UserService
+from app.services.item_service import ItemService
 
 socketio = SocketIO(cors_allowed_origins="*")
 group_service = GroupService()
 user_service = UserService()
+items_service = ItemService()
 
 user_sids = {}  # user_id → sid
 sid_users = {}  # sid → user_id
@@ -98,6 +100,11 @@ def send_char(data):
         is_group = group_service.does_group_exist(recipient_id)
         if not recipient_id:
             return
+
+        active_items = items_service.get_active_items(user_id)
+        for item in active_items:
+            if item['item'] == "Timeout":
+                return
 
         # Send typing notification directly to recipient's socket if they are online
         if recipient_id in user_sids:
