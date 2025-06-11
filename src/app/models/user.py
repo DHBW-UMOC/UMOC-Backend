@@ -1,7 +1,7 @@
 import enum
 import uuid
 from datetime import datetime
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Date
 from app import db
 
 class ContactStatusEnum(enum.Enum):
@@ -50,6 +50,7 @@ class UserContact(db.Model):
     time_out = db.Column(db.DateTime)
     streak = db.Column(db.Integer, default=0)
     continue_streak = db.Column(db.Boolean, default=True)
+    last_streak_update = db.Column(Date)
     
     user = db.relationship('User', foreign_keys=[user_id], backref='contacts')
     contact = db.relationship('User', foreign_keys=[contact_id])
