@@ -35,7 +35,7 @@ class ActiveItems(db.Model):
             'item': self.item,
             'user_id': self.user_id,
             'send_by_user_id': self.send_by_user_id,
-            'active_until': self.active_until.isoformat() if self.created_at else None,
+            'active_until': self.active_until.isoformat()
         }
 
 class Inventory(db.Model):

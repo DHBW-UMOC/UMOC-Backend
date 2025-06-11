@@ -41,6 +41,9 @@ class ItemService:
         if not inventory_item or inventory_item.quantity <= 0:
             return {"error": "Item not in inventory or quantity is zero"}
 
+        if ActiveItems.query.filter_by(item=item.name, user_id=to_user_id).first():
+            return {"error": "Item already active for this user"}
+
         active_item = ActiveItems(
             item=item.name,
             user_id=to_user_id,
@@ -68,6 +71,7 @@ class ItemService:
     def get_active_items(self, user_id):
         """Get all active items for a user"""
         active_items = ActiveItems.query.filter_by(user_id=user_id).all()
+        print(f"Active items for user {user_id}: {active_items} type: {type(active_items)}, {type(active_items[0]) if active_items else 'No items'}")
         return [item.to_dict() for item in active_items]
 
     def get_inventory(self, user_id):
@@ -110,6 +114,7 @@ class ItemService:
         self.create_item("Lightmode", 5)
         self.create_item("Alt_Chat", 5)
         self.create_item("Ad", 2)
+        self.create_item("Timeout", 7)
 
         try:
             db.session.commit()
