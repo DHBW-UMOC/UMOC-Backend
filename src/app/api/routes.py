@@ -1,3 +1,4 @@
+from datetime import datetime
 import re
 from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import create_access_token
@@ -120,6 +121,7 @@ def add_contact():
         return jsonify({"error": "'contact_name' is required"}), 400
 
     result = contact_service.add_contact_by_name(user_id, contact_name)
+    websockets.chat_change_alone(user_id)
     if "error" in result:
         return jsonify(result), 400
 
@@ -154,6 +156,7 @@ def change_contact():
         return jsonify({"error": f"Status '{status}' cannot be set manually. Allowed statuses: {', '.join(allowed_manual_statuses)}"}), 400
 
     result = contact_service.change_contact_status_by_user_id(user_id, contact_id, status)
+    websockets.chat_change_alone(user_id)
     if "error" in result:
         return jsonify(result), 500
 
@@ -189,6 +192,7 @@ def change_profile():
         if not old_password:
             return jsonify({"error": "'old_password' is required"}), 400
         result = user_service.change_password(user_id, old_password, new_value)
+    websockets.chat_change_alone(user_id)
         
     # Check if there was an error in the service call
     if "error" in result:
@@ -287,6 +291,11 @@ def save_message():
     content = data.get("content")
     is_group = group_service.does_group_exist(recipient_id)
 
+    active_items = items_service.get_active_items(user_id)
+    for item in active_items:
+        if item['item'] == "Timeout":
+            return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
+
     if not recipient_id:
         return jsonify({"error": "'recipient_id' is required"}), 400
     if not content:
@@ -329,7 +338,7 @@ def save_message():
                     continue_streak=True
                 ))
                 websockets.new_contact(cid, uid)
-    
+
     try:
         db.session.commit()
     except Exception as e:
@@ -376,7 +385,6 @@ def debug_contacts():
     }
 
     return jsonify(debug_info)
-
 
 # Group Endpoints
 
@@ -592,7 +600,7 @@ def get_active_items():
         return jsonify({"error": "User not found"}), 400
 
     active_items = items_service.get_active_items(user_id)
-    return jsonify({"active_items": [item.to_dict() for item in active_items]}), 200
+    return jsonify({"active_items": active_items}), 200
 
 
 @api_bp.route("/useItem", methods=['POST'])
@@ -634,3 +642,23 @@ def buy_item():
         return jsonify(result), 400
 
     return jsonify({"success": "Item bought successfully"}), 200
+
+@api_bp.route("/deleteMessage", methods=['POST'])
+@jwt_required()
+def delete_message():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    message_id = data.get('message_id')
+
+    if not message_id:
+        return jsonify({"error": "'message_id' is required"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    result = message_service.delete_message(user_id, message_id)
+    if "error" in result:
+        return jsonify(result), 400
+
+    recipient_id = message_service.get_recipient_id_by_message_id(message_id)
+    websockets.updated_message(recipient_id, user_id)
+    return jsonify({"success": "Message deleted successfully"}), 200
