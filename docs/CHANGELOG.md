@@ -1,3 +1,22 @@
+## Cahngelog - Max - 11.06.2025
+### Neue Endpunkte
+- **POST `deleteMessage`** – Löscht eine Nachricht in einem Chat.
+  - **Parameter**:
+    - `message_id`: ID der zu löschenden Nachricht.
+  - **Beispiel-Request**:
+    ```json
+    {
+      "message_id": "00000000-0000-0000-0000-000000000001"
+    }
+    ```
+  - **Beispiel-Antwort (200)**:
+    ```json
+    {
+      "success": "Message deleted successfully"
+    }
+    ```
+
+
 ## Changelog - Max - 04.06.2025
 
 ### API Changes

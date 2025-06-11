@@ -360,3 +360,36 @@ class MessageService:
             
         except Exception as _:
             return 0
+
+
+    def delete_message(self, user_id, message_id):
+        """Delete a message by its ID."""
+        try:
+            # Check if message exists
+            print(f"Attempting to delete message with ID: {message_id} by user {user_id}")
+            message = Message.query.filter_by(message_id=message_id).first()
+            if not message:
+                return {"error": "Message not found"}
+
+            # Delete the message
+            message.type = MessageTypeEnum.DELETED_TEXT
+            db.session.commit()
+
+            return {"success": True}
+
+        except Exception as e:
+            db.session.rollback()
+            return {"error": str(e)}
+
+    def get_recipient_id_by_message_id(self, message_id):
+        """Get the recipient ID for a given message ID."""
+        try:
+            message = Message.query.filter_by(message_id=message_id).first()
+            if not message:
+                return None
+
+            return message.recipient_user_id
+
+        except Exception as e:
+            db.session.rollback()
+            return None
