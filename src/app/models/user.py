@@ -6,7 +6,7 @@ from app import db
 
 class ContactStatusEnum(enum.Enum):
     FRIEND = "friend"
-    FFRIEND = "ffriend"  
+    FFRIEND = "fpending_friend"  
     UNFRIEND = "unfriend"
     PENDINGFRIEND = "pending_friend"
     LASTWORDS = "last_words"
@@ -29,6 +29,7 @@ class User(db.Model):
     session_id = db.Column(db.String)
     public_key = db.Column(db.String)
     encrypted_private_key = db.Column(db.String)
+    points = db.Column(db.Integer, default=0)
     is_online = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
