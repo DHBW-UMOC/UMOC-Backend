@@ -161,5 +161,8 @@ class UserService:
         for contact in contacts:
             streak += contact.streak
         return streak
+    
+    def update_streak(user_id):
+        pass
 
 
