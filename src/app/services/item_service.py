@@ -67,11 +67,10 @@ class ItemService:
         """Get list of all items"""
         items = Item.query.all()
         return [item.to_dict() for item in items]
-
+        
     def get_active_items(self, user_id):
         """Get all active items for a user"""
         active_items = ActiveItems.query.filter_by(user_id=user_id).all()
-        print(f"Active items for user {user_id}: {active_items} type: {type(active_items)}, {type(active_items[0]) if active_items else 'No items'}")
         return [item.to_dict() for item in active_items]
 
     def get_inventory(self, user_id):
