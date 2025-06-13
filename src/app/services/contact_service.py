@@ -115,8 +115,7 @@ class ContactService:
             status = ContactStatusEnum(status_str)
         except ValueError:
             return {"error": f"Invalid status value: {status_str}"}
-        
-        # Find both contact relationships
+          # Find both contact relationships
         # me -> contact
         contact1 = UserContact.query.filter_by(
             user_id=user.user_id, 
@@ -131,10 +130,23 @@ class ContactService:
         
         if not contact1:
             return {"error": "Contact not found"}
-          # Handle block status: blocker gets BLOCK, blocked user gets LASTWORDS
+            
+        # Ensure contact2 exists before trying to access its properties
+        if not contact2:
+            # Create reciprocal contact record if it doesn't exist
+            contact_user = self.user_service.get_user_by_id(contact_id)
+            if not contact_user:
+                return {"error": "Contact user not found"}
+                
+            contact2 = UserContact(
+                user_id=contact_id,
+                contact_id=user.user_id,
+                status=ContactStatusEnum.FRIEND  # Default status
+            )
+            db.session.add(contact2)          # Handle block status: blocker gets BLOCK, blocked user gets LASTWORDS
         if status == ContactStatusEnum.BLOCK:
             contact1.status = ContactStatusEnum.BLOCK
-            if contact2.status == ContactStatusEnum.BLOCK:
+            if contact2 and contact2.status == ContactStatusEnum.BLOCK:
                 pass
             else:
                 contact2.status = ContactStatusEnum.LASTWORDS
@@ -145,11 +157,11 @@ class ContactService:
                 db.session.rollback()
                 return {"error": f"Database error: {str(e)}"}        
             
-        elif status == ContactStatusEnum.UNBLOCK and contact2.status == ContactStatusEnum.BLOCK:
+        elif status == ContactStatusEnum.UNBLOCK and contact2 and contact2.status == ContactStatusEnum.BLOCK:
             return {"error": "The user cant be unblocked because of there is another rule preventing it"}
-        elif status == ContactStatusEnum.UNBLOCK and (contact2.status == ContactStatusEnum.LASTWORDS or contact2.status == ContactStatusEnum.FBLOCKED):            # If the other user has LASTWORDS or FBLOCKED, we can unblock
-            contact1.status = ContactStatusEnum.FRIEND
-            contact2.status = ContactStatusEnum.FRIEND
+        elif status == ContactStatusEnum.UNBLOCK and contact2 and (contact2.status == ContactStatusEnum.LASTWORDS or contact2.status == ContactStatusEnum.FBLOCKED):            # If the other user has LASTWORDS or FBLOCKED, we can unblock            contact1.status = ContactStatusEnum.FRIEND
+            if contact2:
+                contact2.status = ContactStatusEnum.FRIEND
             try:
                 db.session.commit()
                 return {"success": "The user has been unblocked"}

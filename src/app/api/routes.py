@@ -286,15 +286,14 @@ def save_message():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
     user = User.query.filter_by(user_id=user_id).first()
-
     recipient_id = data.get("recipient_id")
     content = data.get("content")
     is_group = group_service.does_group_exist(recipient_id)
-
     active_items = items_service.get_active_items(user_id)
-    for item in active_items:
-        if item['item'] == "Timeout":
-            return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
+    if active_items:  # Check if the list is not empty before iterating
+        for item in active_items:
+            if item['item'] == "Timeout":
+                return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
 
     if not recipient_id:
         return jsonify({"error": "'recipient_id' is required"}), 400
