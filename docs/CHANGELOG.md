@@ -1,4 +1,5 @@
-## Cahngelog - Max - 11.06.2025
+
+## Changelog - Max - 11.06.2025
 ### Neue Endpunkte
 - **POST `deleteMessage`** – Löscht eine Nachricht in einem Chat.
   - **Parameter**:
@@ -15,6 +16,75 @@
       "success": "Message deleted successfully"
     }
     ```
+    
+### Geänderte Endpunkte
+- **/getActiveItems**:
+  - Der Endpunkt hat jetzt nur noch 'item_name' und 'active_until'.
+  - Beispiel-Antwort:
+    ```json
+    {
+      "items": [
+        {
+          "item_name": "String",
+          "active_until": "2023-10-01T12:00:00.000Z"
+        }
+      ]
+    }
+    ```
+    
+- **/getInventory**:
+  - Der Endpunkt hat jetzt nur noch 'item_name' anstatt 'name'.
+  - Beispiel-Antwort:
+    ```json
+    {
+      "items": [
+        {
+          "item_name": "String",
+          "amount": 10
+        },
+        {
+          "item_name": "String",
+          "amount": 5
+        }
+      ]
+    }
+    ```
+    
+- **/getItemList**:
+    - Der Endpunkt hat jetzt nur noch 'item_name' anstatt 'name'.
+    - Beispiel-Antwort:
+        ```json
+        {
+        "items": [
+            {
+            "item_name": "timeout",
+            "price": 5
+            },
+            {
+            "item_name": "alt_background",
+            "price": 5
+            },
+            {
+            "item_name": "show_ads",
+            "price": 2
+            }
+        ]
+        }
+        ```
+      
+- **/getChatMessages**:
+  - Der Endpunkt hat jetzt den typen "deleted_text" neben "text" bekommen um ihn als gelöscht zu markieren.
+    
+    
+- **Websocket `item_used`**:
+  - Der Websocket hat jetzt nur noch 'item_name' und 'active_until'.
+  - Beispiel-Antwort:
+    ```json
+    {
+      "item_name": "lightmode",
+      "active_until": "2023-10-01T12:00:00.000Z"
+    }
+    ```
 
 
 ## Changelog - Max - 04.06.2025
@@ -27,61 +97,61 @@
     {
       "items": [
         {
-          "name": "Lightmode",
+          "item": "Lightmode",
           "price": 5
         },
         {
-          "name": "Alt_Chat",
+          "item": "Alt_Chat",
           "price": 5
         },
         {
-          "name": "Ad",
+          "item": "Ad",
           "price": 2
         }
       ]
     }
     ```
 
-  - **GET `/getInventory`**:
-    - Returns the inventory of the user.
-    - The inventory is a list of items that the user has bought.
-    - Example response:
-      ```json
-      {
-        "items": [
-          {
-            "name": "String",
-            "amount": 10
-          },
-          {
-            "name": "String",
-            "amount": 5
-          }
-        ]
-      }
-      ```
-    
-    - **GET `/getActiveItems`**:
-      - Returns a list of items that are currently active for the user.
-      - Example response:
+- **GET `/getInventory`**:
+  - Returns the inventory of the user.
+  - The inventory is a list of items that the user has bought.
+  - Example response:
     ```json
     {
-    "items": [
-      {
-          "item": "String",
-          "user_id": "00000000-0000-0000-0000-000000000000",
-          "send_by_user_id": "00000000-0000-0000-0000-000000000001",
-          "active_until": "2023-10-01T12:00:00.000000Z"
-      },
-      {
-          "item": "String",
-          "user_id": "00000000-0000-0000-0000-000000000002",
-          "send_by_user_id": "00000000-0000-0000-0000-000000000003",
-          "active_until": "2023-10-01T12:00:00.000000Z"
-      }
-    ]
+      "items": [
+        {
+          "name": "String",
+          "amount": 10
+        },
+        {
+          "name": "String",
+          "amount": 5
+        }
+      ]
     }
     ```
+    
+- **GET `/getActiveItems`**:
+  - Returns a list of items that are currently active for the user.
+  - Example response:
+     ```json
+     {
+        "items": [
+          {
+              "item": "String",
+              "user_id": "00000000-0000-0000-0000-000000000000",
+              "send_by_user_id": "00000000-0000-0000-0000-000000000001",
+              "active_until": "2023-10-01T12:00:00.000000Z"
+          },
+          {
+              "item": "String",
+              "user_id": "00000000-0000-0000-0000-000000000002",
+              "send_by_user_id": "00000000-0000-0000-0000-000000000003",
+              "active_until": "2023-10-01T12:00:00.000000Z"
+          }
+        ]
+     }
+     ```
     
 - **POST `/buyItem`**:
 - Allows users to buy an item from the list of available items.
@@ -161,11 +231,11 @@
   - Beispiel:
   ```json
   {
-      'sender_id': "00000000-0000-0000-0000-000000000000",
-      'sender_username': "MaxMustermann",
-      'char': "H",
-      'is_group': True | False,
-      'recipient_id': "00000000-0000-0000-0000-000000000000"
+      "sender_id": "00000000-0000-0000-0000-000000000000",
+      "sender_username": "MaxMustermann",
+      "char": "H",
+      "is_group": True | False,
+      "recipient_id": "00000000-0000-0000-0000-000000000000"
   }
   ```
 

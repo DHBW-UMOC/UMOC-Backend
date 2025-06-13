@@ -1,4 +1,3 @@
-from datetime import datetime
 import re
 from flask import Blueprint, current_app, request, jsonify
 from flask_jwt_extended import create_access_token
@@ -193,7 +192,7 @@ def change_profile():
             return jsonify({"error": "'old_password' is required"}), 400
         result = user_service.change_password(user_id, old_password, new_value)
     websockets.chat_change_alone(user_id)
-        
+
     # Check if there was an error in the service call
     if "error" in result:
         return jsonify(result), 400
@@ -290,10 +289,12 @@ def save_message():
     content = data.get("content")
     is_group = group_service.does_group_exist(recipient_id)
     active_items = items_service.get_active_items(user_id)
+
     if active_items:  # Check if the list is not empty before iterating
         for item in active_items:
-            if item['item'] == "Timeout":
-                return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
+        if item['item_name'] == "timeout":
+            return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
+
 
     if not recipient_id:
         return jsonify({"error": "'recipient_id' is required"}), 400
@@ -611,15 +612,15 @@ def use_item():
     to_user_id = data.get('to_user_id')
 
     if not item_name:
-        return jsonify({"error": "'item_id' is required"}), 400
+        return jsonify({"error": "'item_name' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
-    result = items_service.use_item(item_name, user_id, to_user_id)
+    result, date = items_service.use_item(item_name, user_id, to_user_id)
     if "error" in result:
         return jsonify(result), 400
 
-    websockets.use_item(user_id, to_user_id, item_name)
+    websockets.use_item(user_id, to_user_id, item_name, date)
 
     return jsonify({"success": "Item used successfully"}), 200
 
@@ -632,7 +633,7 @@ def buy_item():
     item_name = data.get('item_name')
 
     if not item_name:
-        return jsonify({"error": "'item_id' is required"}), 400
+        return jsonify({"error": "'item_name' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
