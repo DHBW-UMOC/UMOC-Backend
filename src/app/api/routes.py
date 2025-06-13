@@ -309,14 +309,16 @@ def save_message():
 
     # Check if sender is blocked by recipient
     if recipient_info and (recipient_info.status == ContactStatusEnum.BLOCK or recipient_info.status == ContactStatusEnum.FBLOCKED):
-        return jsonify({"error": "Unable to send message because of user rules"}), 403
-
-    # Save the message first
+        return jsonify({"error": "Unable to send message because of user rules"}), 403    # Save the message first
     result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
     
     if "error" in result:
         return jsonify(result), 400
 
+    # Update streak after successful message send (only for direct messages, not groups)
+    if not is_group:
+        contact_service.update_streak(user_id, recipient_id)
+    
     # Handle LASTWORDS status after successful message save
     is_last_words = recipient_info and recipient_info.status == ContactStatusEnum.LASTWORDS
     if is_last_words:
