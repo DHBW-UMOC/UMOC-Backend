@@ -1,3 +1,5 @@
+## Changelog - Max - 13.06.2025
+"flashbang" item wurde hinzugefügt. Preis: 1
 
 ## Changelog - Max - 11.06.2025
 ### Neue Endpunkte

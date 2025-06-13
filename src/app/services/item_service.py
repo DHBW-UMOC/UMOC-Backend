@@ -48,7 +48,7 @@ class ItemService:
             item=item.name,
             user_id=to_user_id,
             send_by_user_id=user_id,
-            active_until=datetime.utcnow() + timedelta(days=1)  # Active for 1 day
+            active_until=datetime.utcnow() + timedelta(minutes=1)  # Active for 1 day
         )
         db.session.add(active_item)
 
@@ -58,7 +58,7 @@ class ItemService:
 
         try:
             db.session.commit()
-            return {"success": True}, datetime.utcnow() + timedelta(days=1)
+            return {"success": True}, datetime.utcnow() + timedelta(minutes=1)
         except Exception as e:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}, None
@@ -113,6 +113,7 @@ class ItemService:
         self.create_item("timeout", 5)
         self.create_item("alt_background", 5)
         self.create_item("show_ads", 2)
+        self.create_item("flashbang", 1)
 
         try:
             db.session.commit()
