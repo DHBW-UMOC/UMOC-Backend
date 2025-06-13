@@ -252,6 +252,7 @@ class ContactService:
                 })
             self.update_streak(user.user_id, contact.contact_id)
         return contact_list
+
     def update_streak(self, user_id, contact_id):
         """Update streak if both users sent messages in the last 24 hours, reset if older."""
         try:
@@ -270,51 +271,22 @@ class ContactService:
                 print(f"DEBUG: No contact relationships found between users {user_id} and {contact_id}")
                 return {"error": "Contact relationship not found"}
             
+            # No longer creating missing contact relationships - if there's only one, work with what we have
             if len(contacts) < 2:
-                print(f"DEBUG: Expected 2 contact relationships, found {len(contacts)}")
-                # Try to repair the relationship by creating the missing one
-                if len(contacts) == 1:
-                    existing = contacts[0]
-                    # Determine which direction is missing
-                    if existing.user_id == user_id:
-                        missing_user_id = contact_id
-                        missing_contact_id = user_id
-                    else:
-                        missing_user_id = user_id
-                        missing_contact_id = contact_id
-                    
-                    # Create the missing relationship
-                    print(f"DEBUG: Creating missing contact relationship for {missing_user_id} -> {missing_contact_id}")
-                    new_contact = UserContact(
-                        user_id=missing_user_id,
-                        contact_id=missing_contact_id,
-                        status=existing.status,  # Use same status as existing
-                        streak=existing.streak,  # Use same streak as existing
-                        continue_streak=True,
-                        last_streak_update=existing.last_streak_update if hasattr(existing, 'last_streak_update') else None
-                    )
-                    db.session.add(new_contact)
-                    db.session.commit()
-                    
-                    # Refresh the contacts list
-                    contacts = UserContact.query.filter(
-                        or_(
-                            and_(UserContact.user_id == user_id, UserContact.contact_id == contact_id),
-                            and_(UserContact.user_id == contact_id, UserContact.contact_id == user_id)
-                        )
-                    ).all()
+                print(f"DEBUG: Found {len(contacts)} contact relationship(s). Continuing with existing relationship(s).")
             
-            # Check if streak was already updated today
-            # Safely check if the attribute exists and is set to today
-            already_updated_today = any(
+            # Check if streak was already updated AND INCREASED today
+            # Only block checking if a streak was successfully established/increased today
+            streak_increased_today = any(
                 hasattr(c, 'last_streak_update') and 
-                c.last_streak_update == today 
+                c.last_streak_update == today and
+                c.streak > 0  # Only consider it "updated" if streak is positive
                 for c in contacts
             )
             
-            if already_updated_today:
+            if streak_increased_today:
                 streak_value = next((c.streak for c in contacts), 0)
-                print(f"DEBUG: Streak already updated today for users {user_id} and {contact_id} - current streak: {streak_value}")
+                print(f"DEBUG: Streak already increased today for users {user_id} and {contact_id} - current streak: {streak_value}")
                 return {
                     "success": True,
                     "streak_already_updated": True,
