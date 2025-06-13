@@ -292,7 +292,7 @@ def save_message():
 
     active_items = items_service.get_active_items(user_id)
     for item in active_items:
-        if item['item'] == "Timeout":
+        if item['item_name'] == "timeout":
             return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
 
     if not recipient_id:

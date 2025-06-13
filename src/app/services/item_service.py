@@ -42,7 +42,7 @@ class ItemService:
             return {"error": "Item not in inventory or quantity is zero"}, None
 
         if ActiveItems.query.filter_by(item=item.name, user_id=to_user_id).first():
-            return {"error": "Item already active for this user"}
+            return {"error": "Item already active for this user"}, None
 
         active_item = ActiveItems(
             item=item.name,

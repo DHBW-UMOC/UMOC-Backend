@@ -103,7 +103,7 @@ def send_char(data):
 
         active_items = items_service.get_active_items(user_id)
         for item in active_items:
-            if item['item'] == "Timeout":
+            if item['item_name'] == "timeout":
                 return
 
         # Send typing notification directly to recipient's socket if they are online
