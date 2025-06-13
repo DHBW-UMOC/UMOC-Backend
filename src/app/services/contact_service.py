@@ -252,7 +252,6 @@ class ContactService:
                 })
             self.update_streak(user.user_id, contact.contact_id)
         return contact_list
-    
     def update_streak(self, user_id, contact_id):
         """Update streak if both users sent messages in the last 24 hours, reset if older."""
         try:
@@ -267,16 +266,59 @@ class ContactService:
                 )
             ).all()
             
-            if len(contacts) != 2:
-                print(f"DEBUG: Contact relationship not found. Found {len(contacts)} relationships")
+            if not contacts:
+                print(f"DEBUG: No contact relationships found between users {user_id} and {contact_id}")
                 return {"error": "Contact relationship not found"}
-              # Check if streak was already updated today
-            if contacts[0].last_streak_update == today:
-                print(f"DEBUG: Streak already updated today for users {user_id} and {contact_id} - current streak: {contacts[0].streak}")
+            
+            if len(contacts) < 2:
+                print(f"DEBUG: Expected 2 contact relationships, found {len(contacts)}")
+                # Try to repair the relationship by creating the missing one
+                if len(contacts) == 1:
+                    existing = contacts[0]
+                    # Determine which direction is missing
+                    if existing.user_id == user_id:
+                        missing_user_id = contact_id
+                        missing_contact_id = user_id
+                    else:
+                        missing_user_id = user_id
+                        missing_contact_id = contact_id
+                    
+                    # Create the missing relationship
+                    print(f"DEBUG: Creating missing contact relationship for {missing_user_id} -> {missing_contact_id}")
+                    new_contact = UserContact(
+                        user_id=missing_user_id,
+                        contact_id=missing_contact_id,
+                        status=existing.status,  # Use same status as existing
+                        streak=existing.streak,  # Use same streak as existing
+                        continue_streak=True,
+                        last_streak_update=existing.last_streak_update if hasattr(existing, 'last_streak_update') else None
+                    )
+                    db.session.add(new_contact)
+                    db.session.commit()
+                    
+                    # Refresh the contacts list
+                    contacts = UserContact.query.filter(
+                        or_(
+                            and_(UserContact.user_id == user_id, UserContact.contact_id == contact_id),
+                            and_(UserContact.user_id == contact_id, UserContact.contact_id == user_id)
+                        )
+                    ).all()
+            
+            # Check if streak was already updated today
+            # Safely check if the attribute exists and is set to today
+            already_updated_today = any(
+                hasattr(c, 'last_streak_update') and 
+                c.last_streak_update == today 
+                for c in contacts
+            )
+            
+            if already_updated_today:
+                streak_value = next((c.streak for c in contacts), 0)
+                print(f"DEBUG: Streak already updated today for users {user_id} and {contact_id} - current streak: {streak_value}")
                 return {
                     "success": True,
                     "streak_already_updated": True,
-                    "current_streak": contacts[0].streak
+                    "current_streak": streak_value
                 }
             
             # Check if both users sent messages to each other in last 24h
@@ -301,15 +343,24 @@ class ContactService:
             user = self.user_service.get_user_by_id(user_id)
             contact_user = self.user_service.get_user_by_id(contact_id)
             
+            if not user or not contact_user:
+                print(f"DEBUG: Could not find one or both users. User: {user is not None}, Contact: {contact_user is not None}")
+                return {"error": "One or both users not found"}
+            
+            # Check if points field exists on user model
+            has_points = hasattr(user, 'points')
+            
             if user_sent and contact_sent:
-                print(f"DEBUG: Updating streaks - before: {[c.streak for c in contacts]}")
+                print(f"DEBUG: Updating streaks - before: {[getattr(c, 'streak', 0) for c in contacts]}")
                 # Both users messaged in last 24h - increase streak and award points
                 for contact in contacts:
                     contact.streak += 1
                     contact.last_streak_update = today
                 
-                user.points += 1
-                contact_user.points += 1
+                # Only update points if the field exists
+                if has_points:
+                    user.points = getattr(user, 'points', 0) + 1
+                    contact_user.points = getattr(contact_user, 'points', 0) + 1
                 
                 db.session.commit()
                 print(f"DEBUG: Updated streaks - after: {[c.streak for c in contacts]}")
