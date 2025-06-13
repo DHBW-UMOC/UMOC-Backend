@@ -292,8 +292,8 @@ def save_message():
 
     if active_items:  # Check if the list is not empty before iterating
         for item in active_items:
-        if item['item_name'] == "timeout":
-            return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
+            if item['item_name'] == "timeout":
+                return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
 
 
     if not recipient_id:
