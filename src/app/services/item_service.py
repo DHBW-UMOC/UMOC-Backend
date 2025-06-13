@@ -69,8 +69,11 @@ class ItemService:
         return [item.to_dict() for item in items]
         
     def get_active_items(self, user_id):
-        """Get all active items for a user"""
-        active_items = ActiveItems.query.filter_by(user_id=user_id).all()
+        """Get all active items for a user that are still active"""
+        active_items = ActiveItems.query.filter(
+            ActiveItems.user_id == user_id,
+            ActiveItems.active_until > datetime.utcnow() + timedelta(hours=2)  # Active for at least 1 minute
+        ).all()
         return [item.to_dict() for item in active_items]
 
     def get_inventory(self, user_id):
