@@ -48,7 +48,7 @@ class ItemService:
             item=item.name,
             user_id=to_user_id,
             send_by_user_id=user_id,
-            active_until=datetime.utcnow() + timedelta(minutes=1)  # Active for 1 day
+            active_until=datetime.utcnow() + timedelta(hours=2) + timedelta(minutes=1) # Active for 1 Minute
         )
         db.session.add(active_item)
 
@@ -58,7 +58,7 @@ class ItemService:
 
         try:
             db.session.commit()
-            return {"success": True}, datetime.utcnow() + timedelta(minutes=1)
+            return {"success": True}, datetime.utcnow() + timedelta(hours=2) + timedelta(minutes=1)
         except Exception as e:
             db.session.rollback()
             return {"error": f"Database error: {str(e)}"}, None
