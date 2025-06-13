@@ -1,7 +1,7 @@
 import enum
 import uuid
 from datetime import datetime
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Date
 from app import db
 
 class ContactStatusEnum(enum.Enum):
@@ -29,6 +29,7 @@ class User(db.Model):
     session_id = db.Column(db.String)
     public_key = db.Column(db.String)
     encrypted_private_key = db.Column(db.String)
+    points = db.Column(db.Integer, default=0)
     is_online = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
