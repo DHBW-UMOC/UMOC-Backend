@@ -275,7 +275,7 @@ def get_own_profile():
         "user_id": user.user_id,
         "username": user.username,
         "profile_picture": user.profile_picture,
-        "streak": user_service.get_user_streak(user_id),
+        "points": user_service.get_user_points(user_id),
     })
 
 
