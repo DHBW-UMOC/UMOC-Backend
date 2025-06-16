@@ -140,6 +140,6 @@ jobs:
           
           docker buildx create --use
           docker buildx build \
-            --platform linux/arm64 \
+            --platform linux/amd64 \
             -t ghcr.io/max-rohrhirsch/umoc-backend:latest . \
             --push
