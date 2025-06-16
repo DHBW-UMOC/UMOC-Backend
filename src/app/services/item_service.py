@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from app import db
 from app.models.items import Item, ActiveItems, Inventory
+import app.services.user_service as uservice
 
 
 class ItemService:
@@ -12,16 +13,24 @@ class ItemService:
     def buy_item(self, item_name, user_id):
         """user buys item and add to inventory"""
         item = Item.query.filter_by(name=item_name).first()
+        user = uservice.get_user_by_id(user_id)
+
         if not item:
             return {"error": "Item not found"}
 
         # TODO: Check if user has enough Points to buy the item
+        if item.price > user.points:
+            return {"error": "Not enough points to buy the item"}
 
         inventory_item = Inventory.query.filter_by(item_id=item.id, user_id=user_id).first()
         if inventory_item:
+            #decrease user points
+            user.points -= item.price
             inventory_item.quantity += 1
         else:
             inventory_item = Inventory(item_id=item.id, user_id=user_id, quantity=1)
+            #decrease user points
+            user.points -= item.price
             db.session.add(inventory_item)
 
         try:

@@ -162,6 +162,12 @@ class UserService:
             streak += contact.streak
         return streak
     
+    def get_user_points(self, user_id):
+        user = User.query.filter_by(user_id=user_id).first()
+        if not user:
+            return {"error": "User not found"}
+        return user.points
+    
     def update_streak(user_id):
         pass
 
