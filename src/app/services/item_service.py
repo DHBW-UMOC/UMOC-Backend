@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 from app import db
 from app.models.items import Item, ActiveItems, Inventory
-import app.services.user_service as uservice
+from app.services.user_service import UserService
 
 
 class ItemService:
@@ -13,7 +13,7 @@ class ItemService:
     def buy_item(self, item_name, user_id):
         """user buys item and add to inventory"""
         item = Item.query.filter_by(name=item_name).first()
-        user = uservice.get_user_by_id(user_id)
+        user = UserService.get_user_by_id(user_id)
 
         if not item:
             return {"error": "Item not found"}
