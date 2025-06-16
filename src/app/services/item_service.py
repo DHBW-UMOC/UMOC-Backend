@@ -54,7 +54,8 @@ class ItemService:
         if not inventory_item or inventory_item.quantity <= 0:
             return {"error": "Item not in inventory or quantity is zero"}, None
 
-        if ActiveItems.query.filter_by(item=item.name, user_id=to_user_id).first():
+        if ActiveItems.query.filter_by(item=item.name, user_id=to_user_id) \
+                .filter(ActiveItems.active_until > datetime.utcnow() + timedelta(hours=2)).first():
             return {"error": "Item already active for this user"}, None
 
         active_item = ActiveItems(
