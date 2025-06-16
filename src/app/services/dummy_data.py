@@ -81,7 +81,7 @@ def insert_example_data():
         UserContact(user_id=user1.user_id, contact_id=user2.user_id, status=ContactStatusEnum.FRIEND),
         UserContact(user_id=user1.user_id, contact_id=user3.user_id, status=ContactStatusEnum.NEW),
         UserContact(user_id=user2.user_id, contact_id=user1.user_id, status=ContactStatusEnum.FRIEND),
-        UserContact(user_id=user2.user_id, contact_id=user3.user_id, status=ContactStatusEnum.BLOCKED),
+        UserContact(user_id=user2.user_id, contact_id=user3.user_id, status=ContactStatusEnum.BLOCK),
         UserContact(user_id=user1.user_id, contact_id=user4.user_id, status=ContactStatusEnum.NEW),
         UserContact(user_id=user1.user_id, contact_id=user6.user_id, status=ContactStatusEnum.NEW),
         UserContact(user_id=user2.user_id, contact_id=user4.user_id, status=ContactStatusEnum.NEW),

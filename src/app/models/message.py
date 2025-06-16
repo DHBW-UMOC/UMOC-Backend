@@ -7,6 +7,7 @@ from app import db
 
 class MessageTypeEnum(enum.Enum):
     TEXT = "text"
+    DELETED_TEXT = "deleted_text"
     IMAGE = "image"
     ITEM = "item"
     LOCATION = "location"

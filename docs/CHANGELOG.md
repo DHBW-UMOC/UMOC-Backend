@@ -1,3 +1,94 @@
+## Changelog - Max - 13.06.2025
+"flashbang" item wurde hinzugefügt. Preis: 1
+
+## Changelog - Max - 11.06.2025
+### Neue Endpunkte
+- **POST `deleteMessage`** – Löscht eine Nachricht in einem Chat.
+  - **Parameter**:
+    - `message_id`: ID der zu löschenden Nachricht.
+  - **Beispiel-Request**:
+    ```json
+    {
+      "message_id": "00000000-0000-0000-0000-000000000001"
+    }
+    ```
+  - **Beispiel-Antwort (200)**:
+    ```json
+    {
+      "success": "Message deleted successfully"
+    }
+    ```
+    
+### Geänderte Endpunkte
+- **/getActiveItems**:
+  - Der Endpunkt hat jetzt nur noch 'item_name' und 'active_until'.
+  - Beispiel-Antwort:
+    ```json
+    {
+      "items": [
+        {
+          "item_name": "String",
+          "active_until": "2023-10-01T12:00:00.000Z"
+        }
+      ]
+    }
+    ```
+    
+- **/getInventory**:
+  - Der Endpunkt hat jetzt nur noch 'item_name' anstatt 'name'.
+  - Beispiel-Antwort:
+    ```json
+    {
+      "items": [
+        {
+          "item_name": "String",
+          "amount": 10
+        },
+        {
+          "item_name": "String",
+          "amount": 5
+        }
+      ]
+    }
+    ```
+    
+- **/getItemList**:
+    - Der Endpunkt hat jetzt nur noch 'item_name' anstatt 'name'.
+    - Beispiel-Antwort:
+        ```json
+        {
+        "items": [
+            {
+            "item_name": "timeout",
+            "price": 5
+            },
+            {
+            "item_name": "alt_background",
+            "price": 5
+            },
+            {
+            "item_name": "show_ads",
+            "price": 2
+            }
+        ]
+        }
+        ```
+      
+- **/getChatMessages**:
+  - Der Endpunkt hat jetzt den typen "deleted_text" neben "text" bekommen um ihn als gelöscht zu markieren.
+    
+    
+- **Websocket `item_used`**:
+  - Der Websocket hat jetzt nur noch 'item_name' und 'active_until'.
+  - Beispiel-Antwort:
+    ```json
+    {
+      "item_name": "lightmode",
+      "active_until": "2023-10-01T12:00:00.000Z"
+    }
+    ```
+
+
 ## Changelog - Max - 04.06.2025
 
 ### API Changes
@@ -8,61 +99,61 @@
     {
       "items": [
         {
-          "name": "Lightmode",
+          "item": "Lightmode",
           "price": 5
         },
         {
-          "name": "Alt_Chat",
+          "item": "Alt_Chat",
           "price": 5
         },
         {
-          "name": "Ad",
+          "item": "Ad",
           "price": 2
         }
       ]
     }
     ```
 
-  - **GET `/getInventory`**:
-    - Returns the inventory of the user.
-    - The inventory is a list of items that the user has bought.
-    - Example response:
-      ```json
-      {
-        "items": [
-          {
-            "name": "String",
-            "amount": 10
-          },
-          {
-            "name": "String",
-            "amount": 5
-          }
-        ]
-      }
-      ```
-    
-    - **GET `/getActiveItems`**:
-      - Returns a list of items that are currently active for the user.
-      - Example response:
+- **GET `/getInventory`**:
+  - Returns the inventory of the user.
+  - The inventory is a list of items that the user has bought.
+  - Example response:
     ```json
     {
-    "items": [
-      {
-          "item": "String",
-          "user_id": "00000000-0000-0000-0000-000000000000",
-          "send_by_user_id": "00000000-0000-0000-0000-000000000001",
-          "active_until": "2023-10-01T12:00:00.000000Z"
-      },
-      {
-          "item": "String",
-          "user_id": "00000000-0000-0000-0000-000000000002",
-          "send_by_user_id": "00000000-0000-0000-0000-000000000003",
-          "active_until": "2023-10-01T12:00:00.000000Z"
-      }
-    ]
+      "items": [
+        {
+          "name": "String",
+          "amount": 10
+        },
+        {
+          "name": "String",
+          "amount": 5
+        }
+      ]
     }
     ```
+    
+- **GET `/getActiveItems`**:
+  - Returns a list of items that are currently active for the user.
+  - Example response:
+     ```json
+     {
+        "items": [
+          {
+              "item": "String",
+              "user_id": "00000000-0000-0000-0000-000000000000",
+              "send_by_user_id": "00000000-0000-0000-0000-000000000001",
+              "active_until": "2023-10-01T12:00:00.000000Z"
+          },
+          {
+              "item": "String",
+              "user_id": "00000000-0000-0000-0000-000000000002",
+              "send_by_user_id": "00000000-0000-0000-0000-000000000003",
+              "active_until": "2023-10-01T12:00:00.000000Z"
+          }
+        ]
+     }
+     ```
     
 - **POST `/buyItem`**:
 - Allows users to buy an item from the list of available items.
@@ -108,7 +199,7 @@
 **actions** you can **USE**! -> this is what you **SEND**! a user **cannot have these as status!!**:
 - `friend`: Add as friend or accept friend request
 - `blocked`: Block the contact
-- `deblocked`: Unblock the contact
+- `unblock`: Unblock the contact
 - `unfirend`: Unfriend the contact
 
 **states** you **cannot** use -> these are returned as a state -> DO NOT USE THESE:
@@ -122,11 +213,11 @@
 
 ### API Changes
 - **POST `/changeContact`**:
-  - **Limited manual status changes** to `friend`, `blocked`, and `deblocked` only
+  - **Limited manual status changes** to `friend`, `block`, and `unblock` only
   - System-controlled statuses (`new`, `last_words`, `timeout`, etc.) cannot be set manually
   - More specific success responses based on action:
     - `{"success": "The user has been blocked"}`
-    - `{"success": "The user has been deblocked"}`
+    - `{"success": "The user has been unblocked"}`
     - `{"success": "You are now friends!"}`
     - `{"success": "Friend request sent!"}`
   - Enhanced validation with descriptive error messages
@@ -142,11 +233,11 @@
   - Beispiel:
   ```json
   {
-      'sender_id': "00000000-0000-0000-0000-000000000000",
-      'sender_username': "MaxMustermann",
-      'char': "H",
-      'is_group': True | False,
-      'recipient_id': "00000000-0000-0000-0000-000000000000"
+      "sender_id": "00000000-0000-0000-0000-000000000000",
+      "sender_username": "MaxMustermann",
+      "char": "H",
+      "is_group": True | False,
+      "recipient_id": "00000000-0000-0000-0000-000000000000"
   }
   ```
 

@@ -30,7 +30,7 @@ export interface Contact {
   contact_id: string; // UUID
   name: string;
   picture_url: string; // URL
-  status: 'FRIEND' | 'BLOCKED' | 'NEW' | 'TIMEOUT' | 'LASTWORDS';
+  status: 'FRIEND' | 'BLOCK' | 'NEW' | 'TIMEOUT' | 'LASTWORDS';
   streak: number | null;
 }
 ```
@@ -158,13 +158,12 @@ Change the status of a contact.
   ```json
   {
     "contact_id": "00000000-0000-0000-0000-000000000000",
-    "status": "friend | blocked | deblocked"
+    "status": "friend | block | unblock"
   }
   ```
 - **Status Description**:
-  - `friend`: Add as friend or accept friend request
-  - `blocked`: Block the contact
-  - `deblocked`: Unblock the contact
+  - `friend`: Add as friend or accept friend request  - `block`: Block the contact
+  - `unblock`: Unblock the contact
   - `unfirend`: Unfriend the contact
   - System-controlled statuses (cannot be set manually):
     - `new`: Newly added contact
@@ -175,9 +174,8 @@ Change the status of a contact.
     - `ntcon`: Not connected
 
 - **Success Response**:
-  - **Code**: 200
-    - **Content**: `{"success": "The user has been blocked"}`
-    - **Content**: `{"success": "The user has been deblocked"}`
+  - **Code**: 200    - **Content**: `{"success": "The user has been blocked"}`
+    - **Content**: `{"success": "The user has been unblocked"}`
     - **Content**: `{"success": "You are now friends!"}`
     - **Content**: `{"success": "Friend request sent!"}`
     - **Content**: `{"success": true}`
@@ -186,9 +184,9 @@ Change the status of a contact.
   - **Code**: 400
     - **Content**: `{"error": "'contact_id' is required"}`
     - **Content**: `{"error": "'status' is required"}`
-    - **Content**: `{"error": "Invalid status. Valid options: friend, unfriend, pending_friend, last_words, blocked, fblocked, deblocked, new, timeout, ntcon"}`
+    - **Content**: `{"error": "Invalid status. Valid options: friend, unfriend, pending_friend, last_words, block, fblocked, unblock, new, timeout, ntcon"}`
     - **Content**: `{"error": "Status 'new' cannot be set manually. It is controlled by the system."}`
-    - **Content**: `{"error": "Status 'pending_friend' cannot be set manually. Allowed statuses: friend, blocked, deblocked"}`
+    - **Content**: `{"error": "Status 'pending_friend' cannot be set manually. Allowed statuses: friend, block, unblock"}`
     - **Content**: `{"error": "Contact not found"}`
     - **Content**: `{"error": "The user cant be unblocked because of there is another rule preventing it"}`
     - **Content**: `{"error": "The user cant be added as a friend because of there is another rule preventing it"}`
@@ -285,7 +283,7 @@ Retrieve all messages between the authenticated user and a specific contact.
             "sender_user_id":"00000000-0000-0000-0000-000000000000",
             "sender_username":"String",
             "timestamp":"0000-00-00T00:00:00.000000",
-            "type":"TEXT | IMAGE | ITEM | LOCATION | AUDIO | VIDEO"
+            "type":"text | deleted_text | item"
           },
           {
             "content":"String",
@@ -294,7 +292,7 @@ Retrieve all messages between the authenticated user and a specific contact.
             "sender_user_id":"00000000-0000-0000-0000-000000000000",
             "sender_username":"String",
             "timestamp":"0000-00-00T00:00:00.000000",
-            "type":"TEXT | IMAGE | ITEM | LOCATION | AUDIO | VIDEO"
+            "type":"text | deleted_text | item"
           }
       ]
     }
@@ -510,6 +508,17 @@ Get all Members of a group
     - **Content**: `{"error": "'group_id' is required"}`
     - **Content**: `{"error": "User is not a member of the group"}`
 
+### Delete Message
+Delete a message from a chat.
+- **URL**: `/deleteMessage`
+- **Method**: `POST`
+- Request Body:
+  ```json
+  {
+    "message_id": "00000000-0000-0000-0000-000000000000"
+  }
+  ```
+
 
 ### Get Item List
 Get all Items that exist.
@@ -522,11 +531,11 @@ Get all Items that exist.
     {
       "items": [
         {
-          "name": "String",
+          "item_name": "String",
           "price": 10
         },
         {
-          "name": "String",
+          "item_name": "String",
           "price": 5
         }
       ]
@@ -544,11 +553,11 @@ Get all Items that the user has.
     {
       "items": [
         {
-          "name": "String",
+          "item_name": "String",
           "amount": 10
         },
         {
-          "name": "String",
+          "item_name": "String",
           "amount": 5
         }
       ]
@@ -566,13 +575,13 @@ Get all Items that effect the user.
 {
   "items": [
     {
-        "item": "String",
+        "item_name": "String",
         "user_id": "00000000-0000-0000-0000-000000000000",
         "send_by_user_id": "00000000-0000-0000-0000-000000000001",
         "active_until": "2023-10-01T12:00:00.000000Z"
     },
     {
-        "item": "String",
+        "item_name": "String",
         "user_id": "00000000-0000-0000-0000-000000000002",
         "send_by_user_id": "00000000-0000-0000-0000-000000000003",
         "active_until": "2023-10-01T12:00:00.000000Z"
@@ -817,9 +826,7 @@ event: "item_used"
 - **Server Payload**:
 ```json
 {
-  "item_name": "Lightmode",
-  "from_user_id": "00000000-0000-0000-0000-000000000001",
-  "send_by_user_id": "00000000-0000-0000-0000-000000000002",
+  "item_name": "lightmode",
   "active_until": "2023-10-01T12:00:00.000000Z"
 }
 ```

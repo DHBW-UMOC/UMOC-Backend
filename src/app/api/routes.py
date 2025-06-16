@@ -120,6 +120,7 @@ def add_contact():
         return jsonify({"error": "'contact_name' is required"}), 400
 
     result = contact_service.add_contact_by_name(user_id, contact_name)
+    websockets.chat_change_alone(user_id)
     if "error" in result:
         return jsonify(result), 400
 
@@ -148,12 +149,13 @@ def change_contact():
     if status in ["new", "last_words", "timeout"]:
         return jsonify({"error": f"Status '{status}' cannot be set manually. It is controlled by the system."}), 400
 
-    # Only allow manual setting of friend, blocked, and timeout
-    allowed_manual_statuses = ["friend", "blocked", "deblocked"]
+    # Only allow manual setting of friend, block, and timeout
+    allowed_manual_statuses = ["friend", "block", "unblock", "unfriend"]
     if status not in allowed_manual_statuses:
         return jsonify({"error": f"Status '{status}' cannot be set manually. Allowed statuses: {', '.join(allowed_manual_statuses)}"}), 400
 
     result = contact_service.change_contact_status_by_user_id(user_id, contact_id, status)
+    websockets.chat_change_alone(user_id)
     if "error" in result:
         return jsonify(result), 500
 
@@ -189,7 +191,8 @@ def change_profile():
         if not old_password:
             return jsonify({"error": "'old_password' is required"}), 400
         result = user_service.change_password(user_id, old_password, new_value)
-        
+    websockets.chat_change_alone(user_id)
+
     # Check if there was an error in the service call
     if "error" in result:
         return jsonify(result), 400
@@ -272,7 +275,7 @@ def get_own_profile():
         "user_id": user.user_id,
         "username": user.username,
         "profile_picture": user.profile_picture,
-        "streak": user_service.get_user_streak(user_id),
+        "points": user_service.get_user_points(user_id),
     })
 
 
@@ -282,10 +285,16 @@ def save_message():
     user_id = get_jwt_identity()
     data = request.json if request.is_json else request.args
     user = User.query.filter_by(user_id=user_id).first()
-
     recipient_id = data.get("recipient_id")
     content = data.get("content")
     is_group = group_service.does_group_exist(recipient_id)
+    active_items = items_service.get_active_items(user_id)
+
+    if active_items:  # Check if the list is not empty before iterating
+        for item in active_items:
+            if item['item_name'] == "timeout":
+                return jsonify({"error": "You are currently in timeout and cannot send messages", "until": item['active_until']}), 403
+
 
     if not recipient_id:
         return jsonify({"error": "'recipient_id' is required"}), 400
@@ -299,39 +308,50 @@ def save_message():
         return jsonify({"error": "recipient information could not be gathered"}), 400
 
     # Check if sender is blocked by recipient
-    if recipient_info and (recipient_info.status == ContactStatusEnum.BLOCKED or recipient_info.status == ContactStatusEnum.FBLOCKED):
-        return jsonify({"error": "Unable to send message because of user rules"}), 403
-    # Check if sender is on last message with recipient
-    elif recipient_info and recipient_info.status == ContactStatusEnum.LASTWORDS:
-        result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
-        recipient_info.status = ContactStatusEnum.FBLOCKED
-        db.session.commit()
-        return jsonify({"success": "Your last message has been send you are now blocked"}), 200
-    else:
-        result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
-        websockets.send_message(user, recipient_id, content, is_group=is_group)
+    if recipient_info and (recipient_info.status == ContactStatusEnum.BLOCK or recipient_info.status == ContactStatusEnum.FBLOCKED):
+        return jsonify({"error": "Unable to send message because of user rules"}), 403    # Save the message first
+    result = message_service.save_message(user_id, recipient_id, content, is_group=is_group)
     
     if "error" in result:
         return jsonify(result), 400
 
-    # Kontakte automatisch hinzufügen (beidseitig)
-    for uid, cid in [(user_id, recipient_id), (recipient_id, user_id)]:
-        exists = UserContact.query.filter_by(user_id=uid, contact_id=cid).first()
-        if not exists:
-            db.session.add(UserContact(
-                user_id=uid,
-                contact_id=cid,
-                status=ContactStatusEnum.NEW,
-                streak=0,
-                continue_streak=True
-            ))
+    # Update streak after successful message send (only for direct messages, not groups)
+    if not is_group:
+        contact_service.update_streak(user_id, recipient_id)
+    
+    # Handle LASTWORDS status after successful message save
+    is_last_words = recipient_info and recipient_info.status == ContactStatusEnum.LASTWORDS
+    if is_last_words:
+        recipient_info.status = ContactStatusEnum.FBLOCKED
+        db.session.commit()    # Send websocket message (unless it was last words)
+    if not is_last_words:
+        websockets.send_message(user, recipient_id, content, is_group=is_group)
+
+    # Kontakte automatisch hinzufügen (beidseitig) - only for direct messages, not groups
+    if not is_group:
+        for uid, cid in [(user_id, recipient_id), (recipient_id, user_id)]:
+            exists = UserContact.query.filter_by(user_id=uid, contact_id=cid).first()
+            if not exists:
+                db.session.add(UserContact(
+                    user_id=uid,
+                    contact_id=cid,
+                    status=ContactStatusEnum.NEW,
+                    streak=0,
+                    continue_streak=True
+                ))
+                websockets.new_contact(cid, uid)
+
     try:
         db.session.commit()
     except Exception as e:
         db.session.rollback()
         return jsonify({"error": f"Contact add failed: {str(e)}"}), 500
 
-    return jsonify({"success": "Message saved successfully", "message_id": result["message_id"]})
+    # Return appropriate response based on status
+    if is_last_words:
+        return jsonify({"success": "Your last message has been send you are now blocked"}), 200
+    else:
+        return jsonify({"success": "Message saved successfully", "message_id": result["message_id"]})
 
 
 # Simple test endpoint
@@ -368,7 +388,6 @@ def debug_contacts():
 
     return jsonify(debug_info)
 
-
 # Group Endpoints
 
 @api_bp.route("/createGroup", methods=['POST'])
@@ -390,9 +409,17 @@ def create_group():
     
     if "error" in result:
         return jsonify(result), 400
-    websockets.chat_change("create_group", result["group_id"],
-                           {"group_pic": "https://cdn6.aptoide.com/imgs/1/2/2/1221bc0bdd2354b42b293317ff2adbcf_icon.png", "group_name": "New Group", "group_id": result["group_id"]})
-    return jsonify({"success": "Group created successfully", "group_id": result["group_id"]}), 201
+    
+    # Create complete group structure like in get_groups_by_user_id
+    group_data = {
+        **result["group"].to_dict(),
+        "am_admin": result["am_admin"],
+        "members": result["members"]
+    }
+    
+    # Pass the result directly to websocket (let it handle serialization)
+    websockets.chat_change("create_group", result["group"].group_id, group_data)
+    return jsonify({"group": group_data}), 201
 
 
 @api_bp.route("/deleteGroup", methods=['POST'])
@@ -575,7 +602,7 @@ def get_active_items():
         return jsonify({"error": "User not found"}), 400
 
     active_items = items_service.get_active_items(user_id)
-    return jsonify({"active_items": [item.to_dict() for item in active_items]}), 200
+    return jsonify({"active_items": active_items}), 200
 
 
 @api_bp.route("/useItem", methods=['POST'])
@@ -587,15 +614,15 @@ def use_item():
     to_user_id = data.get('to_user_id')
 
     if not item_name:
-        return jsonify({"error": "'item_id' is required"}), 400
+        return jsonify({"error": "'item_name' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
-    result = items_service.use_item(item_name, user_id, to_user_id)
+    result, date = items_service.use_item(item_name, user_id, to_user_id)
     if "error" in result:
         return jsonify(result), 400
 
-    websockets.use_item(user_id, to_user_id, item_name)
+    websockets.use_item(user_id, to_user_id, item_name, date)
 
     return jsonify({"success": "Item used successfully"}), 200
 
@@ -608,7 +635,7 @@ def buy_item():
     item_name = data.get('item_name')
 
     if not item_name:
-        return jsonify({"error": "'item_id' is required"}), 400
+        return jsonify({"error": "'item_name' is required"}), 400
     if not user_service.does_user_exist(user_id):
         return jsonify({"error": "User not found"}), 400
 
@@ -617,3 +644,23 @@ def buy_item():
         return jsonify(result), 400
 
     return jsonify({"success": "Item bought successfully"}), 200
+
+@api_bp.route("/deleteMessage", methods=['POST'])
+@jwt_required()
+def delete_message():
+    user_id = get_jwt_identity()
+    data = request.json if request.is_json else request.args
+    message_id = data.get('message_id')
+
+    if not message_id:
+        return jsonify({"error": "'message_id' is required"}), 400
+    if not user_service.does_user_exist(user_id):
+        return jsonify({"error": "User not found"}), 400
+
+    result = message_service.delete_message(user_id, message_id)
+    if "error" in result:
+        return jsonify(result), 400
+
+    recipient_id = message_service.get_recipient_id_by_message_id(message_id)
+    websockets.updated_message(recipient_id, user_id)
+    return jsonify({"success": "Message deleted successfully"}), 200

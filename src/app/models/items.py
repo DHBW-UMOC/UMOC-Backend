@@ -14,8 +14,7 @@ class Item(db.Model):
 
     def to_dict(self):
         return {
-            'id': self.id,
-            'name': self.name,
+            'item_name': self.name,
             'price': self.price,
         }
 
@@ -32,10 +31,8 @@ class ActiveItems(db.Model):
 
     def to_dict(self):
         return {
-            'item': self.item,
-            'user_id': self.user_id,
-            'send_by_user_id': self.send_by_user_id,
-            'active_until': self.active_until.isoformat() if self.created_at else None,
+            'item_name': self.item,
+            'active_until': self.active_until.isoformat(),
         }
 
 class Inventory(db.Model):
@@ -51,8 +48,7 @@ class Inventory(db.Model):
 
     def to_dict(self):
         return {
-            'item_id': self.item_id,
-            'name': Item.query.get(self.item_id).name if self.item_id else None,
+            'item_name': Item.query.get(self.item_id).name if self.item_id else None,
             'user_id': self.user_id,
             'quantity': self.quantity,
         }

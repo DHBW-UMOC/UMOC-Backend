@@ -1,17 +1,18 @@
 import enum
 import uuid
 from datetime import datetime
-from sqlalchemy import Enum
+from sqlalchemy import Enum, Date
 from app import db
 
 class ContactStatusEnum(enum.Enum):
     FRIEND = "friend"
+    FFRIEND = "fpending_friend"  
     UNFRIEND = "unfriend"
     PENDINGFRIEND = "pending_friend"
     LASTWORDS = "last_words"
-    BLOCKED = "blocked"
+    BLOCK = "block"
     FBLOCKED = "fblocked"
-    DEBLOCKED = "deblocked"
+    UNBLOCK = "unblock"
     NEW = "new"
     TIMEOUT = "timeout"
     NTCON = "ntcon"  # Not connected
@@ -28,6 +29,7 @@ class User(db.Model):
     session_id = db.Column(db.String)
     public_key = db.Column(db.String)
     encrypted_private_key = db.Column(db.String)
+    points = db.Column(db.Integer, default=0)
     is_online = db.Column(db.Boolean, default=False)
 
     def to_dict(self):
@@ -48,6 +50,7 @@ class UserContact(db.Model):
     time_out = db.Column(db.DateTime)
     streak = db.Column(db.Integer, default=0)
     continue_streak = db.Column(db.Boolean, default=True)
+    last_streak_update = db.Column(db.Date)
     
     user = db.relationship('User', foreign_keys=[user_id], backref='contacts')
     contact = db.relationship('User', foreign_keys=[contact_id])
