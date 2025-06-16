@@ -1,9 +1,14 @@
 from datetime import datetime, timedelta
 from app import db
 from app.models.items import Item, ActiveItems, Inventory
+from app.services.user_service import UserService
 
 
 class ItemService:
+
+    def __init__(self):
+        self.user_service = UserService()
+
     def create_item(self, name, price):
         new_item = Item(name=name, price=price)
         db.session.add(new_item)
@@ -12,10 +17,14 @@ class ItemService:
     def buy_item(self, item_name, user_id):
         """user buys item and add to inventory"""
         item = Item.query.filter_by(name=item_name).first()
+        user = self.user_service.get_user_by_id(user_id)
+
         if not item:
             return {"error": "Item not found"}
 
         # TODO: Check if user has enough Points to buy the item
+        if user.points < item.price:
+            return {"error": "Not enough points to buy this item"}
 
         inventory_item = Inventory.query.filter_by(item_id=item.id, user_id=user_id).first()
         if inventory_item:
