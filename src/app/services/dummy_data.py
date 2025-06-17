@@ -158,7 +158,7 @@ def insert_example_data():
         salt="salt29",
         created_at=datetime.now(),
         session_id="00000000-0000-0000-1111-000000000029",
-        points=20
+        points=1000
     )
 
     # Add the admin user to the group with admin privileges
